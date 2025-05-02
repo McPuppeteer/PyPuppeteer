@@ -5,7 +5,7 @@ import asyncio
 
 
 class Player:
-	async def _callback_handler(self):
+	async def _callback_handler(self, info):
 		pass
 	
 
@@ -71,12 +71,20 @@ class Player:
 		"""
 		return self.clean_json(*await self.connection.write_packet("join server", {"address": address}) )
 
-
+import time
 
 async def main():
 	async with await Player.discover() as p:
-		print(await p.connection.write_packet("get config", {"file name" : "mc-puppeteer.json"}))
-		# tweakeroo
+
+		print((await p.getClientInfo()))
+		await asyncio.sleep(5)
+		# print((await p.getClientInfo())["uuid"])
+		# print((await p.getClientInfo())["uuid"])
+		# print((await p.getClientInfo())["uuid"])
+		# print((await p.getClientInfo())["uuid"])
+		
+		# print(await p.connection.write_packet("baritone goto", {"x": 400, "y": -60, "z": 400}))
+		# # tweakeroo
 
 
 if __name__ == "__main__":

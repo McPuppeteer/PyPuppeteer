@@ -81,30 +81,41 @@ class ClientConnection:
 
         assert self.running
         while self.running:
-            header = await self.reader.readexactly(1 + 4)
-            
-            packet_type, length = struct.unpack("!ci", header)
-            
-            buffer = await self.reader.readexactly(length)
-
-            # Handle json
-            if packet_type == b'j':
-                info = json.loads(buffer.decode("utf-8"))
-
-                assert type(info) is dict
-                if info.get("callback", False):
-                    if self.callback_handler is not None:
-                        self.callback_handler(info)
-                    continue
-                if not "id" in info:
-                    raise PuppeteerError("GLOBAL ERROR: Unknown error has occured in the Minecraft client: " + info.get("message", "UNSPECIFIED ERROR"))
-                if not info["id"] in self.promises:
-                    raise PuppeteerError("GLOBAL ERROR: Unknown id returned")
-                pro = self.promises[info["id"]]
+            try:
+                header = await self.reader.readexactly(1 + 4)
                 
-                pro.set_result((packet_type[0], info))
+                packet_type, length = struct.unpack("!ci", header)
+                if packet_type != b'j':
+                    print("PROTOCOL ERROR")
+                
+                buffer = await self.reader.readexactly(length)
 
-                del self.promises[info["id"]]
+                # Handle json
+                if packet_type == b'j':
+                    info = json.loads(buffer.decode("utf-8"))
+
+                    assert type(info) is dict
+
+
+                    if info.get("callback", False):
+
+                        
+                        if self.callback_handler is not None:
+                            await self.callback_handler(info)
+                            
+
+                        continue
+                    if not "id" in info:
+                        raise PuppeteerError("GLOBAL ERROR: Unknown error has occured in the Minecraft client: " + info.get("message", "UNSPECIFIED ERROR"))
+                    if not info["id"] in self.promises:
+                        raise PuppeteerError("GLOBAL ERROR: Unknown id returned")
+                    pro = self.promises[info["id"]]
+                    
+                    pro.set_result((packet_type[0], info))
+
+                    del self.promises[info["id"]]
+            except Exception as e:
+                print(e)
     async def write_packet(self, cmd, extra=None):
         """
         Sends a JSON packet to the server.
@@ -179,6 +190,7 @@ class ClientConnection:
 
         self.port = port
         self.host = host
+        self.callback_handler = None
     async def start(self):
         """
         This is required to actually do anything. It actually connects
