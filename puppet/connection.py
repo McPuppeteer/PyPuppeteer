@@ -3,6 +3,7 @@ import struct
 import json
 import uuid
 import socket
+import enum
 
 BROADCAST_PORT = 43842
 BROADCAST_MAGIC_NUMBER = b"PUPPETEER"
@@ -54,12 +55,48 @@ async def getBroadcasts():
             continue  # Ignore invalid packets
 
 
+class PuppeteerErrorType(enum.Enum):
+    UNKNOWN_ERROR = enum.auto()
+    SERVER_KILLED = enum.auto()
+
+    FORMAT_ERROR = enum.auto()
+    EXPECTED_ARGUMENT_ERROR = enum.auto()
+
+    CONFIG_FILE_ERROR = enum.auto()
+    UNKNOWN_MOD = enum.auto()
+    CONNECTION_ERROR = enum.auto()
+    WORLD_JOIN_ERROR = enum.auto()
+    MOD_REQUIREMENT_ERROR = enum.auto()
+
+# Forceably bring them into global scope
+# Effectively:
+# from PuppeteerErrorType import *
+globals().update(PuppeteerErrorType.__members__)
+
+
+error_str_to_enum = {
+    "expected argument":    EXPECTED_ARGUMENT_ERROR,
+    "config file missing":  CONFIG_FILE_ERROR,
+    "unknown mod":          UNKNOWN_MOD,
+    "cannot connect":       CONNECTION_ERROR,
+    "cannot join world":    WORLD_JOIN_ERROR,
+    "format":               FORMAT_ERROR,
+    "mod requirement":      MOD_REQUIREMENT_ERROR
+}
+def strType2error(error : str) -> PuppeteerErrorType:
+    return error_str_to_enum.get(error, UNKNOWN_ERROR)
+
+
+
 class PuppeteerError(Exception):
     """ 
     The generic error class for anything bad that happens around the server.
     Mostly server side or connection issues.
     """
-    pass
+    type : PuppeteerErrorType
+
+    def __init__(self, msg, etype = PuppeteerErrorType.UNKNOWN_ERROR):
+        self.type = etype
 
 
 class ClientConnection:
@@ -71,17 +108,30 @@ class ClientConnection:
 
     running : bool = False
     callback_handler = None
+    global_error_handler = None
 
     port : int
     host : str
+
+    def handleError(self, err):
+        if self.global_error_handler is not None:
+            if not self.global_error_handler(err):
+                return
+
+        for _, future in self.promises.items():
+            if not future.done():
+                future.set_exception(err)
+        print("Killing server due to fatal error: \n" + str(err))
+
+        return True
 
 
     async def _listen_for_data(self):
         """ Runs in the background listening for callbacks and data """
 
         assert self.running
-        while self.running:
-            try:
+        try:
+            while self.running:
                 header = await self.reader.readexactly(1 + 4)
                 
                 packet_type, length = struct.unpack("!ci", header)
@@ -93,7 +143,6 @@ class ClientConnection:
                 # Handle json
                 if packet_type == b'j':
                     info = json.loads(buffer.decode("utf-8"))
-
                     assert type(info) is dict
 
 
@@ -106,16 +155,29 @@ class ClientConnection:
 
                         continue
                     if not "id" in info:
-                        raise PuppeteerError("GLOBAL ERROR: Unknown error has occured in the Minecraft client: " + info.get("message", "UNSPECIFIED ERROR"))
+                        if self.handleError(
+                            PuppeteerError(
+                                "GLOBAL ERROR: " + info.get("message", "UNSPECIFIED ERROR"), 
+                                etype=strType2error(info.get("type")))
+                            ):
+                            return
                     if not info["id"] in self.promises:
-                        raise PuppeteerError("GLOBAL ERROR: Unknown id returned")
+                        if self.handleError(PuppeteerError("GLOBAL ERROR: Unknown id returned"), FORMAT_ERROR):
+                            return
+
                     pro = self.promises[info["id"]]
                     
                     pro.set_result((packet_type[0], info))
 
                     del self.promises[info["id"]]
-            except Exception as e:
-                print(e)
+        except Exception as e:
+            print(e)
+        finally:
+            for _, future in self.promises.items():
+                if not future.done():
+                    future.set_exception(
+                        PuppeteerError("Killed server", etype=SERVER_KILLED)
+                        )
     async def write_packet(self, cmd, extra=None):
         """
         Sends a JSON packet to the server.
@@ -190,7 +252,6 @@ class ClientConnection:
 
         self.port = port
         self.host = host
-        self.callback_handler = None
     async def start(self):
         """
         This is required to actually do anything. It actually connects
