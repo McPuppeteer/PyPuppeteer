@@ -6,8 +6,8 @@ import asyncio
 
 class Player:
 	async def _callback_handler(self, info):
-		print(info)
-		# pass
+		# print(info)
+		pass
 		
 
 	def __init__(self, connection : ClientConnection):
@@ -105,16 +105,32 @@ class Player:
 	async def toggleFreerot(self):
 		return await self.setFreerot(not (await self.getFreerotState()))
 
+	async def rotate(self, pitch : float, yaw : float, speed : float = 3, method : RoMethod = RoMethod.SINE_IN_OUT):
+		return self.handle_json(*await self.connection.write_packet("algorithmic rotation", {
+			"pitch": pitch, 
+			"yaw": yaw,	
+			"degrees per tick": speed,
+			"interpolation": method.value
+		}) )
+	async def instantRotate(self, pitch : float, yaw : float):
+		return self.handle_json(*await self.connection.write_packet("instantaneous rotation", {
+			"pitch": pitch,
+			"yaw": yaw
+		}) )
 import time
 
 async def main():
 	async with await Player.discover() as p:
-		await p.setFreecam(True)
+		# await p.setFreecam(True)
+		print("x")
+		t = time.time()
+		print(await p.instantRotate(0, 0))
+		print(time.time() - t)
 		
 
 		# print(await p.baritoneGoto(1, 1, 1, True))
 
-		await asyncio.sleep(5)
+		# await asyncio.sleep(5)
 		# print((await p.getClientInfo())["uuid"])
 		# print((await p.getClientInfo())["uuid"])
 		# print((await p.getClientInfo())["uuid"])

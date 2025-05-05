@@ -55,18 +55,45 @@ async def getBroadcasts():
             continue  # Ignore invalid packets
 
 
+# Rotation interpolation methods used in algorithmic rotation
+class RoMethod(enum.Enum):
+    LINEAR = "linear"  # Linear interpolation
+    SINE = "sine"  # Ease-in using sine curve
+    QUADRATIC_IN = "quadraticIn"  # Ease-in (accelerating from zero velocity, t^2)
+    CUBIC_IN = "cubicIn"  # Ease-in (t^3)
+    QUARTIC_IN = "quarticIn"  # Ease-in (t^4)
+    QUINTIC_IN = "quinticIn"  # Ease-in (t^5)
+    SEXTIC_IN = "sexticIn"  # Ease-in (t^6)
+    QUADRATIC_OUT = "quadraticOut"  # Ease-out (decelerating to zero velocity, 1-(1-t)^2)
+    CUBIC_OUT = "cubicOut"  # Ease-out (1-(1-t)^3)
+    QUARTIC_OUT = "quarticOut"  # Ease-out (1-(1-t)^4)
+    QUINTIC_OUT = "quinticOut"  # Ease-out (1-(1-t)^5)
+    SINE_IN_OUT = "sineInOut"  # Ease-in-out using sine curve
+    QUADRATIC_IN_OUT = "quadraticInOut"  # Ease-in-out (smooth start and end, quadratic)
+    CUBIC_IN_OUT = "cubicInOut"  # Ease-in-out (cubic)
+    QUARTIC_IN_OUT = "quarticInOut"  # Ease-in-out (quartic)
+    QUINTIC_IN_OUT = "quinticInOut"  # Ease-in-out (quintic)
+    EXPONENTIAL_IN = "exponentialIn"  # Exponential ease-in
+    EXPONENTIAL_OUT = "exponentialOut"  # Exponential ease-out
+    EXPONENTIAL_IN_OUT = "exponentialInOut"  # Exponential ease-in-out
+    ELASTIC_OUT = "elasticOut"  # Elastic ease-out (spring-like, bouncy)
+
+
 class PuppeteerErrorType(enum.Enum):
     UNKNOWN_ERROR = enum.auto()
     SERVER_KILLED = enum.auto()
 
     FORMAT_ERROR = enum.auto()
     EXPECTED_ARGUMENT_ERROR = enum.auto()
+    UNEXPECTED_ARGUMENT_ERROR = enum.auto()
 
     CONFIG_FILE_ERROR = enum.auto()
     UNKNOWN_MOD = enum.auto()
     CONNECTION_ERROR = enum.auto()
     WORLD_JOIN_ERROR = enum.auto()
     MOD_REQUIREMENT_ERROR = enum.auto()
+    INTERNEL_EXCEPTION = enum.auto()
+    BARITONE_ERROR = enum.auto()
 
 # Forceably bring them into global scope
 # Effectively:
@@ -75,13 +102,16 @@ globals().update(PuppeteerErrorType.__members__)
 
 
 error_str_to_enum = {
-    "expected argument":    EXPECTED_ARGUMENT_ERROR,
-    "config file missing":  CONFIG_FILE_ERROR,
-    "unknown mod":          UNKNOWN_MOD,
-    "cannot connect":       CONNECTION_ERROR,
-    "cannot join world":    WORLD_JOIN_ERROR,
-    "format":               FORMAT_ERROR,
-    "mod requirement":      MOD_REQUIREMENT_ERROR
+    "expected argument":      EXPECTED_ARGUMENT_ERROR,
+    "unexpected argument":    UNEXPECTED_ARGUMENT_ERROR,
+    "config file missing":    CONFIG_FILE_ERROR,
+    "unknown mod":            UNKNOWN_MOD,
+    "cannot connect":         CONNECTION_ERROR,
+    "cannot join world":      WORLD_JOIN_ERROR,
+    "format":                 FORMAT_ERROR,
+    "mod requirement":        MOD_REQUIREMENT_ERROR,
+    "exception":              INTERNEL_EXCEPTION,
+    "baritone calculation":   BARITONE_ERROR
 }
 def strType2error(error : str) -> PuppeteerErrorType:
     return error_str_to_enum.get(error, UNKNOWN_ERROR)
