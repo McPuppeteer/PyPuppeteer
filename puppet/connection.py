@@ -55,6 +55,32 @@ async def getBroadcasts():
             continue  # Ignore invalid packets
 
 
+class CallbackType(enum.Enum):
+    BARITONE = "BARITONE"
+    PLAYER_POSITION = "PLAYER_POSITION"
+    PLAYER_YAW = "PLAYER_YAW"
+    PLAYER_PITCH = "PLAYER_PITCH"
+    PLAYER_DAMAGE = "PLAYER_DAMAGE"
+    PLAYER_DEATH = "PLAYER_DEATH"
+    PLAYER_INVENTORY = "PLAYER_INVENTORY"
+    CHAT = "CHAT"
+class InputButton(enum.Enum):
+    FORWARDS = "forwards"
+    BACKWARDS = "backwards"
+    LEFT = "left"
+    RIGHT = "right"
+    JUMP = "jump"
+    SNEAK = "sneak"
+    SPRINT = "sprint"
+
+    ATTACK = "attack"
+    USE = "use"
+
+string_callback_dict = {
+      v.value: v for k, v in CallbackType.__members__.items()
+}
+
+
 # Rotation interpolation methods used in algorithmic rotation
 class RoMethod(enum.Enum):
     LINEAR = "linear"  # Linear interpolation

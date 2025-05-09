@@ -6,8 +6,8 @@ import asyncio
 
 class Player:
 	async def _callback_handler(self, info):
-		# print(info)
-		pass
+		print(info)
+		# pass
 		
 
 	def __init__(self, connection : ClientConnection):
@@ -46,7 +46,16 @@ class Player:
 	async def getInstalledMods(self):
 		return self.handle_json(*await self.connection.write_packet("get mod list") )["mods"]
 
+	async def getCallbackStates(self) -> dict[CallbackType, bool]:
+		result = self.handle_json(*await self.connection.write_packet("get callbacks") )
+		return {
+			string_callback_dict.get(k): v
+				for k, v in result["callbacks"].items()
+		}
+	async def setCallbacks(self, callbacks : dict[CallbackType, bool]):
+		payload = {k.value : v for k, v in callbacks.items()}
 
+		return self.handle_json(*await self.connection.write_packet("set callbacks", {"callbacks": payload}) )
 
 	# World/server function
 
@@ -79,12 +88,11 @@ class Player:
 		return self.handle_json(*await self.connection.write_packet("join server", {"address": address}) )
 
 
-	async def baritoneGoto(self, x : int, y : int, z : int, force : bool = True):
+	async def baritoneGoto(self, x : int, y : int, z : int):
 		return self.handle_json(*await self.connection.write_packet("baritone goto", {
 			"x": x,
 			"y": y,
-			"z": z,
-			"no cancel": not force
+			"z": z
 		}) )
 
 
@@ -93,17 +101,36 @@ class Player:
 		return (await self.connection.write_packet("is freecam"))["is freecam"]
 	async def getFreerotState(self) -> bool:
 		return (await self.connection.write_packet("is freerot"))["is freerot"]
+	async def getNoWalkState(self) -> bool:
+		return (await self.connection.write_packet("is nowalk"))["is nowalk"]
 
 	async def setFreecam(self, enabled : bool = True):
 		return self.handle_json(*await self.connection.write_packet("set freecam", {"enabled": enabled}) )
 	async def setFreerot(self, enabled : bool = True):
 		return self.handle_json(*await self.connection.write_packet("set freerot", {"enabled": enabled}) )
+	async def setNoWalk(self, enabled : bool = True):
+		return self.handle_json(*await self.connection.write_packet("set nowalk", {"enabled": enabled}) )
 
 
-	async def toggleFreecam(self):
-		return await self.setFreecam(not (await self.getFreecamState()))
-	async def toggleFreerot(self):
-		return await self.setFreerot(not (await self.getFreerotState()))
+
+	async def sendChatMessage(self, message : str):
+		return self.handle_json(*await self.connection.write_packet("send chat message", {"message": message}) )
+	async def displayMessage(self, message : str):
+		return self.handle_json(*await self.connection.write_packet("display chat message", {"message": message}) )
+	async def overviewMessage(self, message : str):
+		return self.handle_json(*await self.connection.write_packet("overview message", {"message": message}) )
+
+
+	async def clearInputs(self):
+		return self.handle_json(*await self.connection.write_packet("clear force input") )
+	async def forceInput(self, inputs : list[tuple[InputButton, bool]]):
+		return self.handle_json(*await self.connection.write_packet("force inputs", {"inputs": {
+			k[0].value: k[1] for k in inputs
+			}}) )
+	async def removeForcedInputs(self, inputs: list[InputButton]):
+		return self.handle_json(*await self.connection.write_packet("force inputs", {"remove": [
+			k.value for k in inputs
+			]}) )
 
 	async def rotate(self, pitch : float, yaw : float, speed : float = 3, method : RoMethod = RoMethod.SINE_IN_OUT):
 		return self.handle_json(*await self.connection.write_packet("algorithmic rotation", {
@@ -117,20 +144,39 @@ class Player:
 			"pitch": pitch,
 			"yaw": yaw
 		}) )
+
+	async def attack(self):
+		return self.handle_json(*await self.connection.write_packet("attack key click") )
+	async def use(self):
+		return self.handle_json(*await self.connection.write_packet("use key click") )
+
+
+	async def setDirectionalWalk(self, degrees : float, speed = 1, force=False):
+		return self.handle_json(*await self.connection.write_packet("set directional movement degree", {
+			"direction": degrees,
+			"speed": speed,
+			"force" : force
+		}) )
+	async def setDirectionalWalkVector(self, x : float, z : float, speed = 1, force = False):
+		return self.handle_json(*await self.connection.write_packet("set directional movement vector", {
+			"x": x,
+			"z": z
+			"speed": speed,
+			"force" : force
+		}) )
+	async def stopDirectionalWalk(self):
+		return self.handle_json(*await self.connection.write_packet("clear directional movement") )
+
 import time
 
 async def main():
 	async with await Player.discover() as p:
-		# await p.setFreecam(True)
-		print("x")
-		t = time.time()
-		print(await p.instantRotate(0, 0))
-		print(time.time() - t)
+		print(await p.connection.write_packet("set directional movement vector", {"x": 5, "z": 4}))
+
+		# print("goto")
+		# print(await p.baritoneGoto(1, -60, 1))
+
 		
-
-		# print(await p.baritoneGoto(1, 1, 1, True))
-
-		# await asyncio.sleep(5)
 		# print((await p.getClientInfo())["uuid"])
 		# print((await p.getClientInfo())["uuid"])
 		# print((await p.getClientInfo())["uuid"])
