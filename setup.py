@@ -6,7 +6,7 @@ with open("README.md", "r", encoding='utf-8') as file:
 
 
 setup(
-  name             = 'PyMcPuppeteer',
+  name             = 'McPuppeteer',
   version          =  VERSION,
   description      = 'A python library for fully controlling the player in Minecraft',
   author           = 'PsychedelicPalimpsest',
