@@ -15,7 +15,10 @@ documentation for details.
    :maxdepth: 2
    :caption: Contents:
 
-
+   modules
+   puppet
+   puppet.connection
+   puppet.player
 
 
 

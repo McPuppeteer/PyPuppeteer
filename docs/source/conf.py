@@ -35,5 +35,5 @@ html_static_path = ['_static']
 
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../puppet'))  # Add your library path
+sys.path.insert(0, os.path.abspath('../../'))  # Add your library path
 
