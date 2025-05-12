@@ -16,7 +16,7 @@ class Player:
             raise PuppeteerError(
                 "Error: " + json.get("message", ""),
                 etype=str2error(json.get("type")),
-            )
+                )
         del json["status"]
         del json["id"]
         return json
