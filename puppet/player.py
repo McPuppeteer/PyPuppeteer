@@ -257,15 +257,11 @@ class Player:
         )
 
     async def attack(self):
-        """
-        Tells the player to punch. Single left click
-        """
+        """ Tells the player to punch. Single left click """
         return await self.handle_packet("attack key click")
 
     async def use(self):
-        """
-        Tells the player to use an item/block. Single right click
-        """
+        """ Tells the player to use an item/block. Single right click """
         return await self.handle_packet("use key click")
 
     async def set_directional_walk(
