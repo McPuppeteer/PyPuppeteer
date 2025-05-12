@@ -2,8 +2,6 @@ from connection import *
 import asyncio
 
 
-
-
 class Player:
 	async def _callback_handler(self, info):
 		print(info)
@@ -13,17 +11,17 @@ class Player:
 	def __init__(self, connection : ClientConnection):
 		self.connection = connection
 		self.connection.callback_handler = self._callback_handler
-	def handle_json(self, packet_type, json):
+	def handle_json(self, packet_type : int, json : dict) -> dict:
 		assert packet_type == ord('j')
 		if json.get("status") == "error":
-			raise PuppeteerError("Error: " + json.get("message", ""), etype=strType2error(json.get("type")))
+			raise PuppeteerError("Error: " + json.get("message", ""), etype=str2error(json.get("type")))
 		del json["status"]
 		del json["id"]
 		return json
 
 	@classmethod
 	async def discover(cls, with_name=None):
-		async for broadcast, (host, _) in getBroadcasts():
+		async for broadcast, (host, _) in gen_broadcasts():
 			if with_name is not None and broadcast["player username"] != with_name:
 				continue
 
@@ -31,64 +29,77 @@ class Player:
 			await connection.start()
 			return cls(connection)
 
+		assert False, "Unreachable"
+
 	async def __aenter__(self):
 		return self
 	async def __aexit__(self, exc_type, exc, tb):
 		await self.connection.__aexit__(exc_type, exc, tb)
 
+	# ========================================
+	#        Informational functions
+	# ========================================
 
-
-	# Informational functions
-
-	async def getClientInfo(self):
+	async def get_client_info(self):
 		""" Returns a dictionary of a bunch of information about the game client """
 		return self.handle_json(*await self.connection.write_packet("client info") )
-	async def getInstalledMods(self):
-		return self.handle_json(*await self.connection.write_packet("get mod list") )["mods"]
+	async def get_installed_mods(self):
+		return self.handle_json(*await self.connection.write_packet("get mod list") ).get("mods")
 
-	async def getCallbackStates(self) -> dict[CallbackType, bool]:
+	async def get_callback_states(self) -> dict[CallbackType, bool]:
+		""" Tells you what callbacks are currently enabled in the client. Use ``set_callbacks()`` to enable them. """
+
 		result = self.handle_json(*await self.connection.write_packet("get callbacks") )
 		return {
 			string_callback_dict.get(k): v
 				for k, v in result["callbacks"].items()
 		}
-	async def setCallbacks(self, callbacks : dict[CallbackType, bool]):
+	async def set_callbacks(self, callbacks : dict[CallbackType, bool]):
+		"""
+		Enable more callbacks being sent to the player.
+
+		:param callbacks: A dictionary (identical to the return of ``get_callback_states()``) of what callbacks you want to enable.
+		"""
+
 		payload = {k.value : v for k, v in callbacks.items()}
 
 		return self.handle_json(*await self.connection.write_packet("set callbacks", {"callbacks": payload}) )
 
-	# World/server function
 
-	async def getServerList(self):
+	# ========================================
+	#           World/server functions
+	# ========================================
+
+	async def get_server_list(self):
 		""" Gets all the multiplayer servers in your server list, along with the "hidden" ones (your direct connect history). """
 		return self.handle_json(*await self.connection.write_packet("get server list") )
-	async def getWorldList(self):
+	async def get_world_list(self):
 		""" 
 		List ALL the worlds on this minecraft instances .minecraft folder.
 
-		This can be slow on some installs, as some users may have <b>thousands</b> of worlds.
+		This can be slow on some installs, as some users may have **thousands** of worlds.
 		"""
 		return self.handle_json(*await self.connection.write_packet("get worlds") )
-	async def joinWorld(self, name : str):
+	async def join_world(self, name : str):
 		"""
-		Joins a local world. The name <b>needs</b> to be from the 'load name' from getWorldList()
+		Joins a local world. The name **needs** to be from the 'load name' from getWorldList()
 		
-		:param name: The name of the world to join, <b>needs</b to match the 'load name' from getWorldList()
-		:type name: str
+		:param name: The name of the world to join, **needs** to match the 'load name' from ``getWorldList()``
 		"""
 		return self.handle_json(*await self.connection.write_packet("join world", {"load world": name}) )
-	async def joinServer(self, address : str):
+	async def join_server(self, address : str):
 		"""
 		Joins a multiplayer server
 
 		:param address: Server ip to connect to
-		:type address: str
 		"""
 
 		return self.handle_json(*await self.connection.write_packet("join server", {"address": address}) )
 
 
-	async def baritoneGoto(self, x : int, y : int, z : int):
+	async def baritone_goto(self, x : int, y : int, z : int):
+		"""  Tells baritone to go to a specific location. """
+
 		return self.handle_json(*await self.connection.write_packet("baritone goto", {
 			"x": x,
 			"y": y,
@@ -97,96 +108,183 @@ class Player:
 
 
 
-	async def getFreecamState(self) -> bool:
+	async def get_freecam_state(self) -> bool:
+		""" Tells you if freecam is currently enabled. """
 		return (await self.connection.write_packet("is freecam"))["is freecam"]
-	async def getFreerotState(self) -> bool:
+	async def get_freerot_state(self) -> bool:
+		""" Tells you if freeroot is currently enabled. """
 		return (await self.connection.write_packet("is freerot"))["is freerot"]
-	async def getNoWalkState(self) -> bool:
+	async def get_no_walk_state(self) -> bool:
+		""" Tells you if no walk is currently enabled. """
 		return (await self.connection.write_packet("is nowalk"))["is nowalk"]
 
-	async def setFreecam(self, enabled : bool = True):
+
+	async def set_freecam(self, enabled : bool = True):
+		""" Set if freecam is currently enabled. """
 		return self.handle_json(*await self.connection.write_packet("set freecam", {"enabled": enabled}) )
-	async def setFreerot(self, enabled : bool = True):
+	async def set_freerot(self, enabled : bool = True):
+		""" Set if freeroot is currently enabled. """
 		return self.handle_json(*await self.connection.write_packet("set freerot", {"enabled": enabled}) )
-	async def setNoWalk(self, enabled : bool = True):
+	async def set_no_walk(self, enabled : bool = True):
+		""" Set if no walk is currently enabled. """
 		return self.handle_json(*await self.connection.write_packet("set nowalk", {"enabled": enabled}) )
 
 
 
-	async def sendChatMessage(self, message : str):
+	async def send_chat_message(self, message : str):
+		"""
+		Sends a public chat message. If prepended with "/", will execute a command.
+
+		:param message: The message to send.
+		"""
 		return self.handle_json(*await self.connection.write_packet("send chat message", {"message": message}) )
-	async def displayMessage(self, message : str):
+	async def send_execute_command(self, message : str):
+		"""
+		Runs a command.
+
+		:param message: The command to execute
+
+		Note: Do **NOT** include the "/"
+
+		Ex: ``gamemode creative`` to set the gamemode to creative.
+		"""
+		return self.handle_json(*await self.connection.write_packet("execute command", {"message": message}) )
+
+
+	async def display_message(self, message : str):
+		"""
+		Displays a message in chat. This is private
+		:param message:  Message to display in chat
+		"""
+
 		return self.handle_json(*await self.connection.write_packet("display chat message", {"message": message}) )
-	async def overviewMessage(self, message : str):
+	async def overview_message(self, message : str):
+		"""
+		Shows a message above the users hotbar, this is great for informational status updates.
+
+		For example, telling the user when something is starting and ending.
+
+		:param message: Message to display above the hotbar
+		"""
+
 		return self.handle_json(*await self.connection.write_packet("overview message", {"message": message}) )
 
 
-	async def clearInputs(self):
+	# Player control
+	async def clear_inputs(self):
+		""" Remove all forced button presses. """
+
 		return self.handle_json(*await self.connection.write_packet("clear force input") )
-	async def forceInput(self, inputs : list[tuple[InputButton, bool]]):
+	async def force_inputs(self, inputs : list[tuple[InputButton, bool]]):
+		"""
+		Force down/up buttons. If a button is not mentioned, it will not be impacted. Meaning that if it is already pressed,
+		it will still be pressed if you do not update its state.
+
+		:param inputs: List of tuples of (InputButton, bool). Where the bool is the **forced state** of the input. Meaning
+					   setting to False indicates the **user cannot press** that key.
+		"""
+
 		return self.handle_json(*await self.connection.write_packet("force inputs", {"inputs": {
 			k[0].value: k[1] for k in inputs
 			}}) )
-	async def removeForcedInputs(self, inputs: list[InputButton]):
+	async def remove_forced_inputs(self, inputs: list[InputButton]):
+		"""
+		Disables the forced state of inputs. If a button is not mentioned, it will not be impacted.
+		A complete list of inputs will result in identical behavior to ``clear_inputs()``
+
+		:param inputs: A list if inputs, each input will have is state no longer controlled.
+		"""
+
 		return self.handle_json(*await self.connection.write_packet("force inputs", {"remove": [
 			k.value for k in inputs
 			]}) )
 
-	async def rotate(self, pitch : float, yaw : float, speed : float = 3, method : RoMethod = RoMethod.SINE_IN_OUT):
+	async def arotate(self, pitch : float, yaw : float, speed : float = 3, method : RoMethod = RoMethod.SINE_IN_OUT):
+		"""
+		Smoothly, and realistically, rotate the player.
+
+
+		:param pitch: Pitch angle in degrees.
+		:param yaw: Yaw angle in degrees.
+		:param speed: Speed of rotation. This can be generally interpreted as `degrees per tick`, but with certain rotation methods
+		              this will not be true.
+		:param method: What interpolation method is used. This will not change the time required to rotate, but instead how it looks.
+		"""
+
 		return self.handle_json(*await self.connection.write_packet("algorithmic rotation", {
 			"pitch": pitch, 
 			"yaw": yaw,	
 			"degrees per tick": speed,
 			"interpolation": method.value
 		}) )
-	async def instantRotate(self, pitch : float, yaw : float):
+	async def irotate(self, pitch : float, yaw : float):
+		"""
+		Instantly set the player's rotation. This looks like you are cheating.
+
+		:param pitch: Pitch angle in degrees.
+		:param yaw: Yaw angle in degrees.
+		:param speed: Speed of rotation. Thi
+		"""
+
 		return self.handle_json(*await self.connection.write_packet("instantaneous rotation", {
 			"pitch": pitch,
 			"yaw": yaw
 		}) )
 
 	async def attack(self):
+		"""
+		Tells the player to punch. Single left click
+		"""
+
 		return self.handle_json(*await self.connection.write_packet("attack key click") )
 	async def use(self):
+		"""
+		Tells the player to use an item/block. Single right click
+		"""
+
 		return self.handle_json(*await self.connection.write_packet("use key click") )
 
 
-	async def setDirectionalWalk(self, degrees : float, speed = 1, force=False):
+	async def set_directional_walk(self, degrees : float, speed : float = 1, force=False):
+		"""
+		Force the player to walk in a certain direction. Directional walking allows you to make the player walk towards a block.
+		The direction the player is walking in is absolute, meaning the user can look around without interfacing.
+
+		:param degrees: The **global** direction, in degrees, from 0-360, of where the user will walk.
+		:param speed: Should be from 0-1. With zero being no movement, and one being regular walk speed.
+		:param force: If false, will clamp the speed. If true, will allow any speed value, basically being speed hacks.
+		"""
+
 		return self.handle_json(*await self.connection.write_packet("set directional movement degree", {
 			"direction": degrees,
 			"speed": speed,
 			"force" : force
 		}) )
-	async def setDirectionalWalkVector(self, x : float, z : float, speed = 1, force = False):
+	async def set_directional_walk_vector(self, x : float, z : float, speed = 1, force = False):
+		"""
+		Force the player to walk in a certain direction. Directional walking allows you to make the player walk towards a block.
+		The direction the player is walking in is absolute, meaning the user can look around without interfacing.
+
+		The difference between this and ``set_directional_walk()`` is that you input a global vector. For example,
+		to walk in the `+x` direction, use parameters x=1, z=0. To walk equally in the `+x` and `+z` direction, use
+		parameters x=1, z=1. Negative directions **are** supported. Vectors **are normalized**. so feel free to use
+		large values.
+
+		:param x: The x component of the direction.
+		:param z: The z component of the direction.
+		:param speed: Should be from 0-1. With zero being no movement, and one being regular walk speed.
+		:param force: If false, will clamp the speed. If true, will allow any speed value, basically being speed hacks.
+		"""
+
+
 		return self.handle_json(*await self.connection.write_packet("set directional movement vector", {
 			"x": x,
-			"z": z
+			"z": z,
 			"speed": speed,
 			"force" : force
 		}) )
-	async def stopDirectionalWalk(self):
+	async def stop_directional_walk(self):
+		"""No longer be directional walking"""
 		return self.handle_json(*await self.connection.write_packet("clear directional movement") )
 
-import time
-
-async def main():
-	async with await Player.discover() as p:
-		print(await p.connection.write_packet("set directional movement vector", {"x": 5, "z": 4}))
-
-		# print("goto")
-		# print(await p.baritoneGoto(1, -60, 1))
-
-		
-		# print((await p.getClientInfo())["uuid"])
-		# print((await p.getClientInfo())["uuid"])
-		# print((await p.getClientInfo())["uuid"])
-		# print((await p.getClientInfo()))
-		
-		
-		# # tweakeroo
-
-
-if __name__ == "__main__":
-
-	asyncio.run(main())
 

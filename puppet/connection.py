@@ -8,12 +8,12 @@ import enum
 BROADCAST_PORT = 43842
 BROADCAST_MAGIC_NUMBER = b"PUPPETEER"
 
-def _setup_broadcast_listener(mcast_grp=None):
+
+def _setup_broadcast_listener(mcast_grp: str | None = None):
     """
     Set up a non-blocking UDP socket for broadcast or multicast listening.
 
-    :param mcast_grp: Optional multicast group IP address to join.
-    :type mcast_grp: Optional[str]
+    :param mcast_grp Optional multicast group IP address to join.
     :return: Configured UDP socket.
     :rtype: socket.socket
     """
@@ -27,7 +27,9 @@ def _setup_broadcast_listener(mcast_grp=None):
         mreq = socket.inet_aton(mcast_grp) + socket.inet_aton('0.0.0.0')
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
     return sock
-async def getBroadcasts():
+
+
+async def gen_broadcasts():
     """
     Asynchronously listen for and yield valid broadcast packets.
 
@@ -44,7 +46,7 @@ async def getBroadcasts():
 
     while True:
         data, addr = await loop.sock_recvfrom(sock, 1024)
-        
+
         if not data.startswith(BROADCAST_MAGIC_NUMBER):
             continue
         data = data[len(BROADCAST_MAGIC_NUMBER):]
@@ -56,6 +58,9 @@ async def getBroadcasts():
 
 
 class CallbackType(enum.Enum):
+    """
+    The named Puppeteer callback varieties.
+    """
     BARITONE = "BARITONE"
     PLAYER_POSITION = "PLAYER_POSITION"
     PLAYER_YAW = "PLAYER_YAW"
@@ -64,7 +69,13 @@ class CallbackType(enum.Enum):
     PLAYER_DEATH = "PLAYER_DEATH"
     PLAYER_INVENTORY = "PLAYER_INVENTORY"
     CHAT = "CHAT"
+
+
 class InputButton(enum.Enum):
+    """
+    Input types that you can override and force the state of.
+    """
+
     FORWARDS = "forwards"
     BACKWARDS = "backwards"
     LEFT = "left"
@@ -76,13 +87,17 @@ class InputButton(enum.Enum):
     ATTACK = "attack"
     USE = "use"
 
+
 string_callback_dict = {
-      v.value: v for k, v in CallbackType.__members__.items()
+    v.value: v for k, v in CallbackType.__members__.items()
 }
 
 
-# Rotation interpolation methods used in algorithmic rotation
+
 class RoMethod(enum.Enum):
+    """
+    Rotation interpolation methods used in algorithmic rotation
+    """
     LINEAR = "linear"  # Linear interpolation
     SINE = "sine"  # Ease-in using sine curve
     QUADRATIC_IN = "quadraticIn"  # Ease-in (accelerating from zero velocity, t^2)
@@ -106,6 +121,15 @@ class RoMethod(enum.Enum):
 
 
 class PuppeteerErrorType(enum.Enum):
+    """
+    Puppeteer error types.
+
+    Note: These can occur somewhat randomly.
+          Assume all functions **CAN AND WILL**
+          throw exceptions at **any moment**.
+          In addition, can do so in the background.
+    """
+
     UNKNOWN_ERROR = enum.auto()
     SERVER_KILLED = enum.auto()
 
@@ -121,27 +145,28 @@ class PuppeteerErrorType(enum.Enum):
     INTERNEL_EXCEPTION = enum.auto()
     BARITONE_ERROR = enum.auto()
 
-# Forceably bring them into global scope
+
+# Forcefully bring them into global scope
 # Effectively:
 # from PuppeteerErrorType import *
 globals().update(PuppeteerErrorType.__members__)
 
-
 error_str_to_enum = {
-    "expected argument":      EXPECTED_ARGUMENT_ERROR,
-    "unexpected argument":    UNEXPECTED_ARGUMENT_ERROR,
-    "config file missing":    CONFIG_FILE_ERROR,
-    "unknown mod":            UNKNOWN_MOD,
-    "cannot connect":         CONNECTION_ERROR,
-    "cannot join world":      WORLD_JOIN_ERROR,
-    "format":                 FORMAT_ERROR,
-    "mod requirement":        MOD_REQUIREMENT_ERROR,
-    "exception":              INTERNEL_EXCEPTION,
-    "baritone calculation":   BARITONE_ERROR
+    "expected argument": EXPECTED_ARGUMENT_ERROR,
+    "unexpected argument": UNEXPECTED_ARGUMENT_ERROR,
+    "config file missing": CONFIG_FILE_ERROR,
+    "unknown mod": UNKNOWN_MOD,
+    "cannot connect": CONNECTION_ERROR,
+    "cannot join world": WORLD_JOIN_ERROR,
+    "format": FORMAT_ERROR,
+    "mod requirement": MOD_REQUIREMENT_ERROR,
+    "exception": INTERNEL_EXCEPTION,
+    "baritone calculation": BARITONE_ERROR
 }
-def strType2error(error : str) -> PuppeteerErrorType:
-    return error_str_to_enum.get(error, UNKNOWN_ERROR)
 
+
+def str2error(error: str) -> PuppeteerErrorType:
+    return error_str_to_enum.get(error, UNKNOWN_ERROR)
 
 
 class PuppeteerError(Exception):
@@ -149,9 +174,9 @@ class PuppeteerError(Exception):
     The generic error class for anything bad that happens around the server.
     Mostly server side or connection issues.
     """
-    type : PuppeteerErrorType
+    type: PuppeteerErrorType
 
-    def __init__(self, msg, etype = PuppeteerErrorType.UNKNOWN_ERROR):
+    def __init__(self, msg : str, etype : PuppeteerErrorType = PuppeteerErrorType.UNKNOWN_ERROR):
         self.type = etype
 
 
@@ -161,15 +186,14 @@ class ClientConnection:
     Handles connection setup, packet sending, and response handling.
     """
 
-
-    running : bool = False
+    running: bool = False
     callback_handler = None
     global_error_handler = None
 
-    port : int
-    host : str
+    port: int
+    host: str
 
-    def handleError(self, err):
+    def handle_error(self, err):
         if self.global_error_handler is not None:
             if not self.global_error_handler(err):
                 return
@@ -181,7 +205,6 @@ class ClientConnection:
 
         return True
 
-
     async def _listen_for_data(self):
         """ Runs in the background listening for callbacks and data """
 
@@ -189,11 +212,11 @@ class ClientConnection:
         try:
             while self.running:
                 header = await self.reader.readexactly(1 + 4)
-                
+
                 packet_type, length = struct.unpack("!ci", header)
                 if packet_type != b'j':
                     print("PROTOCOL ERROR")
-                
+
                 buffer = await self.reader.readexactly(length)
 
                 # Handle json
@@ -201,31 +224,34 @@ class ClientConnection:
                     info = json.loads(buffer.decode("utf-8"))
                     assert type(info) is dict
 
-
                     if info.get("callback", False):
 
-                        
                         if self.callback_handler is not None:
                             await self.callback_handler(info)
-                            
 
                         continue
                     if not "id" in info:
-                        if self.handleError(
-                            PuppeteerError(
-                                "GLOBAL ERROR: " + info.get("message", "UNSPECIFIED ERROR"), 
-                                etype=strType2error(info.get("type")))
-                            ):
+                        if self.handle_error(
+                                PuppeteerError(
+                                    "GLOBAL ERROR: " + info.get("message", "UNSPECIFIED ERROR"),
+                                    etype=str2error(info.get("type")))
+                        ):
                             return
                     if not info["id"] in self.promises:
-                        if self.handleError(PuppeteerError("GLOBAL ERROR: Unknown id returned"), FORMAT_ERROR):
+                        if self.handle_error(PuppeteerError("GLOBAL ERROR: Unknown id returned"), FORMAT_ERROR):
                             return
 
                     pro = self.promises[info["id"]]
-                    
+
                     pro.set_result((packet_type[0], info))
 
                     del self.promises[info["id"]]
+                elif packet_type == b'n':
+                    # TODO: NBT both in server and client
+                    assert False, "Not implemented"
+                else:
+                    if self.handle_error(PuppeteerError("GLOBAL ERROR: Unknown packet type: " + hex(packet_type[0])), FORMAT_ERROR):
+                        return
         except Exception as e:
             print(e)
         finally:
@@ -233,17 +259,16 @@ class ClientConnection:
                 if not future.done():
                     future.set_exception(
                         PuppeteerError("Killed server", etype=SERVER_KILLED)
-                        )
-    async def write_packet(self, cmd, extra=None):
+                    )
+
+    async def write_packet(self, cmd : str, extra : dict | None =None) -> tuple[int, dict]:
         """
         Sends a JSON packet to the server.
 
         :param cmd: Command string to specify what command is being used
-        :type cmd: str
         :param extra: Extra JSON data to be sent along
-        :type extra: Optional[dict]
-        :return: Coroutine that yields whatever the server might send back in response
-        :rtype: Awaitable[dict]
+
+        :return: Coroutine that yields a tuple, the first being an int representing the datatype
         """
 
         assert self.running
@@ -261,10 +286,8 @@ class ClientConnection:
         packet = {"cmd": cmd, "id": pid, **extra}
         data = json.dumps(packet).encode("utf-8")
 
-        
         data = struct.pack("!ci", b'j', len(data)) + data
 
-        
         self.writer.write(data)
         await self.writer.drain()
 
@@ -276,11 +299,11 @@ class ClientConnection:
         Used UDP broadcast sent by the Minecraft client mod to
         discover the first available client. 
         
-        <b>NOTE:</b>
+        **NOTE:**
         If multiple clients are running, the choice
         will be up to chance.
 
-        <b>NOTE:</b>
+        **NOTE:**
         It is possible for this to wait forever if nothing is
         ever found
 
@@ -288,26 +311,23 @@ class ClientConnection:
         :rtype: Awaitable[ClientConnection]
         """
 
-
-        broadcast_itr = getBroadcasts()
+        broadcast_itr = gen_broadcasts()
         broadcast, (host, port) = await anext(broadcast_itr)
 
-        
         return cls(host, broadcast["port"])
-    def __init__(self, host, port):
+
+    def __init__(self, host : str, port : int):
         """ 
         Create the python object, 
         <b> BUT YOU MUST FIRST CALL start() BEFORE YOU CAN DO ANYTHING </b>
 
         :param host: An ip to connect too
-        :type host: str
         :param port: The port to connect too
-        :type port: int
         """
-
 
         self.port = port
         self.host = host
+
     async def start(self):
         """
         This is required to actually do anything. It actually connects
@@ -318,11 +338,12 @@ class ClientConnection:
         """
 
         self.running = True
-        
+
         self.reader, self.writer = await asyncio.open_connection(self.host, self.port)
         self.promises = dict()
 
         self.listener = asyncio.create_task(self._listen_for_data())
+
     async def close(self):
         """
         Close the connection, and the listener coroutine
@@ -333,12 +354,11 @@ class ClientConnection:
 
         self.running = False
         self.listener.cancel()
+
     async def __aenter__(self):
         if not self.running:
             await self.start()
         return self
+
     async def __aexit__(self, exc_type, exc, tb):
         await self.close()
-
-
-
