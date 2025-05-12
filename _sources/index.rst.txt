@@ -1,15 +1,5 @@
-.. McPuppeteer documentation master file, created by
-   sphinx-quickstart on Mon May 12 19:29:24 2025.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-McPuppeteer documentation
-=========================
-
-Add your content using ``reStructuredText`` syntax. See the
-`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
-documentation for details.
-
+Welcome to Puppet's documentation!
+==================================
 
 .. toctree::
    :maxdepth: 2
@@ -19,8 +9,6 @@ documentation for details.
    puppet
    puppet.connection
    puppet.player
-
-
 
 Indices and tables
 ==================
