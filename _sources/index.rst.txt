@@ -6,9 +6,6 @@ Welcome to Puppet's documentation!
    :caption: Contents:
 
    modules
-   puppet
-   puppet.connection
-   puppet.player
 
 Indices and tables
 ==================
