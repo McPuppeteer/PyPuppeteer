@@ -246,7 +246,6 @@ class Player:
 
         :param pitch: Pitch angle in degrees.
         :param yaw: Yaw angle in degrees.
-        :param speed: Speed of rotation. Thi
         """
         return await self.handle_packet(
             "instantaneous rotation",
