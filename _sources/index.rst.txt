@@ -5,7 +5,7 @@ Welcome to Puppet's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   modules
+   puppet
 
 Indices and tables
 ==================
