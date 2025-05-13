@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>puppet.constants &#8212; McPuppeteer 0.0.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=686e5160" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <script src="../../_static/documentation_options.js?v=e3a6060d"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for puppet.constants</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Core constants and enums for the Puppeteer communication system.</span>
+
+<span class="sd">This has a few network related constants. It also has enums used</span>
+<span class="sd">for input, callbacks, rotation, and more.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">enum</span>
+
+
+<span class="c1"># Network configuration constants</span>
+<span class="c1">#: Port used for UDP broadcast discovery</span>
+<span class="n">BROADCAST_PORT</span> <span class="o">=</span> <span class="mi">43842</span>
+<span class="c1">#: Magic bytes used to identify Puppeteer broadcast packets</span>
+<span class="n">BROADCAST_MAGIC_NUMBER</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;PUPPETEER&quot;</span>
+
+
+<div class="viewcode-block" id="CallbackType">
+<a class="viewcode-back" href="../../puppet.html#puppet.constants.CallbackType">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CallbackType</span><span class="p">(</span><span class="n">enum</span><span class="o">.</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The named Puppeteer callback varieties.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">BARITONE</span> <span class="o">=</span> <span class="s2">&quot;BARITONE&quot;</span>
+    <span class="n">PLAYER_POSITION</span> <span class="o">=</span> <span class="s2">&quot;PLAYER_POSITION&quot;</span>
+    <span class="n">PLAYER_YAW</span> <span class="o">=</span> <span class="s2">&quot;PLAYER_YAW&quot;</span>
+    <span class="n">PLAYER_PITCH</span> <span class="o">=</span> <span class="s2">&quot;PLAYER_PITCH&quot;</span>
+    <span class="n">PLAYER_DAMAGE</span> <span class="o">=</span> <span class="s2">&quot;PLAYER_DAMAGE&quot;</span>
+    <span class="n">PLAYER_DEATH</span> <span class="o">=</span> <span class="s2">&quot;PLAYER_DEATH&quot;</span>
+    <span class="n">PLAYER_INVENTORY</span> <span class="o">=</span> <span class="s2">&quot;PLAYER_INVENTORY&quot;</span>
+    <span class="n">CHAT</span> <span class="o">=</span> <span class="s2">&quot;CHAT&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="InputButton">
+<a class="viewcode-back" href="../../puppet.html#puppet.constants.InputButton">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">InputButton</span><span class="p">(</span><span class="n">enum</span><span class="o">.</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Input types that you can override and force the state of.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">FORWARDS</span> <span class="o">=</span> <span class="s2">&quot;forwards&quot;</span>
+    <span class="n">BACKWARDS</span> <span class="o">=</span> <span class="s2">&quot;backwards&quot;</span>
+    <span class="n">LEFT</span> <span class="o">=</span> <span class="s2">&quot;left&quot;</span>
+    <span class="n">RIGHT</span> <span class="o">=</span> <span class="s2">&quot;right&quot;</span>
+    <span class="n">JUMP</span> <span class="o">=</span> <span class="s2">&quot;jump&quot;</span>
+    <span class="n">SNEAK</span> <span class="o">=</span> <span class="s2">&quot;sneak&quot;</span>
+    <span class="n">SPRINT</span> <span class="o">=</span> <span class="s2">&quot;sprint&quot;</span>
+
+    <span class="n">ATTACK</span> <span class="o">=</span> <span class="s2">&quot;attack&quot;</span>
+    <span class="n">USE</span> <span class="o">=</span> <span class="s2">&quot;use&quot;</span></div>
+
+
+
+<span class="n">string_callback_dict</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">v</span><span class="o">.</span><span class="n">value</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">CallbackType</span><span class="o">.</span><span class="n">__members__</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+<span class="p">}</span>
+
+
+
+<div class="viewcode-block" id="RoMethod">
+<a class="viewcode-back" href="../../puppet.html#puppet.constants.RoMethod">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RoMethod</span><span class="p">(</span><span class="n">enum</span><span class="o">.</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rotation interpolation methods used in algorithmic rotation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">LINEAR</span> <span class="o">=</span> <span class="s2">&quot;linear&quot;</span>  <span class="c1"># Linear interpolation</span>
+    <span class="n">SINE</span> <span class="o">=</span> <span class="s2">&quot;sine&quot;</span>  <span class="c1"># Ease-in using sine curve</span>
+    <span class="n">QUADRATIC_IN</span> <span class="o">=</span> <span class="s2">&quot;quadraticIn&quot;</span>  <span class="c1"># Ease-in (accelerating from zero velocity, t^2)</span>
+    <span class="n">CUBIC_IN</span> <span class="o">=</span> <span class="s2">&quot;cubicIn&quot;</span>  <span class="c1"># Ease-in (t^3)</span>
+    <span class="n">QUARTIC_IN</span> <span class="o">=</span> <span class="s2">&quot;quarticIn&quot;</span>  <span class="c1"># Ease-in (t^4)</span>
+    <span class="n">QUINTIC_IN</span> <span class="o">=</span> <span class="s2">&quot;quinticIn&quot;</span>  <span class="c1"># Ease-in (t^5)</span>
+    <span class="n">SEXTIC_IN</span> <span class="o">=</span> <span class="s2">&quot;sexticIn&quot;</span>  <span class="c1"># Ease-in (t^6)</span>
+    <span class="n">QUADRATIC_OUT</span> <span class="o">=</span> <span class="s2">&quot;quadraticOut&quot;</span>  <span class="c1"># Ease-out (decelerating to zero velocity, 1-(1-t)^2)</span>
+    <span class="n">CUBIC_OUT</span> <span class="o">=</span> <span class="s2">&quot;cubicOut&quot;</span>  <span class="c1"># Ease-out (1-(1-t)^3)</span>
+    <span class="n">QUARTIC_OUT</span> <span class="o">=</span> <span class="s2">&quot;quarticOut&quot;</span>  <span class="c1"># Ease-out (1-(1-t)^4)</span>
+    <span class="n">QUINTIC_OUT</span> <span class="o">=</span> <span class="s2">&quot;quinticOut&quot;</span>  <span class="c1"># Ease-out (1-(1-t)^5)</span>
+    <span class="n">SINE_IN_OUT</span> <span class="o">=</span> <span class="s2">&quot;sineInOut&quot;</span>  <span class="c1"># Ease-in-out using sine curve</span>
+    <span class="n">QUADRATIC_IN_OUT</span> <span class="o">=</span> <span class="s2">&quot;quadraticInOut&quot;</span>  <span class="c1"># Ease-in-out (smooth start and end, quadratic)</span>
+    <span class="n">CUBIC_IN_OUT</span> <span class="o">=</span> <span class="s2">&quot;cubicInOut&quot;</span>  <span class="c1"># Ease-in-out (cubic)</span>
+    <span class="n">QUARTIC_IN_OUT</span> <span class="o">=</span> <span class="s2">&quot;quarticInOut&quot;</span>  <span class="c1"># Ease-in-out (quartic)</span>
+    <span class="n">QUINTIC_IN_OUT</span> <span class="o">=</span> <span class="s2">&quot;quinticInOut&quot;</span>  <span class="c1"># Ease-in-out (quintic)</span>
+    <span class="n">EXPONENTIAL_IN</span> <span class="o">=</span> <span class="s2">&quot;exponentialIn&quot;</span>  <span class="c1"># Exponential ease-in</span>
+    <span class="n">EXPONENTIAL_OUT</span> <span class="o">=</span> <span class="s2">&quot;exponentialOut&quot;</span>  <span class="c1"># Exponential ease-out</span>
+    <span class="n">EXPONENTIAL_IN_OUT</span> <span class="o">=</span> <span class="s2">&quot;exponentialInOut&quot;</span>  <span class="c1"># Exponential ease-in-out</span>
+    <span class="n">ELASTIC_OUT</span> <span class="o">=</span> <span class="s2">&quot;elasticOut&quot;</span>  <span class="c1"># Elastic ease-out (spring-like, bouncy)</span></div>
+
+
+
+<div class="viewcode-block" id="PuppeteerErrorType">
+<a class="viewcode-back" href="../../puppet.html#puppet.constants.PuppeteerErrorType">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PuppeteerErrorType</span><span class="p">(</span><span class="n">enum</span><span class="o">.</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Puppeteer error types.</span>
+
+<span class="sd">    Note: These can occur somewhat randomly.</span>
+<span class="sd">          Assume all functions **CAN AND WILL**</span>
+<span class="sd">          throw exceptions at **any moment**.</span>
+<span class="sd">          In addition, can do so in the background.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">UNKNOWN_ERROR</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">SERVER_KILLED</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+
+    <span class="n">FORMAT_ERROR</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">EXPECTED_ARGUMENT_ERROR</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">UNEXPECTED_ARGUMENT_ERROR</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+
+    <span class="n">CONFIG_FILE_ERROR</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">UNKNOWN_MOD</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">CONNECTION_ERROR</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">WORLD_JOIN_ERROR</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">MOD_REQUIREMENT_ERROR</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">INTERNEL_EXCEPTION</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">BARITONE_ERROR</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span></div>
+
+
+
+<span class="c1"># Forcefully bring them into global scope</span>
+<span class="c1"># Effectively:</span>
+<span class="c1"># from PuppeteerErrorType import *</span>
+<span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">PuppeteerErrorType</span><span class="o">.</span><span class="n">__members__</span><span class="p">)</span>
+
+<span class="n">error_str_to_enum</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;expected argument&quot;</span><span class="p">:</span> <span class="n">EXPECTED_ARGUMENT_ERROR</span><span class="p">,</span>
+    <span class="s2">&quot;unexpected argument&quot;</span><span class="p">:</span> <span class="n">UNEXPECTED_ARGUMENT_ERROR</span><span class="p">,</span>
+    <span class="s2">&quot;config file missing&quot;</span><span class="p">:</span> <span class="n">CONFIG_FILE_ERROR</span><span class="p">,</span>
+    <span class="s2">&quot;unknown mod&quot;</span><span class="p">:</span> <span class="n">UNKNOWN_MOD</span><span class="p">,</span>
+    <span class="s2">&quot;cannot connect&quot;</span><span class="p">:</span> <span class="n">CONNECTION_ERROR</span><span class="p">,</span>
+    <span class="s2">&quot;cannot join world&quot;</span><span class="p">:</span> <span class="n">WORLD_JOIN_ERROR</span><span class="p">,</span>
+    <span class="s2">&quot;format&quot;</span><span class="p">:</span> <span class="n">FORMAT_ERROR</span><span class="p">,</span>
+    <span class="s2">&quot;mod requirement&quot;</span><span class="p">:</span> <span class="n">MOD_REQUIREMENT_ERROR</span><span class="p">,</span>
+    <span class="s2">&quot;exception&quot;</span><span class="p">:</span> <span class="n">INTERNEL_EXCEPTION</span><span class="p">,</span>
+    <span class="s2">&quot;baritone calculation&quot;</span><span class="p">:</span> <span class="n">BARITONE_ERROR</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="str2error">
+<a class="viewcode-back" href="../../puppet.html#puppet.constants.str2error">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">str2error</span><span class="p">(</span><span class="n">error</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PuppeteerErrorType</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">error_str_to_enum</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="n">UNKNOWN_ERROR</span><span class="p">)</span></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">McPuppeteer</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../puppet.html">puppet package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2025, PsychedelicPalimpsest.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.1.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

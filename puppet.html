@@ -57,295 +57,6 @@ and addr is the sender’s address.</p>
 </dl>
 </dd></dl>
 
-<dl class="py class">
-<dt class="sig sig-object py" id="puppet.connection.CallbackType">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">puppet.connection.</span></span><span class="sig-name descname"><span class="pre">CallbackType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/connection.html#CallbackType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.connection.CallbackType" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
-<p>The named Puppeteer callback varieties.</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.CallbackType.BARITONE">
-<span class="sig-name descname"><span class="pre">BARITONE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'BARITONE'</span></em><a class="headerlink" href="#puppet.connection.CallbackType.BARITONE" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.CallbackType.PLAYER_POSITION">
-<span class="sig-name descname"><span class="pre">PLAYER_POSITION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'PLAYER_POSITION'</span></em><a class="headerlink" href="#puppet.connection.CallbackType.PLAYER_POSITION" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.CallbackType.PLAYER_YAW">
-<span class="sig-name descname"><span class="pre">PLAYER_YAW</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'PLAYER_YAW'</span></em><a class="headerlink" href="#puppet.connection.CallbackType.PLAYER_YAW" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.CallbackType.PLAYER_PITCH">
-<span class="sig-name descname"><span class="pre">PLAYER_PITCH</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'PLAYER_PITCH'</span></em><a class="headerlink" href="#puppet.connection.CallbackType.PLAYER_PITCH" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.CallbackType.PLAYER_DAMAGE">
-<span class="sig-name descname"><span class="pre">PLAYER_DAMAGE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'PLAYER_DAMAGE'</span></em><a class="headerlink" href="#puppet.connection.CallbackType.PLAYER_DAMAGE" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.CallbackType.PLAYER_DEATH">
-<span class="sig-name descname"><span class="pre">PLAYER_DEATH</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'PLAYER_DEATH'</span></em><a class="headerlink" href="#puppet.connection.CallbackType.PLAYER_DEATH" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.CallbackType.PLAYER_INVENTORY">
-<span class="sig-name descname"><span class="pre">PLAYER_INVENTORY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'PLAYER_INVENTORY'</span></em><a class="headerlink" href="#puppet.connection.CallbackType.PLAYER_INVENTORY" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.CallbackType.CHAT">
-<span class="sig-name descname"><span class="pre">CHAT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'CHAT'</span></em><a class="headerlink" href="#puppet.connection.CallbackType.CHAT" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="puppet.connection.InputButton">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">puppet.connection.</span></span><span class="sig-name descname"><span class="pre">InputButton</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/connection.html#InputButton"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.connection.InputButton" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
-<p>Input types that you can override and force the state of.</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.InputButton.FORWARDS">
-<span class="sig-name descname"><span class="pre">FORWARDS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'forwards'</span></em><a class="headerlink" href="#puppet.connection.InputButton.FORWARDS" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.InputButton.BACKWARDS">
-<span class="sig-name descname"><span class="pre">BACKWARDS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'backwards'</span></em><a class="headerlink" href="#puppet.connection.InputButton.BACKWARDS" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.InputButton.LEFT">
-<span class="sig-name descname"><span class="pre">LEFT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'left'</span></em><a class="headerlink" href="#puppet.connection.InputButton.LEFT" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.InputButton.RIGHT">
-<span class="sig-name descname"><span class="pre">RIGHT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'right'</span></em><a class="headerlink" href="#puppet.connection.InputButton.RIGHT" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.InputButton.JUMP">
-<span class="sig-name descname"><span class="pre">JUMP</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'jump'</span></em><a class="headerlink" href="#puppet.connection.InputButton.JUMP" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.InputButton.SNEAK">
-<span class="sig-name descname"><span class="pre">SNEAK</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'sneak'</span></em><a class="headerlink" href="#puppet.connection.InputButton.SNEAK" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.InputButton.SPRINT">
-<span class="sig-name descname"><span class="pre">SPRINT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'sprint'</span></em><a class="headerlink" href="#puppet.connection.InputButton.SPRINT" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.InputButton.ATTACK">
-<span class="sig-name descname"><span class="pre">ATTACK</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'attack'</span></em><a class="headerlink" href="#puppet.connection.InputButton.ATTACK" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.InputButton.USE">
-<span class="sig-name descname"><span class="pre">USE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'use'</span></em><a class="headerlink" href="#puppet.connection.InputButton.USE" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="puppet.connection.RoMethod">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">puppet.connection.</span></span><span class="sig-name descname"><span class="pre">RoMethod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/connection.html#RoMethod"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.connection.RoMethod" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
-<p>Rotation interpolation methods used in algorithmic rotation</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.RoMethod.LINEAR">
-<span class="sig-name descname"><span class="pre">LINEAR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'linear'</span></em><a class="headerlink" href="#puppet.connection.RoMethod.LINEAR" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.RoMethod.SINE">
-<span class="sig-name descname"><span class="pre">SINE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'sine'</span></em><a class="headerlink" href="#puppet.connection.RoMethod.SINE" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.RoMethod.QUADRATIC_IN">
-<span class="sig-name descname"><span class="pre">QUADRATIC_IN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'quadraticIn'</span></em><a class="headerlink" href="#puppet.connection.RoMethod.QUADRATIC_IN" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.RoMethod.CUBIC_IN">
-<span class="sig-name descname"><span class="pre">CUBIC_IN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'cubicIn'</span></em><a class="headerlink" href="#puppet.connection.RoMethod.CUBIC_IN" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.RoMethod.QUARTIC_IN">
-<span class="sig-name descname"><span class="pre">QUARTIC_IN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'quarticIn'</span></em><a class="headerlink" href="#puppet.connection.RoMethod.QUARTIC_IN" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.RoMethod.QUINTIC_IN">
-<span class="sig-name descname"><span class="pre">QUINTIC_IN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'quinticIn'</span></em><a class="headerlink" href="#puppet.connection.RoMethod.QUINTIC_IN" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.RoMethod.SEXTIC_IN">
-<span class="sig-name descname"><span class="pre">SEXTIC_IN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'sexticIn'</span></em><a class="headerlink" href="#puppet.connection.RoMethod.SEXTIC_IN" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.RoMethod.QUADRATIC_OUT">
-<span class="sig-name descname"><span class="pre">QUADRATIC_OUT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'quadraticOut'</span></em><a class="headerlink" href="#puppet.connection.RoMethod.QUADRATIC_OUT" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.RoMethod.CUBIC_OUT">
-<span class="sig-name descname"><span class="pre">CUBIC_OUT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'cubicOut'</span></em><a class="headerlink" href="#puppet.connection.RoMethod.CUBIC_OUT" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.RoMethod.QUARTIC_OUT">
-<span class="sig-name descname"><span class="pre">QUARTIC_OUT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'quarticOut'</span></em><a class="headerlink" href="#puppet.connection.RoMethod.QUARTIC_OUT" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.RoMethod.QUINTIC_OUT">
-<span class="sig-name descname"><span class="pre">QUINTIC_OUT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'quinticOut'</span></em><a class="headerlink" href="#puppet.connection.RoMethod.QUINTIC_OUT" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.RoMethod.SINE_IN_OUT">
-<span class="sig-name descname"><span class="pre">SINE_IN_OUT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'sineInOut'</span></em><a class="headerlink" href="#puppet.connection.RoMethod.SINE_IN_OUT" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.RoMethod.QUADRATIC_IN_OUT">
-<span class="sig-name descname"><span class="pre">QUADRATIC_IN_OUT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'quadraticInOut'</span></em><a class="headerlink" href="#puppet.connection.RoMethod.QUADRATIC_IN_OUT" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.RoMethod.CUBIC_IN_OUT">
-<span class="sig-name descname"><span class="pre">CUBIC_IN_OUT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'cubicInOut'</span></em><a class="headerlink" href="#puppet.connection.RoMethod.CUBIC_IN_OUT" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.RoMethod.QUARTIC_IN_OUT">
-<span class="sig-name descname"><span class="pre">QUARTIC_IN_OUT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'quarticInOut'</span></em><a class="headerlink" href="#puppet.connection.RoMethod.QUARTIC_IN_OUT" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.RoMethod.QUINTIC_IN_OUT">
-<span class="sig-name descname"><span class="pre">QUINTIC_IN_OUT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'quinticInOut'</span></em><a class="headerlink" href="#puppet.connection.RoMethod.QUINTIC_IN_OUT" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.RoMethod.EXPONENTIAL_IN">
-<span class="sig-name descname"><span class="pre">EXPONENTIAL_IN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'exponentialIn'</span></em><a class="headerlink" href="#puppet.connection.RoMethod.EXPONENTIAL_IN" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.RoMethod.EXPONENTIAL_OUT">
-<span class="sig-name descname"><span class="pre">EXPONENTIAL_OUT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'exponentialOut'</span></em><a class="headerlink" href="#puppet.connection.RoMethod.EXPONENTIAL_OUT" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.RoMethod.EXPONENTIAL_IN_OUT">
-<span class="sig-name descname"><span class="pre">EXPONENTIAL_IN_OUT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'exponentialInOut'</span></em><a class="headerlink" href="#puppet.connection.RoMethod.EXPONENTIAL_IN_OUT" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.RoMethod.ELASTIC_OUT">
-<span class="sig-name descname"><span class="pre">ELASTIC_OUT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'elasticOut'</span></em><a class="headerlink" href="#puppet.connection.RoMethod.ELASTIC_OUT" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="puppet.connection.PuppeteerErrorType">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">puppet.connection.</span></span><span class="sig-name descname"><span class="pre">PuppeteerErrorType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/connection.html#PuppeteerErrorType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.connection.PuppeteerErrorType" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
-<p>Puppeteer error types.</p>
-<dl class="simple">
-<dt>Note: These can occur somewhat randomly.</dt><dd><p>Assume all functions <strong>CAN AND WILL</strong>
-throw exceptions at <strong>any moment</strong>.
-In addition, can do so in the background.</p>
-</dd>
-</dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.PuppeteerErrorType.UNKNOWN_ERROR">
-<span class="sig-name descname"><span class="pre">UNKNOWN_ERROR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#puppet.connection.PuppeteerErrorType.UNKNOWN_ERROR" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.PuppeteerErrorType.SERVER_KILLED">
-<span class="sig-name descname"><span class="pre">SERVER_KILLED</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#puppet.connection.PuppeteerErrorType.SERVER_KILLED" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.PuppeteerErrorType.FORMAT_ERROR">
-<span class="sig-name descname"><span class="pre">FORMAT_ERROR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#puppet.connection.PuppeteerErrorType.FORMAT_ERROR" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.PuppeteerErrorType.EXPECTED_ARGUMENT_ERROR">
-<span class="sig-name descname"><span class="pre">EXPECTED_ARGUMENT_ERROR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#puppet.connection.PuppeteerErrorType.EXPECTED_ARGUMENT_ERROR" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.PuppeteerErrorType.UNEXPECTED_ARGUMENT_ERROR">
-<span class="sig-name descname"><span class="pre">UNEXPECTED_ARGUMENT_ERROR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></em><a class="headerlink" href="#puppet.connection.PuppeteerErrorType.UNEXPECTED_ARGUMENT_ERROR" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.PuppeteerErrorType.CONFIG_FILE_ERROR">
-<span class="sig-name descname"><span class="pre">CONFIG_FILE_ERROR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6</span></em><a class="headerlink" href="#puppet.connection.PuppeteerErrorType.CONFIG_FILE_ERROR" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.PuppeteerErrorType.UNKNOWN_MOD">
-<span class="sig-name descname"><span class="pre">UNKNOWN_MOD</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">7</span></em><a class="headerlink" href="#puppet.connection.PuppeteerErrorType.UNKNOWN_MOD" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.PuppeteerErrorType.CONNECTION_ERROR">
-<span class="sig-name descname"><span class="pre">CONNECTION_ERROR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">8</span></em><a class="headerlink" href="#puppet.connection.PuppeteerErrorType.CONNECTION_ERROR" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.PuppeteerErrorType.WORLD_JOIN_ERROR">
-<span class="sig-name descname"><span class="pre">WORLD_JOIN_ERROR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">9</span></em><a class="headerlink" href="#puppet.connection.PuppeteerErrorType.WORLD_JOIN_ERROR" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.PuppeteerErrorType.MOD_REQUIREMENT_ERROR">
-<span class="sig-name descname"><span class="pre">MOD_REQUIREMENT_ERROR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">10</span></em><a class="headerlink" href="#puppet.connection.PuppeteerErrorType.MOD_REQUIREMENT_ERROR" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.PuppeteerErrorType.INTERNEL_EXCEPTION">
-<span class="sig-name descname"><span class="pre">INTERNEL_EXCEPTION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">11</span></em><a class="headerlink" href="#puppet.connection.PuppeteerErrorType.INTERNEL_EXCEPTION" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="puppet.connection.PuppeteerErrorType.BARITONE_ERROR">
-<span class="sig-name descname"><span class="pre">BARITONE_ERROR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">12</span></em><a class="headerlink" href="#puppet.connection.PuppeteerErrorType.BARITONE_ERROR" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="puppet.connection.str2error">
-<span class="sig-prename descclassname"><span class="pre">puppet.connection.</span></span><span class="sig-name descname"><span class="pre">str2error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/connection.html#str2error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.connection.str2error" title="Link to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.connection.PuppeteerErrorType" title="puppet.connection.PuppeteerErrorType"><code class="xref py py-class docutils literal notranslate"><span class="pre">PuppeteerErrorType</span></code></a></span></p>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py exception">
 <dt class="sig sig-object py" id="puppet.connection.PuppeteerError">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">puppet.connection.</span></span><span class="sig-name descname"><span class="pre">PuppeteerError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">etype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">PuppeteerErrorType.UNKNOWN_ERROR</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/connection.html#PuppeteerError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.connection.PuppeteerError" title="Link to this definition">¶</a></dt>
@@ -354,7 +65,7 @@ In addition, can do so in the background.</p>
 Mostly server side or connection issues.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="puppet.connection.PuppeteerError.type">
-<span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#puppet.connection.PuppeteerErrorType" title="puppet.connection.PuppeteerErrorType"><code class="xref py py-class docutils literal notranslate"><span class="pre">PuppeteerErrorType</span></code></a></em><a class="headerlink" href="#puppet.connection.PuppeteerError.type" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#puppet.constants.PuppeteerErrorType" title="puppet.constants.PuppeteerErrorType"><code class="xref py py-class docutils literal notranslate"><span class="pre">PuppeteerErrorType</span></code></a></em><a class="headerlink" href="#puppet.connection.PuppeteerError.type" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -511,7 +222,7 @@ to the Minecraft client</p>
 <dd><p>Tells you what callbacks are currently enabled in the client. Use <code class="docutils literal notranslate"><span class="pre">set_callbacks()</span></code> to enable them.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<a class="reference internal" href="#puppet.connection.CallbackType" title="puppet.connection.CallbackType"><code class="xref py py-class docutils literal notranslate"><span class="pre">CallbackType</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<a class="reference internal" href="#puppet.constants.CallbackType" title="puppet.constants.CallbackType"><code class="xref py py-class docutils literal notranslate"><span class="pre">CallbackType</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -522,7 +233,7 @@ to the Minecraft client</p>
 <dd><p>Enable more callbacks being sent to the player.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>callbacks</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<a class="reference internal" href="#puppet.connection.CallbackType" title="puppet.connection.CallbackType"><code class="xref py py-class docutils literal notranslate"><span class="pre">CallbackType</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]</span>) – A dictionary (identical to the return of <code class="docutils literal notranslate"><span class="pre">get_callback_states()</span></code>) of what callbacks you want to enable.</p>
+<dd class="field-odd"><p><strong>callbacks</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<a class="reference internal" href="#puppet.constants.CallbackType" title="puppet.constants.CallbackType"><code class="xref py py-class docutils literal notranslate"><span class="pre">CallbackType</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]</span>) – A dictionary (identical to the return of <code class="docutils literal notranslate"><span class="pre">get_callback_states()</span></code>) of what callbacks you want to enable.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -676,7 +387,7 @@ to the Minecraft client</p>
 it will still be pressed if you do not update its state.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>inputs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<a class="reference internal" href="#puppet.connection.InputButton" title="puppet.connection.InputButton"><code class="xref py py-class docutils literal notranslate"><span class="pre">InputButton</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]]</span>) – List of tuples of (InputButton, bool). Where the bool is the <strong>forced state</strong> of the input. Meaning
+<dd class="field-odd"><p><strong>inputs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<a class="reference internal" href="#puppet.constants.InputButton" title="puppet.constants.InputButton"><code class="xref py py-class docutils literal notranslate"><span class="pre">InputButton</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]]</span>) – List of tuples of (InputButton, bool). Where the bool is the <strong>forced state</strong> of the input. Meaning
 setting to False indicates the <strong>user cannot press</strong> that key.</p>
 </dd>
 </dl>
@@ -689,7 +400,7 @@ setting to False indicates the <strong>user cannot press</strong> that key.</p>
 A complete list of inputs will result in identical behavior to <code class="docutils literal notranslate"><span class="pre">clear_inputs()</span></code></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>inputs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="#puppet.connection.InputButton" title="puppet.connection.InputButton"><code class="xref py py-class docutils literal notranslate"><span class="pre">InputButton</span></code></a>]</span>) – A list if inputs, each input will have is state no longer controlled.</p>
+<dd class="field-odd"><p><strong>inputs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="#puppet.constants.InputButton" title="puppet.constants.InputButton"><code class="xref py py-class docutils literal notranslate"><span class="pre">InputButton</span></code></a>]</span>) – A list if inputs, each input will have is state no longer controlled.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -705,7 +416,7 @@ A complete list of inputs will result in identical behavior to <code class="docu
 <li><p><strong>yaw</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Yaw angle in degrees.</p></li>
 <li><p><strong>speed</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Speed of rotation. This can be generally interpreted as <cite>degrees per tick</cite>, but with certain rotation methods
 this will not be true.</p></li>
-<li><p><strong>method</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.connection.RoMethod" title="puppet.connection.RoMethod"><code class="xref py py-class docutils literal notranslate"><span class="pre">RoMethod</span></code></a></span>) – What interpolation method is used. This will not change the time required to rotate, but instead how it looks.</p></li>
+<li><p><strong>method</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.constants.RoMethod" title="puppet.constants.RoMethod"><code class="xref py py-class docutils literal notranslate"><span class="pre">RoMethod</span></code></a></span>) – What interpolation method is used. This will not change the time required to rotate, but instead how it looks.</p></li>
 </ul>
 </dd>
 </dl>
@@ -720,7 +431,6 @@ this will not be true.</p></li>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>pitch</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Pitch angle in degrees.</p></li>
 <li><p><strong>yaw</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Yaw angle in degrees.</p></li>
-<li><p><strong>speed</strong> – Speed of rotation. Thi</p></li>
 </ul>
 </dd>
 </dl>
@@ -784,8 +494,312 @@ large values.</p>
 </dd></dl>
 
 </section>
-<section id="module-puppet">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-puppet" title="Link to this heading">¶</a></h2>
+<section id="puppet-constants-module">
+<h2>puppet.constants module<a class="headerlink" href="#puppet-constants-module" title="Link to this heading">¶</a></h2>
+<p id="module-puppet.constants">Core constants and enums for the Puppeteer communication system.</p>
+<p>This has a few network related constants. It also has enums used
+for input, callbacks, rotation, and more.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="puppet.constants.BROADCAST_PORT">
+<span class="sig-prename descclassname"><span class="pre">puppet.constants.</span></span><span class="sig-name descname"><span class="pre">BROADCAST_PORT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">43842</span></em><a class="headerlink" href="#puppet.constants.BROADCAST_PORT" title="Link to this definition">¶</a></dt>
+<dd><p>Port used for UDP broadcast discovery</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="puppet.constants.BROADCAST_MAGIC_NUMBER">
+<span class="sig-prename descclassname"><span class="pre">puppet.constants.</span></span><span class="sig-name descname"><span class="pre">BROADCAST_MAGIC_NUMBER</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">b'PUPPETEER'</span></em><a class="headerlink" href="#puppet.constants.BROADCAST_MAGIC_NUMBER" title="Link to this definition">¶</a></dt>
+<dd><p>Magic bytes used to identify Puppeteer broadcast packets</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="puppet.constants.CallbackType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">puppet.constants.</span></span><span class="sig-name descname"><span class="pre">CallbackType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/constants.html#CallbackType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.constants.CallbackType" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>The named Puppeteer callback varieties.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.CallbackType.BARITONE">
+<span class="sig-name descname"><span class="pre">BARITONE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'BARITONE'</span></em><a class="headerlink" href="#puppet.constants.CallbackType.BARITONE" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.CallbackType.PLAYER_POSITION">
+<span class="sig-name descname"><span class="pre">PLAYER_POSITION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'PLAYER_POSITION'</span></em><a class="headerlink" href="#puppet.constants.CallbackType.PLAYER_POSITION" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.CallbackType.PLAYER_YAW">
+<span class="sig-name descname"><span class="pre">PLAYER_YAW</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'PLAYER_YAW'</span></em><a class="headerlink" href="#puppet.constants.CallbackType.PLAYER_YAW" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.CallbackType.PLAYER_PITCH">
+<span class="sig-name descname"><span class="pre">PLAYER_PITCH</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'PLAYER_PITCH'</span></em><a class="headerlink" href="#puppet.constants.CallbackType.PLAYER_PITCH" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.CallbackType.PLAYER_DAMAGE">
+<span class="sig-name descname"><span class="pre">PLAYER_DAMAGE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'PLAYER_DAMAGE'</span></em><a class="headerlink" href="#puppet.constants.CallbackType.PLAYER_DAMAGE" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.CallbackType.PLAYER_DEATH">
+<span class="sig-name descname"><span class="pre">PLAYER_DEATH</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'PLAYER_DEATH'</span></em><a class="headerlink" href="#puppet.constants.CallbackType.PLAYER_DEATH" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.CallbackType.PLAYER_INVENTORY">
+<span class="sig-name descname"><span class="pre">PLAYER_INVENTORY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'PLAYER_INVENTORY'</span></em><a class="headerlink" href="#puppet.constants.CallbackType.PLAYER_INVENTORY" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.CallbackType.CHAT">
+<span class="sig-name descname"><span class="pre">CHAT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'CHAT'</span></em><a class="headerlink" href="#puppet.constants.CallbackType.CHAT" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="puppet.constants.InputButton">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">puppet.constants.</span></span><span class="sig-name descname"><span class="pre">InputButton</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/constants.html#InputButton"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.constants.InputButton" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>Input types that you can override and force the state of.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.InputButton.FORWARDS">
+<span class="sig-name descname"><span class="pre">FORWARDS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'forwards'</span></em><a class="headerlink" href="#puppet.constants.InputButton.FORWARDS" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.InputButton.BACKWARDS">
+<span class="sig-name descname"><span class="pre">BACKWARDS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'backwards'</span></em><a class="headerlink" href="#puppet.constants.InputButton.BACKWARDS" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.InputButton.LEFT">
+<span class="sig-name descname"><span class="pre">LEFT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'left'</span></em><a class="headerlink" href="#puppet.constants.InputButton.LEFT" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.InputButton.RIGHT">
+<span class="sig-name descname"><span class="pre">RIGHT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'right'</span></em><a class="headerlink" href="#puppet.constants.InputButton.RIGHT" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.InputButton.JUMP">
+<span class="sig-name descname"><span class="pre">JUMP</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'jump'</span></em><a class="headerlink" href="#puppet.constants.InputButton.JUMP" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.InputButton.SNEAK">
+<span class="sig-name descname"><span class="pre">SNEAK</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'sneak'</span></em><a class="headerlink" href="#puppet.constants.InputButton.SNEAK" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.InputButton.SPRINT">
+<span class="sig-name descname"><span class="pre">SPRINT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'sprint'</span></em><a class="headerlink" href="#puppet.constants.InputButton.SPRINT" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.InputButton.ATTACK">
+<span class="sig-name descname"><span class="pre">ATTACK</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'attack'</span></em><a class="headerlink" href="#puppet.constants.InputButton.ATTACK" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.InputButton.USE">
+<span class="sig-name descname"><span class="pre">USE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'use'</span></em><a class="headerlink" href="#puppet.constants.InputButton.USE" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="puppet.constants.RoMethod">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">puppet.constants.</span></span><span class="sig-name descname"><span class="pre">RoMethod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/constants.html#RoMethod"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.constants.RoMethod" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>Rotation interpolation methods used in algorithmic rotation</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.RoMethod.LINEAR">
+<span class="sig-name descname"><span class="pre">LINEAR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'linear'</span></em><a class="headerlink" href="#puppet.constants.RoMethod.LINEAR" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.RoMethod.SINE">
+<span class="sig-name descname"><span class="pre">SINE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'sine'</span></em><a class="headerlink" href="#puppet.constants.RoMethod.SINE" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.RoMethod.QUADRATIC_IN">
+<span class="sig-name descname"><span class="pre">QUADRATIC_IN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'quadraticIn'</span></em><a class="headerlink" href="#puppet.constants.RoMethod.QUADRATIC_IN" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.RoMethod.CUBIC_IN">
+<span class="sig-name descname"><span class="pre">CUBIC_IN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'cubicIn'</span></em><a class="headerlink" href="#puppet.constants.RoMethod.CUBIC_IN" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.RoMethod.QUARTIC_IN">
+<span class="sig-name descname"><span class="pre">QUARTIC_IN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'quarticIn'</span></em><a class="headerlink" href="#puppet.constants.RoMethod.QUARTIC_IN" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.RoMethod.QUINTIC_IN">
+<span class="sig-name descname"><span class="pre">QUINTIC_IN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'quinticIn'</span></em><a class="headerlink" href="#puppet.constants.RoMethod.QUINTIC_IN" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.RoMethod.SEXTIC_IN">
+<span class="sig-name descname"><span class="pre">SEXTIC_IN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'sexticIn'</span></em><a class="headerlink" href="#puppet.constants.RoMethod.SEXTIC_IN" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.RoMethod.QUADRATIC_OUT">
+<span class="sig-name descname"><span class="pre">QUADRATIC_OUT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'quadraticOut'</span></em><a class="headerlink" href="#puppet.constants.RoMethod.QUADRATIC_OUT" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.RoMethod.CUBIC_OUT">
+<span class="sig-name descname"><span class="pre">CUBIC_OUT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'cubicOut'</span></em><a class="headerlink" href="#puppet.constants.RoMethod.CUBIC_OUT" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.RoMethod.QUARTIC_OUT">
+<span class="sig-name descname"><span class="pre">QUARTIC_OUT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'quarticOut'</span></em><a class="headerlink" href="#puppet.constants.RoMethod.QUARTIC_OUT" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.RoMethod.QUINTIC_OUT">
+<span class="sig-name descname"><span class="pre">QUINTIC_OUT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'quinticOut'</span></em><a class="headerlink" href="#puppet.constants.RoMethod.QUINTIC_OUT" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.RoMethod.SINE_IN_OUT">
+<span class="sig-name descname"><span class="pre">SINE_IN_OUT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'sineInOut'</span></em><a class="headerlink" href="#puppet.constants.RoMethod.SINE_IN_OUT" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.RoMethod.QUADRATIC_IN_OUT">
+<span class="sig-name descname"><span class="pre">QUADRATIC_IN_OUT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'quadraticInOut'</span></em><a class="headerlink" href="#puppet.constants.RoMethod.QUADRATIC_IN_OUT" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.RoMethod.CUBIC_IN_OUT">
+<span class="sig-name descname"><span class="pre">CUBIC_IN_OUT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'cubicInOut'</span></em><a class="headerlink" href="#puppet.constants.RoMethod.CUBIC_IN_OUT" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.RoMethod.QUARTIC_IN_OUT">
+<span class="sig-name descname"><span class="pre">QUARTIC_IN_OUT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'quarticInOut'</span></em><a class="headerlink" href="#puppet.constants.RoMethod.QUARTIC_IN_OUT" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.RoMethod.QUINTIC_IN_OUT">
+<span class="sig-name descname"><span class="pre">QUINTIC_IN_OUT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'quinticInOut'</span></em><a class="headerlink" href="#puppet.constants.RoMethod.QUINTIC_IN_OUT" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.RoMethod.EXPONENTIAL_IN">
+<span class="sig-name descname"><span class="pre">EXPONENTIAL_IN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'exponentialIn'</span></em><a class="headerlink" href="#puppet.constants.RoMethod.EXPONENTIAL_IN" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.RoMethod.EXPONENTIAL_OUT">
+<span class="sig-name descname"><span class="pre">EXPONENTIAL_OUT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'exponentialOut'</span></em><a class="headerlink" href="#puppet.constants.RoMethod.EXPONENTIAL_OUT" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.RoMethod.EXPONENTIAL_IN_OUT">
+<span class="sig-name descname"><span class="pre">EXPONENTIAL_IN_OUT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'exponentialInOut'</span></em><a class="headerlink" href="#puppet.constants.RoMethod.EXPONENTIAL_IN_OUT" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.RoMethod.ELASTIC_OUT">
+<span class="sig-name descname"><span class="pre">ELASTIC_OUT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'elasticOut'</span></em><a class="headerlink" href="#puppet.constants.RoMethod.ELASTIC_OUT" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="puppet.constants.PuppeteerErrorType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">puppet.constants.</span></span><span class="sig-name descname"><span class="pre">PuppeteerErrorType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/constants.html#PuppeteerErrorType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.constants.PuppeteerErrorType" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>Puppeteer error types.</p>
+<dl class="simple">
+<dt>Note: These can occur somewhat randomly.</dt><dd><p>Assume all functions <strong>CAN AND WILL</strong>
+throw exceptions at <strong>any moment</strong>.
+In addition, can do so in the background.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.PuppeteerErrorType.UNKNOWN_ERROR">
+<span class="sig-name descname"><span class="pre">UNKNOWN_ERROR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#puppet.constants.PuppeteerErrorType.UNKNOWN_ERROR" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.PuppeteerErrorType.SERVER_KILLED">
+<span class="sig-name descname"><span class="pre">SERVER_KILLED</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#puppet.constants.PuppeteerErrorType.SERVER_KILLED" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.PuppeteerErrorType.FORMAT_ERROR">
+<span class="sig-name descname"><span class="pre">FORMAT_ERROR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#puppet.constants.PuppeteerErrorType.FORMAT_ERROR" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.PuppeteerErrorType.EXPECTED_ARGUMENT_ERROR">
+<span class="sig-name descname"><span class="pre">EXPECTED_ARGUMENT_ERROR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#puppet.constants.PuppeteerErrorType.EXPECTED_ARGUMENT_ERROR" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.PuppeteerErrorType.UNEXPECTED_ARGUMENT_ERROR">
+<span class="sig-name descname"><span class="pre">UNEXPECTED_ARGUMENT_ERROR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></em><a class="headerlink" href="#puppet.constants.PuppeteerErrorType.UNEXPECTED_ARGUMENT_ERROR" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.PuppeteerErrorType.CONFIG_FILE_ERROR">
+<span class="sig-name descname"><span class="pre">CONFIG_FILE_ERROR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6</span></em><a class="headerlink" href="#puppet.constants.PuppeteerErrorType.CONFIG_FILE_ERROR" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.PuppeteerErrorType.UNKNOWN_MOD">
+<span class="sig-name descname"><span class="pre">UNKNOWN_MOD</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">7</span></em><a class="headerlink" href="#puppet.constants.PuppeteerErrorType.UNKNOWN_MOD" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.PuppeteerErrorType.CONNECTION_ERROR">
+<span class="sig-name descname"><span class="pre">CONNECTION_ERROR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">8</span></em><a class="headerlink" href="#puppet.constants.PuppeteerErrorType.CONNECTION_ERROR" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.PuppeteerErrorType.WORLD_JOIN_ERROR">
+<span class="sig-name descname"><span class="pre">WORLD_JOIN_ERROR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">9</span></em><a class="headerlink" href="#puppet.constants.PuppeteerErrorType.WORLD_JOIN_ERROR" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.PuppeteerErrorType.MOD_REQUIREMENT_ERROR">
+<span class="sig-name descname"><span class="pre">MOD_REQUIREMENT_ERROR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">10</span></em><a class="headerlink" href="#puppet.constants.PuppeteerErrorType.MOD_REQUIREMENT_ERROR" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.PuppeteerErrorType.INTERNEL_EXCEPTION">
+<span class="sig-name descname"><span class="pre">INTERNEL_EXCEPTION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">11</span></em><a class="headerlink" href="#puppet.constants.PuppeteerErrorType.INTERNEL_EXCEPTION" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.PuppeteerErrorType.BARITONE_ERROR">
+<span class="sig-name descname"><span class="pre">BARITONE_ERROR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">12</span></em><a class="headerlink" href="#puppet.constants.PuppeteerErrorType.BARITONE_ERROR" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="puppet.constants.str2error">
+<span class="sig-prename descclassname"><span class="pre">puppet.constants.</span></span><span class="sig-name descname"><span class="pre">str2error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/constants.html#str2error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.constants.str2error" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.constants.PuppeteerErrorType" title="puppet.constants.PuppeteerErrorType"><code class="xref py py-class docutils literal notranslate"><span class="pre">PuppeteerErrorType</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 </section>
 
@@ -821,7 +835,7 @@ large values.</p>
 <li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-puppet.connection">puppet.connection module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-puppet.player">puppet.player module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-puppet">Module contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#puppet-constants-module">puppet.constants module</a></li>
 </ul>
 </li>
 </ul>

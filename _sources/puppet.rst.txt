@@ -20,10 +20,11 @@ puppet.player module
    :show-inheritance:
    :undoc-members:
 
-Module contents
----------------
+puppet.constants module
+--------------------
 
-.. automodule:: puppet
+.. automodule:: puppet.constants
    :members:
    :show-inheritance:
    :undoc-members:
+
