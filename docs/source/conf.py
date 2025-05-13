@@ -24,7 +24,12 @@ extensions = [
 templates_path = ['_templates']
 exclude_patterns = []
 
-
+autodoc_default_options = {
+    'inherited-members': False,
+    'undoc-members': False
+}
+autodoc_member_order = 'bysource'
+autodoc_inherit_docstrings = False
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
@@ -36,4 +41,8 @@ html_static_path = ['_static']
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../../'))  # Add your library path
+
+
+
+
 
