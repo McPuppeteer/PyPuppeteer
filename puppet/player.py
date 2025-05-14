@@ -1,6 +1,8 @@
 from .connection import *
+from .world import Chunk
 import asyncio
 
+from io import BytesIO
 
 class Player:
     async def _callback_handler(self, info):
@@ -34,7 +36,7 @@ class Player:
             await connection.start()
             return cls(connection)
 
-        assert False, "Unreachable"
+        assert "Unreachable"
 
     async def __aenter__(self):
         return self
@@ -69,6 +71,22 @@ class Player:
         """
         payload = {k.value: v for k, v in callbacks.items()}
         return await self.handle_packet("set callbacks", {"callbacks": payload})
+
+
+
+    async def get_block(self, x : int, y : int, z : int) -> dict:
+        """ Asks for a specific block somewhere in the world"""
+        pt, data = await self.connection.write_packet("get block", {"x": x, "y": y, "z": z})
+        if pt == ord('j'):
+            return self.handle_json(pt, data)
+
+        return data.unpack()
+
+    async def get_chunk(self, cx : int, cz : int) -> Chunk | dict:
+        pt, data = await self.connection.write_packet("get chunk", {"cx": -1, "cz": -1})
+        if pt == ord('j'):
+            return self.handle_json(pt, data)
+        return Chunk.from_network(BytesIO(data))
 
     # ========================================
     #           World/server functions

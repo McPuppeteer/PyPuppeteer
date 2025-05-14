@@ -98,6 +98,7 @@ class PuppeteerErrorType(enum.Enum):
 
     CONFIG_FILE_ERROR = enum.auto()
     UNKNOWN_MOD = enum.auto()
+    UNKNOWN_CONFIG_VALUE_ERROR = enum.auto()
     CONNECTION_ERROR = enum.auto()
     WORLD_JOIN_ERROR = enum.auto()
     MOD_REQUIREMENT_ERROR = enum.auto()
@@ -120,7 +121,8 @@ error_str_to_enum = {
     "format": FORMAT_ERROR,
     "mod requirement": MOD_REQUIREMENT_ERROR,
     "exception": INTERNEL_EXCEPTION,
-    "baritone calculation": BARITONE_ERROR
+    "baritone calculation": BARITONE_ERROR,
+    "unknown config item": UNKNOWN_CONFIG_VALUE_ERROR
 }
 
 

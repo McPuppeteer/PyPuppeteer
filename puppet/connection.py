@@ -4,11 +4,11 @@ import json
 import uuid
 import socket
 import enum
-
-
-
+import nbtlib
+from traceback import print_stack
 
 from .constants import *
+from io import BytesIO
 
 
 def _setup_broadcast_listener(mcast_grp: str | None = None):
@@ -59,7 +59,6 @@ async def gen_broadcasts():
             continue  # Ignore invalid packets
 
 
-
 class PuppeteerError(Exception):
     """ 
     The generic error class for anything bad that happens around the server.
@@ -67,8 +66,9 @@ class PuppeteerError(Exception):
     """
     type: PuppeteerErrorType
 
-    def __init__(self, msg : str, etype : PuppeteerErrorType = PuppeteerErrorType.UNKNOWN_ERROR):
+    def __init__(self, msg: str, etype: PuppeteerErrorType = PuppeteerErrorType.UNKNOWN_ERROR):
         self.type = etype
+        super(msg)
 
 
 class ClientConnection:
@@ -106,8 +106,6 @@ class ClientConnection:
                 header = await self.reader.readexactly(1 + 4)
 
                 packet_type, length = struct.unpack("!ci", header)
-                if packet_type != b'j':
-                    print("PROTOCOL ERROR")
 
                 buffer = await self.reader.readexactly(length)
 
@@ -138,14 +136,43 @@ class ClientConnection:
                     pro.set_result((packet_type[0], info))
 
                     del self.promises[info["id"]]
-                elif packet_type == b'n':
-                    # TODO: NBT both in server and client
-                    assert False, "Not implemented"
+                elif packet_type == b'n' or packet_type == b'b':
+                    idlen = struct.unpack("!h", await self.reader.readexactly(2))[0]
+                    id = (await self.reader.readexactly(idlen)).decode("utf-8")
+
+                    if not id in self.promises:
+                        if self.handle_error(PuppeteerError("GLOBAL ERROR: Unknown id returned"), FORMAT_ERROR):
+                            return
+                    pro = self.promises[id]
+
+
+                    if packet_type == b'b':
+                        pro.set_result((packet_type[0], buffer))
+                    else:
+                        reader = BytesIO(buffer)
+                        # Minecraft sends the first byte to specify what we are getting
+                        tag_type = reader.read(1)[0]
+
+                        cls = nbtlib.Base.all_tags.get(tag_type)
+
+                        if cls is None:
+                            if self.handle_error(PuppeteerError("GLOBAL ERROR: Nbt tag id: " + hex(tag_type)),
+                                FORMAT_ERROR):
+                                return
+                        
+                        tag = cls.parse(reader)
+                        pro.set_result((packet_type[0], tag))
+                    
+
+                    del self.promises[id]
                 else:
-                    if self.handle_error(PuppeteerError("GLOBAL ERROR: Unknown packet type: " + hex(packet_type[0])), FORMAT_ERROR):
+                    if self.handle_error(PuppeteerError("GLOBAL ERROR: Unknown packet type: " + hex(packet_type[0])),
+                                         FORMAT_ERROR):
                         return
         except Exception as e:
             print(e)
+            print_stack(e)
+            
         finally:
             for _, future in self.promises.items():
                 if not future.done():
@@ -153,7 +180,7 @@ class ClientConnection:
                         PuppeteerError("Killed server", etype=SERVER_KILLED)
                     )
 
-    async def write_packet(self, cmd : str, extra : dict | None =None) -> tuple[int, dict]:
+    async def write_packet(self, cmd: str, extra: dict | None = None) -> tuple[int, dict | bytes | nbtlib.Base]:
         """
         Sends a JSON packet to the server.
 
@@ -208,7 +235,7 @@ class ClientConnection:
 
         return cls(host, broadcast["port"])
 
-    def __init__(self, host : str, port : int):
+    def __init__(self, host: str, port: int):
         """ 
         Create the python object, 
         <b> BUT YOU MUST FIRST CALL start() BEFORE YOU CAN DO ANYTHING </b>
