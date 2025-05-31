@@ -102,7 +102,7 @@ class PuppeteerErrorType(enum.Enum):
     CONNECTION_ERROR = enum.auto()
     WORLD_JOIN_ERROR = enum.auto()
     MOD_REQUIREMENT_ERROR = enum.auto()
-    INTERNEL_EXCEPTION = enum.auto()
+    INTERNAL_EXCEPTION = enum.auto()
     BARITONE_ERROR = enum.auto()
 
 
@@ -112,19 +112,19 @@ class PuppeteerErrorType(enum.Enum):
 globals().update(PuppeteerErrorType.__members__)
 
 error_str_to_enum = {
-    "expected argument": EXPECTED_ARGUMENT_ERROR,
-    "unexpected argument": UNEXPECTED_ARGUMENT_ERROR,
-    "config file missing": CONFIG_FILE_ERROR,
-    "unknown mod": UNKNOWN_MOD,
-    "cannot connect": CONNECTION_ERROR,
-    "cannot join world": WORLD_JOIN_ERROR,
-    "format": FORMAT_ERROR,
-    "mod requirement": MOD_REQUIREMENT_ERROR,
-    "exception": INTERNEL_EXCEPTION,
-    "baritone calculation": BARITONE_ERROR,
-    "unknown config item": UNKNOWN_CONFIG_VALUE_ERROR
+    "expected argument":     PuppeteerErrorType .EXPECTED_ARGUMENT_ERROR,
+    "unexpected argument":   PuppeteerErrorType .UNEXPECTED_ARGUMENT_ERROR,
+    "config file missing":   PuppeteerErrorType .CONFIG_FILE_ERROR,
+    "unknown mod":           PuppeteerErrorType .UNKNOWN_MOD,
+    "cannot connect":        PuppeteerErrorType .CONNECTION_ERROR,
+    "cannot join world":     PuppeteerErrorType .WORLD_JOIN_ERROR,
+    "format":                PuppeteerErrorType .FORMAT_ERROR,
+    "mod requirement":       PuppeteerErrorType .MOD_REQUIREMENT_ERROR,
+    "exception":             PuppeteerErrorType .INTERNAL_EXCEPTION,
+    "baritone calculation":  PuppeteerErrorType .BARITONE_ERROR,
+    "unknown config item":   PuppeteerErrorType .UNKNOWN_CONFIG_VALUE_ERROR
 }
 
 
 def str2error(error: str) -> PuppeteerErrorType:
-    return error_str_to_enum.get(error, UNKNOWN_ERROR)
+    return error_str_to_enum.get(error, PuppeteerErrorType.UNKNOWN_ERROR)
