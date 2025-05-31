@@ -142,10 +142,11 @@
 
     <span class="n">CONFIG_FILE_ERROR</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
     <span class="n">UNKNOWN_MOD</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">UNKNOWN_CONFIG_VALUE_ERROR</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
     <span class="n">CONNECTION_ERROR</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
     <span class="n">WORLD_JOIN_ERROR</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
     <span class="n">MOD_REQUIREMENT_ERROR</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
-    <span class="n">INTERNEL_EXCEPTION</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
+    <span class="n">INTERNAL_EXCEPTION</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span>
     <span class="n">BARITONE_ERROR</span> <span class="o">=</span> <span class="n">enum</span><span class="o">.</span><span class="n">auto</span><span class="p">()</span></div>
 
 
@@ -156,23 +157,24 @@
 <span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">PuppeteerErrorType</span><span class="o">.</span><span class="n">__members__</span><span class="p">)</span>
 
 <span class="n">error_str_to_enum</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;expected argument&quot;</span><span class="p">:</span> <span class="n">EXPECTED_ARGUMENT_ERROR</span><span class="p">,</span>
-    <span class="s2">&quot;unexpected argument&quot;</span><span class="p">:</span> <span class="n">UNEXPECTED_ARGUMENT_ERROR</span><span class="p">,</span>
-    <span class="s2">&quot;config file missing&quot;</span><span class="p">:</span> <span class="n">CONFIG_FILE_ERROR</span><span class="p">,</span>
-    <span class="s2">&quot;unknown mod&quot;</span><span class="p">:</span> <span class="n">UNKNOWN_MOD</span><span class="p">,</span>
-    <span class="s2">&quot;cannot connect&quot;</span><span class="p">:</span> <span class="n">CONNECTION_ERROR</span><span class="p">,</span>
-    <span class="s2">&quot;cannot join world&quot;</span><span class="p">:</span> <span class="n">WORLD_JOIN_ERROR</span><span class="p">,</span>
-    <span class="s2">&quot;format&quot;</span><span class="p">:</span> <span class="n">FORMAT_ERROR</span><span class="p">,</span>
-    <span class="s2">&quot;mod requirement&quot;</span><span class="p">:</span> <span class="n">MOD_REQUIREMENT_ERROR</span><span class="p">,</span>
-    <span class="s2">&quot;exception&quot;</span><span class="p">:</span> <span class="n">INTERNEL_EXCEPTION</span><span class="p">,</span>
-    <span class="s2">&quot;baritone calculation&quot;</span><span class="p">:</span> <span class="n">BARITONE_ERROR</span>
+    <span class="s2">&quot;expected argument&quot;</span><span class="p">:</span>     <span class="n">PuppeteerErrorType</span> <span class="o">.</span><span class="n">EXPECTED_ARGUMENT_ERROR</span><span class="p">,</span>
+    <span class="s2">&quot;unexpected argument&quot;</span><span class="p">:</span>   <span class="n">PuppeteerErrorType</span> <span class="o">.</span><span class="n">UNEXPECTED_ARGUMENT_ERROR</span><span class="p">,</span>
+    <span class="s2">&quot;config file missing&quot;</span><span class="p">:</span>   <span class="n">PuppeteerErrorType</span> <span class="o">.</span><span class="n">CONFIG_FILE_ERROR</span><span class="p">,</span>
+    <span class="s2">&quot;unknown mod&quot;</span><span class="p">:</span>           <span class="n">PuppeteerErrorType</span> <span class="o">.</span><span class="n">UNKNOWN_MOD</span><span class="p">,</span>
+    <span class="s2">&quot;cannot connect&quot;</span><span class="p">:</span>        <span class="n">PuppeteerErrorType</span> <span class="o">.</span><span class="n">CONNECTION_ERROR</span><span class="p">,</span>
+    <span class="s2">&quot;cannot join world&quot;</span><span class="p">:</span>     <span class="n">PuppeteerErrorType</span> <span class="o">.</span><span class="n">WORLD_JOIN_ERROR</span><span class="p">,</span>
+    <span class="s2">&quot;format&quot;</span><span class="p">:</span>                <span class="n">PuppeteerErrorType</span> <span class="o">.</span><span class="n">FORMAT_ERROR</span><span class="p">,</span>
+    <span class="s2">&quot;mod requirement&quot;</span><span class="p">:</span>       <span class="n">PuppeteerErrorType</span> <span class="o">.</span><span class="n">MOD_REQUIREMENT_ERROR</span><span class="p">,</span>
+    <span class="s2">&quot;exception&quot;</span><span class="p">:</span>             <span class="n">PuppeteerErrorType</span> <span class="o">.</span><span class="n">INTERNAL_EXCEPTION</span><span class="p">,</span>
+    <span class="s2">&quot;baritone calculation&quot;</span><span class="p">:</span>  <span class="n">PuppeteerErrorType</span> <span class="o">.</span><span class="n">BARITONE_ERROR</span><span class="p">,</span>
+    <span class="s2">&quot;unknown config item&quot;</span><span class="p">:</span>   <span class="n">PuppeteerErrorType</span> <span class="o">.</span><span class="n">UNKNOWN_CONFIG_VALUE_ERROR</span>
 <span class="p">}</span>
 
 
 <div class="viewcode-block" id="str2error">
 <a class="viewcode-back" href="../../puppet.html#puppet.constants.str2error">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">str2error</span><span class="p">(</span><span class="n">error</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PuppeteerErrorType</span><span class="p">:</span>
-    <span class="k">return</span> <span class="n">error_str_to_enum</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="n">UNKNOWN_ERROR</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">error_str_to_enum</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">error</span><span class="p">,</span> <span class="n">PuppeteerErrorType</span><span class="o">.</span><span class="n">UNKNOWN_ERROR</span><span class="p">)</span></div>
 
 </pre></div>
 

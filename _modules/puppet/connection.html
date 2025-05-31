@@ -37,11 +37,11 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">socket</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">enum</span>
-
-
-
+<span class="kn">import</span><span class="w"> </span><span class="nn">nbtlib</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">traceback</span><span class="w"> </span><span class="kn">import</span> <span class="n">print_stack</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.constants</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">io</span><span class="w"> </span><span class="kn">import</span> <span class="n">BytesIO</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_setup_broadcast_listener</span><span class="p">(</span><span class="n">mcast_grp</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
@@ -95,7 +95,6 @@
 
 
 
-
 <div class="viewcode-block" id="PuppeteerError">
 <a class="viewcode-back" href="../../puppet.html#puppet.connection.PuppeteerError">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">PuppeteerError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
@@ -105,8 +104,9 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nb">type</span><span class="p">:</span> <span class="n">PuppeteerErrorType</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">etype</span> <span class="p">:</span> <span class="n">PuppeteerErrorType</span> <span class="o">=</span> <span class="n">PuppeteerErrorType</span><span class="o">.</span><span class="n">UNKNOWN_ERROR</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="n">etype</span></div>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">etype</span><span class="p">:</span> <span class="n">PuppeteerErrorType</span> <span class="o">=</span> <span class="n">PuppeteerErrorType</span><span class="o">.</span><span class="n">UNKNOWN_ERROR</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="n">etype</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
 
 
 
@@ -150,8 +150,6 @@
                 <span class="n">header</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">readexactly</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">4</span><span class="p">)</span>
 
                 <span class="n">packet_type</span><span class="p">,</span> <span class="n">length</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;!ci&quot;</span><span class="p">,</span> <span class="n">header</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">packet_type</span> <span class="o">!=</span> <span class="sa">b</span><span class="s1">&#39;j&#39;</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;PROTOCOL ERROR&quot;</span><span class="p">)</span>
 
                 <span class="n">buffer</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">readexactly</span><span class="p">(</span><span class="n">length</span><span class="p">)</span>
 
@@ -182,14 +180,43 @@
                     <span class="n">pro</span><span class="o">.</span><span class="n">set_result</span><span class="p">((</span><span class="n">packet_type</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">info</span><span class="p">))</span>
 
                     <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">promises</span><span class="p">[</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]]</span>
-                <span class="k">elif</span> <span class="n">packet_type</span> <span class="o">==</span> <span class="sa">b</span><span class="s1">&#39;n&#39;</span><span class="p">:</span>
-                    <span class="c1"># TODO: NBT both in server and client</span>
-                    <span class="k">assert</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;Not implemented&quot;</span>
+                <span class="k">elif</span> <span class="n">packet_type</span> <span class="o">==</span> <span class="sa">b</span><span class="s1">&#39;n&#39;</span> <span class="ow">or</span> <span class="n">packet_type</span> <span class="o">==</span> <span class="sa">b</span><span class="s1">&#39;b&#39;</span><span class="p">:</span>
+                    <span class="n">idlen</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;!h&quot;</span><span class="p">,</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">readexactly</span><span class="p">(</span><span class="mi">2</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="nb">id</span> <span class="o">=</span> <span class="p">(</span><span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">readexactly</span><span class="p">(</span><span class="n">idlen</span><span class="p">))</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="ow">not</span> <span class="nb">id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">promises</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_error</span><span class="p">(</span><span class="n">PuppeteerError</span><span class="p">(</span><span class="s2">&quot;GLOBAL ERROR: Unknown id returned&quot;</span><span class="p">),</span> <span class="n">FORMAT_ERROR</span><span class="p">):</span>
+                            <span class="k">return</span>
+                    <span class="n">pro</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">promises</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span>
+
+
+                    <span class="k">if</span> <span class="n">packet_type</span> <span class="o">==</span> <span class="sa">b</span><span class="s1">&#39;b&#39;</span><span class="p">:</span>
+                        <span class="n">pro</span><span class="o">.</span><span class="n">set_result</span><span class="p">((</span><span class="n">packet_type</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">buffer</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">reader</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">(</span><span class="n">buffer</span><span class="p">)</span>
+                        <span class="c1"># Minecraft sends the first byte to specify what we are getting</span>
+                        <span class="n">tag_type</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+                        <span class="bp">cls</span> <span class="o">=</span> <span class="n">nbtlib</span><span class="o">.</span><span class="n">Base</span><span class="o">.</span><span class="n">all_tags</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tag_type</span><span class="p">)</span>
+
+                        <span class="k">if</span> <span class="bp">cls</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_error</span><span class="p">(</span><span class="n">PuppeteerError</span><span class="p">(</span><span class="s2">&quot;GLOBAL ERROR: Nbt tag id: &quot;</span> <span class="o">+</span> <span class="nb">hex</span><span class="p">(</span><span class="n">tag_type</span><span class="p">)),</span>
+                                <span class="n">FORMAT_ERROR</span><span class="p">):</span>
+                                <span class="k">return</span>
+                        
+                        <span class="n">tag</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>
+                        <span class="n">pro</span><span class="o">.</span><span class="n">set_result</span><span class="p">((</span><span class="n">packet_type</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tag</span><span class="p">))</span>
+                    
+
+                    <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">promises</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_error</span><span class="p">(</span><span class="n">PuppeteerError</span><span class="p">(</span><span class="s2">&quot;GLOBAL ERROR: Unknown packet type: &quot;</span> <span class="o">+</span> <span class="nb">hex</span><span class="p">(</span><span class="n">packet_type</span><span class="p">[</span><span class="mi">0</span><span class="p">])),</span> <span class="n">FORMAT_ERROR</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_error</span><span class="p">(</span><span class="n">PuppeteerError</span><span class="p">(</span><span class="s2">&quot;GLOBAL ERROR: Unknown packet type: &quot;</span> <span class="o">+</span> <span class="nb">hex</span><span class="p">(</span><span class="n">packet_type</span><span class="p">[</span><span class="mi">0</span><span class="p">])),</span>
+                                         <span class="n">FORMAT_ERROR</span><span class="p">):</span>
                         <span class="k">return</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="n">print_stack</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            
         <span class="k">finally</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">future</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">promises</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">future</span><span class="o">.</span><span class="n">done</span><span class="p">():</span>
@@ -199,7 +226,7 @@
 
 <div class="viewcode-block" id="ClientConnection.write_packet">
 <a class="viewcode-back" href="../../puppet.html#puppet.connection.ClientConnection.write_packet">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">write_packet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmd</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">extra</span> <span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">write_packet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">extra</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">dict</span> <span class="o">|</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="n">nbtlib</span><span class="o">.</span><span class="n">Base</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Sends a JSON packet to the server.</span>
 
@@ -258,7 +285,7 @@
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">broadcast</span><span class="p">[</span><span class="s2">&quot;port&quot;</span><span class="p">])</span></div>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">port</span> <span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">port</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">        Create the python object, </span>
 <span class="sd">        &lt;b&gt; BUT YOU MUST FIRST CALL start() BEFORE YOU CAN DO ANYTHING &lt;/b&gt;</span>
