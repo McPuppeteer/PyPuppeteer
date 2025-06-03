@@ -3,6 +3,17 @@ from .world import Chunk
 import asyncio
 
 from io import BytesIO
+from functools import partial
+
+
+_MOD_INTEGRATIONS = (
+    ("dump itemscroller config", "get itemscroller config item", "set itemscroller config item", "exec itemscroller config item"),
+    ("dump litematica config", "get litematica config item", "set litematica config item", "exec litematica config item"),
+    ("dump tweakeroo config", "get tweakeroo config item", "set tweakeroo config item", "exec tweakeroo config item"),
+    ("dump malilib config", "get malilib config item", "set malilib config item", "exec malilib config item"),
+    ("dump minihud config", "get minihud config item", "set minihud config item", "exec minihud config item"),
+)
+
 
 class Player:
     async def _callback_handler(self, info):
@@ -44,13 +55,67 @@ class Player:
     async def __aexit__(self, exc_type, exc, tb):
         await self.connection.__aexit__(exc_type, exc, tb)
 
+
+
+    # =======================================
+    #     Mod integration helper functions
+    # =======================================
+
+    @classmethod
+    def _generate_dump_mesa_config(cls, cmd : str):
+        async def func(self):
+            """ Returns the config json associated with this mod. """
+            return await self.handle_packet(cmd)
+        return func
+
+    @classmethod
+    def _generate_get_mesa_config_item(cls, cmd : str):
+        async def func(self, category : str, name : str):
+            """ Returns the config json value of the config item associated with this mod. """
+            return await self.handle_packet(cmd, {
+                "category": category,
+                "name": name,
+            })
+        return func
+
+    @classmethod
+    def _generate_set_mesa_config_item(cls, cmd : str):
+        async def func(self, category : str, name : str, value):
+            return await self.handle_packet(cmd, {
+                "category": category,
+                "name": name,
+                "value": value,
+            })
+        return func
+
+    @classmethod
+    def _generate_exec_mesa_config_item(cls, cmd : str):
+        async def func(self, category : str, name : str, action : str = None):
+            """ Executes a given hotkey associated with this mod. """
+            assert action is None or action in ("press", "release"), ValueError("Invalid action. Must be press or release")
+
+            return await self.handle_packet(cmd, {
+                **{
+                    "category": category,
+                    "name": name
+                },
+                **(
+                    {} if action is None else {"action": action}
+                )
+           })
+        return func
+
+
     # ========================================
     #        Informational functions
     # ========================================
 
     async def get_client_info(self):
         """ Returns a dictionary of a bunch of information about the game client """
-        return await self.handle_packet("client info")
+        return await self.handle_packet("get client info")
+    async def get_player_info(self):
+        """ Returns a dictionary of a bunch of information about the player, you MUST be in game to do this. """
+        return await self.handle_packet("get player info")
 
     async def get_installed_mods(self):
         return (await self.handle_packet("get mod list")).get("mods")
@@ -331,3 +396,11 @@ class Player:
     async def stop_directional_walk(self):
         """No longer be directional walking"""
         return await self.handle_packet("clear directional movement")
+
+
+# Generate functions for all the mod integrations
+for (dump_cmd, get_cmd, set_cmd, exec_cmd) in _MOD_INTEGRATIONS:
+    setattr(Player, dump_cmd.replace(" ", "_"), Player._generate_dump_mesa_config(dump_cmd))
+    setattr(Player, get_cmd.replace(" ", "_"), Player._generate_get_mesa_config_item(get_cmd))
+    setattr(Player, set_cmd.replace(" ", "_"), Player._generate_set_mesa_config_item(set_cmd))
+    setattr(Player, exec_cmd.replace(" ", "_"), Player._generate_exec_mesa_config_item(exec_cmd))

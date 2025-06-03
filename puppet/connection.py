@@ -68,7 +68,7 @@ class PuppeteerError(Exception):
 
     def __init__(self, msg: str, etype: PuppeteerErrorType = PuppeteerErrorType.UNKNOWN_ERROR):
         self.type = etype
-        super(msg)
+        super().__init__(msg)
 
 
 class ClientConnection:
