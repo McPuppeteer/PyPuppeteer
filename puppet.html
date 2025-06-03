@@ -185,15 +185,11 @@ to the Minecraft client</p>
 <dt class="sig sig-object py" id="puppet.player.Player">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">puppet.player.</span></span><span class="sig-name descname"><span class="pre">Player</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">connection</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Main wrapper class around the connection.</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="puppet.player.Player.handle_json">
-<span class="sig-name descname"><span class="pre">handle_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">packet_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">json</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.handle_json"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.handle_json" title="Link to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
-</dd>
-</dl>
-</dd></dl>
+<dt class="sig sig-object py" id="puppet.player.Player.discover">
+<em class="property"><span class="pre">async</span><span class="w"> </span><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">discover</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">with_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.discover"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.discover" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.handle_packet">
@@ -201,21 +197,14 @@ to the Minecraft client</p>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="puppet.player.Player.discover">
-<em class="property"><span class="pre">async</span><span class="w"> </span><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">discover</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">with_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.discover"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.discover" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.get_client_info">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_client_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.get_client_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.get_client_info" title="Link to this definition">¶</a></dt>
-<dd><p>Returns a dictionary of a bunch of information about the game client</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.get_player_info">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_player_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.get_player_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.get_player_info" title="Link to this definition">¶</a></dt>
-<dd><p>Returns a dictionary of a bunch of information about the player, you MUST be in game to do this.</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.get_installed_mods">
@@ -223,10 +212,14 @@ to the Minecraft client</p>
 <dd></dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.get_source_info">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_source_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.get_source_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.get_source_info" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.get_callback_states">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_callback_states</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.get_callback_states"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.get_callback_states" title="Link to this definition">¶</a></dt>
-<dd><p>Tells you what callbacks are currently enabled in the client. Use <code class="docutils literal notranslate"><span class="pre">set_callbacks()</span></code> to enable them.</p>
-<dl class="field-list simple">
+<dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<a class="reference internal" href="#puppet.constants.CallbackType" title="puppet.constants.CallbackType"><code class="xref py py-class docutils literal notranslate"><span class="pre">CallbackType</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]</span></p>
 </dd>
@@ -236,21 +229,29 @@ to the Minecraft client</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.set_callbacks">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_callbacks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">callbacks</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.set_callbacks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.set_callbacks" title="Link to this definition">¶</a></dt>
-<dd><p>Enable more callbacks being sent to the player.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>callbacks</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<a class="reference internal" href="#puppet.constants.CallbackType" title="puppet.constants.CallbackType"><code class="xref py py-class docutils literal notranslate"><span class="pre">CallbackType</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]</span>) – A dictionary (identical to the return of <code class="docutils literal notranslate"><span class="pre">get_callback_states()</span></code>) of what callbacks you want to enable.</p>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.clear_callbacks">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">clear_callbacks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.clear_callbacks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.clear_callbacks" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.get_block">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_block</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.get_block"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.get_block" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="puppet.player.Player.get_block">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_block</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.get_block"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.get_block" title="Link to this definition">¶</a></dt>
-<dd><p>Asks for a specific block somewhere in the world</p>
-<dl class="field-list simple">
+<dt class="sig sig-object py" id="puppet.player.Player.list_loaded_chunk_segments">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">list_loaded_chunk_segments</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.list_loaded_chunk_segments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.list_loaded_chunk_segments" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -268,49 +269,27 @@ to the Minecraft client</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.get_server_list">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_server_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.get_server_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.get_server_list" title="Link to this definition">¶</a></dt>
-<dd><p>Gets all the multiplayer servers in your server list, along with the “hidden” ones (your direct connect history).</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.get_world_list">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_world_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.get_world_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.get_world_list" title="Link to this definition">¶</a></dt>
-<dd><p>List ALL the worlds on this minecraft instances .minecraft folder.</p>
-<p>This can be slow on some installs, as some users may have <strong>thousands</strong> of worlds.</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.join_world">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">join_world</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.join_world"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.join_world" title="Link to this definition">¶</a></dt>
-<dd><p>Joins a local world. The name <strong>needs</strong> to be from the ‘load name’ from getWorldList()</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The name of the world to join, <strong>needs</strong> to match the ‘load name’ from <code class="docutils literal notranslate"><span class="pre">getWorldList()</span></code></p>
-</dd>
-</dl>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.join_server">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">join_server</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">address</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.join_server"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.join_server" title="Link to this definition">¶</a></dt>
-<dd><p>Joins a multiplayer server</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>address</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Server ip to connect to</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="puppet.player.Player.baritone_goto">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">baritone_goto</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.baritone_goto"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.baritone_goto" title="Link to this definition">¶</a></dt>
-<dd><p>Tells baritone to go to a specific location.</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.get_freecam_state">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_freecam_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.get_freecam_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.get_freecam_state" title="Link to this definition">¶</a></dt>
-<dd><p>Tells you if freecam is currently enabled.</p>
-<dl class="field-list simple">
+<dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
 </dd>
@@ -320,8 +299,7 @@ to the Minecraft client</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.get_freerot_state">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_freerot_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.get_freerot_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.get_freerot_state" title="Link to this definition">¶</a></dt>
-<dd><p>Tells you if freeroot is currently enabled.</p>
-<dl class="field-list simple">
+<dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
 </dd>
@@ -331,8 +309,17 @@ to the Minecraft client</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.get_no_walk_state">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_no_walk_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.get_no_walk_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.get_no_walk_state" title="Link to this definition">¶</a></dt>
-<dd><p>Tells you if no walk is currently enabled.</p>
-<dl class="field-list simple">
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.get_headless_state">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_headless_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.get_headless_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.get_headless_state" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
 </dd>
@@ -342,271 +329,182 @@ to the Minecraft client</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.set_freecam">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_freecam</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enabled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.set_freecam"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.set_freecam" title="Link to this definition">¶</a></dt>
-<dd><p>Set if freecam is currently enabled.</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.set_freerot">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_freerot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enabled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.set_freerot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.set_freerot" title="Link to this definition">¶</a></dt>
-<dd><p>Set if freeroot is currently enabled.</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.set_no_walk">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_no_walk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enabled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.set_no_walk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.set_no_walk" title="Link to this definition">¶</a></dt>
-<dd><p>Set if no walk is currently enabled.</p>
-</dd></dl>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.set_headless">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_headless</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enabled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.set_headless"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.set_headless" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.baritone_goto">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">baritone_goto</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.baritone_goto"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.baritone_goto" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.send_chat_message">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">send_chat_message</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.send_chat_message"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.send_chat_message" title="Link to this definition">¶</a></dt>
-<dd><p>Sends a public chat message. If prepended with “/”, will execute a command.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>message</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The message to send.</p>
-</dd>
-</dl>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.send_execute_command">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">send_execute_command</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.send_execute_command"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.send_execute_command" title="Link to this definition">¶</a></dt>
-<dd><p>Runs a command.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>message</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The command to execute</p>
-</dd>
-</dl>
-<p>Note: Do <strong>NOT</strong> include the “/”</p>
-<p>Ex: <code class="docutils literal notranslate"><span class="pre">gamemode</span> <span class="pre">creative</span></code> to set the gamemode to creative.</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.display_message">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">display_message</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.display_message"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.display_message" title="Link to this definition">¶</a></dt>
-<dd><p>Displays a message in chat. This is private
-:type message: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>
-:param message:  Message to display in chat</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.overview_message">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">overview_message</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.overview_message"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.overview_message" title="Link to this definition">¶</a></dt>
-<dd><p>Shows a message above the users hotbar, this is great for informational status updates.</p>
-<p>For example, telling the user when something is starting and ending.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>message</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Message to display above the hotbar</p>
-</dd>
-</dl>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.clear_inputs">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">clear_inputs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.clear_inputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.clear_inputs" title="Link to this definition">¶</a></dt>
-<dd><p>Remove all forced button presses.</p>
-</dd></dl>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.get_forced_inputs">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_forced_inputs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.get_forced_inputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.get_forced_inputs" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.force_inputs">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">force_inputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.force_inputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.force_inputs" title="Link to this definition">¶</a></dt>
-<dd><p>Force down/up buttons. If a button is not mentioned, it will not be impacted. Meaning that if it is already pressed,
-it will still be pressed if you do not update its state.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>inputs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<a class="reference internal" href="#puppet.constants.InputButton" title="puppet.constants.InputButton"><code class="xref py py-class docutils literal notranslate"><span class="pre">InputButton</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]]</span>) – List of tuples of (InputButton, bool). Where the bool is the <strong>forced state</strong> of the input. Meaning
-setting to False indicates the <strong>user cannot press</strong> that key.</p>
-</dd>
-</dl>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.remove_forced_inputs">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">remove_forced_inputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.remove_forced_inputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.remove_forced_inputs" title="Link to this definition">¶</a></dt>
-<dd><p>Disables the forced state of inputs. If a button is not mentioned, it will not be impacted.
-A complete list of inputs will result in identical behavior to <code class="docutils literal notranslate"><span class="pre">clear_inputs()</span></code></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>inputs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="#puppet.constants.InputButton" title="puppet.constants.InputButton"><code class="xref py py-class docutils literal notranslate"><span class="pre">InputButton</span></code></a>]</span>) – A list if inputs, each input will have is state no longer controlled.</p>
-</dd>
-</dl>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.arotate">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">arotate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pitch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yaw</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">speed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">RoMethod.SINE_IN_OUT</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.arotate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.arotate" title="Link to this definition">¶</a></dt>
-<dd><p>Smoothly, and realistically, rotate the player.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>pitch</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Pitch angle in degrees.</p></li>
-<li><p><strong>yaw</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Yaw angle in degrees.</p></li>
-<li><p><strong>speed</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Speed of rotation. This can be generally interpreted as <cite>degrees per tick</cite>, but with certain rotation methods
-this will not be true.</p></li>
-<li><p><strong>method</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.constants.RoMethod" title="puppet.constants.RoMethod"><code class="xref py py-class docutils literal notranslate"><span class="pre">RoMethod</span></code></a></span>) – What interpolation method is used. This will not change the time required to rotate, but instead how it looks.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.irotate">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">irotate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pitch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yaw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.irotate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.irotate" title="Link to this definition">¶</a></dt>
-<dd><p>Instantly set the player’s rotation. This looks like you are cheating.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>pitch</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Pitch angle in degrees.</p></li>
-<li><p><strong>yaw</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Yaw angle in degrees.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.set_hotbar_slot">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_hotbar_slot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">slot</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.set_hotbar_slot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.set_hotbar_slot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.attack">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">attack</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.attack"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.attack" title="Link to this definition">¶</a></dt>
-<dd><p>Tells the player to punch. Single left click</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.use">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">use</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.use"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.use" title="Link to this definition">¶</a></dt>
-<dd><p>Tells the player to use an item/block. Single right click</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.set_directional_walk">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_directional_walk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">degrees</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">speed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.set_directional_walk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.set_directional_walk" title="Link to this definition">¶</a></dt>
-<dd><p>Force the player to walk in a certain direction. Directional walking allows you to make the player walk towards a block.
-The direction the player is walking in is absolute, meaning the user can look around without interfacing.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>degrees</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – The <strong>global</strong> direction, in degrees, from 0-360, of where the user will walk.</p></li>
-<li><p><strong>speed</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Should be from 0-1. With zero being no movement, and one being regular walk speed.</p></li>
-<li><p><strong>force</strong> – If false, will clamp the speed. If true, will allow any speed value, basically being speed hacks.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.set_directional_walk_vector">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_directional_walk_vector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">speed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.set_directional_walk_vector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.set_directional_walk_vector" title="Link to this definition">¶</a></dt>
-<dd><p>Force the player to walk in a certain direction. Directional walking allows you to make the player walk towards a block.
-The direction the player is walking in is absolute, meaning the user can look around without interfacing.</p>
-<p>The difference between this and <code class="docutils literal notranslate"><span class="pre">set_directional_walk()</span></code> is that you input a global vector. For example,
-to walk in the <cite>+x</cite> direction, use parameters x=1, z=0. To walk equally in the <cite>+x</cite> and <cite>+z</cite> direction, use
-parameters x=1, z=1. Negative directions <strong>are</strong> supported. Vectors <strong>are normalized</strong>. so feel free to use
-large values.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – The x component of the direction.</p></li>
-<li><p><strong>z</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – The z component of the direction.</p></li>
-<li><p><strong>speed</strong> – Should be from 0-1. With zero being no movement, and one being regular walk speed.</p></li>
-<li><p><strong>force</strong> – If false, will clamp the speed. If true, will allow any speed value, basically being speed hacks.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.stop_directional_walk">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stop_directional_walk</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.stop_directional_walk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.stop_directional_walk" title="Link to this definition">¶</a></dt>
-<dd><p>No longer be directional walking</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.dump_itemscroller_config">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dump_itemscroller_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.dump_itemscroller_config" title="Link to this definition">¶</a></dt>
-<dd><p>Returns the config json associated with this mod.</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.dump_litematica_config">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dump_litematica_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.dump_litematica_config" title="Link to this definition">¶</a></dt>
-<dd><p>Returns the config json associated with this mod.</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.dump_malilib_config">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dump_malilib_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.dump_malilib_config" title="Link to this definition">¶</a></dt>
-<dd><p>Returns the config json associated with this mod.</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.dump_minihud_config">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dump_minihud_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.dump_minihud_config" title="Link to this definition">¶</a></dt>
-<dd><p>Returns the config json associated with this mod.</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.dump_tweakeroo_config">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dump_tweakeroo_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.dump_tweakeroo_config" title="Link to this definition">¶</a></dt>
-<dd><p>Returns the config json associated with this mod.</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.exec_itemscroller_config_item">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exec_itemscroller_config_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.exec_itemscroller_config_item" title="Link to this definition">¶</a></dt>
-<dd><p>Executes a given hotkey associated with this mod.</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.exec_litematica_config_item">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exec_litematica_config_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.exec_litematica_config_item" title="Link to this definition">¶</a></dt>
-<dd><p>Executes a given hotkey associated with this mod.</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.exec_malilib_config_item">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exec_malilib_config_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.exec_malilib_config_item" title="Link to this definition">¶</a></dt>
-<dd><p>Executes a given hotkey associated with this mod.</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.exec_minihud_config_item">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exec_minihud_config_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.exec_minihud_config_item" title="Link to this definition">¶</a></dt>
-<dd><p>Executes a given hotkey associated with this mod.</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.exec_tweakeroo_config_item">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exec_tweakeroo_config_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.exec_tweakeroo_config_item" title="Link to this definition">¶</a></dt>
-<dd><p>Executes a given hotkey associated with this mod.</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.get_itemscroller_config_item">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_itemscroller_config_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.get_itemscroller_config_item" title="Link to this definition">¶</a></dt>
-<dd><p>Returns the config json value of the config item associated with this mod.</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.get_litematica_config_item">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_litematica_config_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.get_litematica_config_item" title="Link to this definition">¶</a></dt>
-<dd><p>Returns the config json value of the config item associated with this mod.</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.get_malilib_config_item">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_malilib_config_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.get_malilib_config_item" title="Link to this definition">¶</a></dt>
-<dd><p>Returns the config json value of the config item associated with this mod.</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.get_minihud_config_item">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_minihud_config_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.get_minihud_config_item" title="Link to this definition">¶</a></dt>
-<dd><p>Returns the config json value of the config item associated with this mod.</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.get_tweakeroo_config_item">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_tweakeroo_config_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.get_tweakeroo_config_item" title="Link to this definition">¶</a></dt>
-<dd><p>Returns the config json value of the config item associated with this mod.</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.set_itemscroller_config_item">
