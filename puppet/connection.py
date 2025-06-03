@@ -187,7 +187,7 @@ class ClientConnection:
         :param cmd: Command string to specify what command is being used
         :param extra: Extra JSON data to be sent along
 
-        :return: Coroutine that yields a tuple, the first being an int representing the datatype
+        :return: Coroutine that yields a tuple, the first being an int representing the datatype, and the second being that datatype
         """
 
         assert self.running
