@@ -36,6 +36,17 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">io</span><span class="w"> </span><span class="kn">import</span> <span class="n">BytesIO</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+
+
+<span class="n">_MOD_INTEGRATIONS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="p">(</span><span class="s2">&quot;dump itemscroller config&quot;</span><span class="p">,</span> <span class="s2">&quot;get itemscroller config item&quot;</span><span class="p">,</span> <span class="s2">&quot;set itemscroller config item&quot;</span><span class="p">,</span> <span class="s2">&quot;exec itemscroller config item&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;dump litematica config&quot;</span><span class="p">,</span> <span class="s2">&quot;get litematica config item&quot;</span><span class="p">,</span> <span class="s2">&quot;set litematica config item&quot;</span><span class="p">,</span> <span class="s2">&quot;exec litematica config item&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;dump tweakeroo config&quot;</span><span class="p">,</span> <span class="s2">&quot;get tweakeroo config item&quot;</span><span class="p">,</span> <span class="s2">&quot;set tweakeroo config item&quot;</span><span class="p">,</span> <span class="s2">&quot;exec tweakeroo config item&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;dump malilib config&quot;</span><span class="p">,</span> <span class="s2">&quot;get malilib config item&quot;</span><span class="p">,</span> <span class="s2">&quot;set malilib config item&quot;</span><span class="p">,</span> <span class="s2">&quot;exec malilib config item&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;dump minihud config&quot;</span><span class="p">,</span> <span class="s2">&quot;get minihud config item&quot;</span><span class="p">,</span> <span class="s2">&quot;set minihud config item&quot;</span><span class="p">,</span> <span class="s2">&quot;exec minihud config item&quot;</span><span class="p">),</span>
+<span class="p">)</span>
+
 
 <div class="viewcode-block" id="Player">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player">[docs]</a>
@@ -88,6 +99,57 @@
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="fm">__aexit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">tb</span><span class="p">):</span>
         <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="fm">__aexit__</span><span class="p">(</span><span class="n">exc_type</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">tb</span><span class="p">)</span>
 
+
+
+    <span class="c1"># =======================================</span>
+    <span class="c1">#     Mod integration helper functions</span>
+    <span class="c1"># =======================================</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_dump_mesa_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">cmd</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot; Returns the config json associated with this mod. &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">func</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_get_mesa_config_item</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">cmd</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">category</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot; Returns the config json value of the config item associated with this mod. &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="p">{</span>
+                <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="n">category</span><span class="p">,</span>
+                <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+            <span class="p">})</span>
+        <span class="k">return</span> <span class="n">func</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_set_mesa_config_item</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">cmd</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">category</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+            <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="p">{</span>
+                <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="n">category</span><span class="p">,</span>
+                <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+                <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">value</span><span class="p">,</span>
+            <span class="p">})</span>
+        <span class="k">return</span> <span class="n">func</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_exec_mesa_config_item</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">cmd</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">category</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">action</span> <span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot; Executes a given hotkey associated with this mod. &quot;&quot;&quot;</span>
+            <span class="k">assert</span> <span class="n">action</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">action</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;press&quot;</span><span class="p">,</span> <span class="s2">&quot;release&quot;</span><span class="p">),</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid action. Must be press or release&quot;</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="p">{</span>
+                <span class="o">**</span><span class="p">{</span>
+                    <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="n">category</span><span class="p">,</span>
+                    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span>
+                <span class="p">},</span>
+                <span class="o">**</span><span class="p">(</span>
+                    <span class="p">{}</span> <span class="k">if</span> <span class="n">action</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="n">action</span><span class="p">}</span>
+                <span class="p">)</span>
+           <span class="p">})</span>
+        <span class="k">return</span> <span class="n">func</span>
+
+
     <span class="c1"># ========================================</span>
     <span class="c1">#        Informational functions</span>
     <span class="c1"># ========================================</span>
@@ -96,7 +158,13 @@
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_client_info">[docs]</a>
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_client_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns a dictionary of a bunch of information about the game client &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;client info&quot;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;get client info&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Player.get_player_info">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_player_info">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_player_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns a dictionary of a bunch of information about the player, you MUST be in game to do this. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;get player info&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Player.get_installed_mods">
@@ -469,6 +537,14 @@
         <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;clear directional movement&quot;</span><span class="p">)</span></div>
 </div>
 
+
+
+<span class="c1"># Generate functions for all the mod integrations</span>
+<span class="k">for</span> <span class="p">(</span><span class="n">dump_cmd</span><span class="p">,</span> <span class="n">get_cmd</span><span class="p">,</span> <span class="n">set_cmd</span><span class="p">,</span> <span class="n">exec_cmd</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_MOD_INTEGRATIONS</span><span class="p">:</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="n">Player</span><span class="p">,</span> <span class="n">dump_cmd</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">),</span> <span class="n">Player</span><span class="o">.</span><span class="n">_generate_dump_mesa_config</span><span class="p">(</span><span class="n">dump_cmd</span><span class="p">))</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="n">Player</span><span class="p">,</span> <span class="n">get_cmd</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">),</span> <span class="n">Player</span><span class="o">.</span><span class="n">_generate_get_mesa_config_item</span><span class="p">(</span><span class="n">get_cmd</span><span class="p">))</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="n">Player</span><span class="p">,</span> <span class="n">set_cmd</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">),</span> <span class="n">Player</span><span class="o">.</span><span class="n">_generate_set_mesa_config_item</span><span class="p">(</span><span class="n">set_cmd</span><span class="p">))</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="n">Player</span><span class="p">,</span> <span class="n">exec_cmd</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">),</span> <span class="n">Player</span><span class="o">.</span><span class="n">_generate_exec_mesa_config_item</span><span class="p">(</span><span class="n">exec_cmd</span><span class="p">))</span>
 </pre></div>
 
           </div>

@@ -212,6 +212,12 @@ to the Minecraft client</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.get_player_info">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_player_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.get_player_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.get_player_info" title="Link to this definition">¶</a></dt>
+<dd><p>Returns a dictionary of a bunch of information about the player, you MUST be in game to do this.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.get_installed_mods">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_installed_mods</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.get_installed_mods"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.get_installed_mods" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -511,6 +517,121 @@ large values.</p>
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stop_directional_walk</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.stop_directional_walk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.stop_directional_walk" title="Link to this definition">¶</a></dt>
 <dd><p>No longer be directional walking</p>
 </dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.dump_itemscroller_config">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dump_itemscroller_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.dump_itemscroller_config" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the config json associated with this mod.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.dump_litematica_config">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dump_litematica_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.dump_litematica_config" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the config json associated with this mod.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.dump_malilib_config">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dump_malilib_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.dump_malilib_config" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the config json associated with this mod.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.dump_minihud_config">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dump_minihud_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.dump_minihud_config" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the config json associated with this mod.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.dump_tweakeroo_config">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dump_tweakeroo_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.dump_tweakeroo_config" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the config json associated with this mod.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.exec_itemscroller_config_item">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exec_itemscroller_config_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.exec_itemscroller_config_item" title="Link to this definition">¶</a></dt>
+<dd><p>Executes a given hotkey associated with this mod.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.exec_litematica_config_item">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exec_litematica_config_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.exec_litematica_config_item" title="Link to this definition">¶</a></dt>
+<dd><p>Executes a given hotkey associated with this mod.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.exec_malilib_config_item">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exec_malilib_config_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.exec_malilib_config_item" title="Link to this definition">¶</a></dt>
+<dd><p>Executes a given hotkey associated with this mod.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.exec_minihud_config_item">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exec_minihud_config_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.exec_minihud_config_item" title="Link to this definition">¶</a></dt>
+<dd><p>Executes a given hotkey associated with this mod.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.exec_tweakeroo_config_item">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exec_tweakeroo_config_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.exec_tweakeroo_config_item" title="Link to this definition">¶</a></dt>
+<dd><p>Executes a given hotkey associated with this mod.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.get_itemscroller_config_item">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_itemscroller_config_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.get_itemscroller_config_item" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the config json value of the config item associated with this mod.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.get_litematica_config_item">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_litematica_config_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.get_litematica_config_item" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the config json value of the config item associated with this mod.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.get_malilib_config_item">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_malilib_config_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.get_malilib_config_item" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the config json value of the config item associated with this mod.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.get_minihud_config_item">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_minihud_config_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.get_minihud_config_item" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the config json value of the config item associated with this mod.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.get_tweakeroo_config_item">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_tweakeroo_config_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.get_tweakeroo_config_item" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the config json value of the config item associated with this mod.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.set_itemscroller_config_item">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_itemscroller_config_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.set_itemscroller_config_item" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.set_litematica_config_item">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_litematica_config_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.set_litematica_config_item" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.set_malilib_config_item">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_malilib_config_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.set_malilib_config_item" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.set_minihud_config_item">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_minihud_config_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.set_minihud_config_item" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.set_tweakeroo_config_item">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_tweakeroo_config_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#puppet.player.Player.set_tweakeroo_config_item" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
