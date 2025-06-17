@@ -32,22 +32,38 @@
             
   <h1>Source code for puppet.player</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">io</span><span class="w"> </span><span class="kn">import</span> <span class="n">BytesIO</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.connection</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.world</span><span class="w"> </span><span class="kn">import</span> <span class="n">Chunk</span>
 
 <span class="n">_MOD_INTEGRATIONS</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="p">(</span><span class="s2">&quot;dump itemscroller config&quot;</span><span class="p">,</span> <span class="s2">&quot;get itemscroller config item&quot;</span><span class="p">,</span> <span class="s2">&quot;set itemscroller config item&quot;</span><span class="p">,</span> <span class="s2">&quot;exec itemscroller config item&quot;</span><span class="p">),</span>
-    <span class="p">(</span><span class="s2">&quot;dump litematica config&quot;</span><span class="p">,</span> <span class="s2">&quot;get litematica config item&quot;</span><span class="p">,</span> <span class="s2">&quot;set litematica config item&quot;</span><span class="p">,</span> <span class="s2">&quot;exec litematica config item&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;dump itemscroller config&quot;</span><span class="p">,</span> <span class="s2">&quot;get itemscroller config item&quot;</span><span class="p">,</span> <span class="s2">&quot;set itemscroller config item&quot;</span><span class="p">,</span>
+     <span class="s2">&quot;exec itemscroller config item&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;dump litematica config&quot;</span><span class="p">,</span> <span class="s2">&quot;get litematica config item&quot;</span><span class="p">,</span> <span class="s2">&quot;set litematica config item&quot;</span><span class="p">,</span>
+     <span class="s2">&quot;exec litematica config item&quot;</span><span class="p">),</span>
     <span class="p">(</span><span class="s2">&quot;dump tweakeroo config&quot;</span><span class="p">,</span> <span class="s2">&quot;get tweakeroo config item&quot;</span><span class="p">,</span> <span class="s2">&quot;set tweakeroo config item&quot;</span><span class="p">,</span> <span class="s2">&quot;exec tweakeroo config item&quot;</span><span class="p">),</span>
     <span class="p">(</span><span class="s2">&quot;dump malilib config&quot;</span><span class="p">,</span> <span class="s2">&quot;get malilib config item&quot;</span><span class="p">,</span> <span class="s2">&quot;set malilib config item&quot;</span><span class="p">,</span> <span class="s2">&quot;exec malilib config item&quot;</span><span class="p">),</span>
     <span class="p">(</span><span class="s2">&quot;dump minihud config&quot;</span><span class="p">,</span> <span class="s2">&quot;get minihud config item&quot;</span><span class="p">,</span> <span class="s2">&quot;set minihud config item&quot;</span><span class="p">,</span> <span class="s2">&quot;exec minihud config item&quot;</span><span class="p">),</span>
 <span class="p">)</span>
 
+
 <div class="viewcode-block" id="Player">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Player</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Main wrapper class around the connection. &quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Main wrapper class around the connection. It is recommended to</span>
+<span class="sd">    create a new instance using the ```discover()``` function, in</span>
+<span class="sd">    addition to using a context manager.</span>
+
+<span class="sd">    Ex:</span>
+<span class="sd">    ```</span>
+<span class="sd">    async with Player.discover() as p:</span>
+<span class="sd">        print(await p.attack())</span>
+<span class="sd">    ```</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_callbacks</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="kc">None</span><span class="p">]]</span>
 
     <span class="c1"># =========================</span>
     <span class="c1">#   Connection Management</span>
@@ -59,6 +75,8 @@
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">connection</span><span class="p">:</span> <span class="n">ClientConnection</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">connection</span> <span class="o">=</span> <span class="n">connection</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">callback_handler</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callback_handler</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_callbacks</span> <span class="o">=</span> <span class="p">{}</span>
 
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="fm">__aenter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span>
@@ -88,7 +106,7 @@
     <span class="c1">#   Packet Handling</span>
     <span class="c1"># =========================</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_handle_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">packet_type</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">json</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_handle_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">packet_type</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">json</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Handles JSON packets received from the server.</span>
 
@@ -109,7 +127,7 @@
 
 <div class="viewcode-block" id="Player.handle_packet">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.handle_packet">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">handle_packet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">extra</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">handle_packet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">extra</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Write a json packet, send it, and raise any errors.</span>
 <span class="sd">        :raises PuppeteerError: If the JSON contains an error status.</span>
@@ -126,6 +144,7 @@
         <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot; Returns the config json associated with this mod. &quot;&quot;&quot;</span>
             <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="n">func</span>
 
     <span class="nd">@classmethod</span>
@@ -136,6 +155,7 @@
                 <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="n">category</span><span class="p">,</span>
                 <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
             <span class="p">})</span>
+
         <span class="k">return</span> <span class="n">func</span>
 
     <span class="nd">@classmethod</span>
@@ -147,13 +167,15 @@
                 <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
                 <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">value</span><span class="p">,</span>
             <span class="p">})</span>
+
         <span class="k">return</span> <span class="n">func</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_generate_exec_mesa_config_item</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">category</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot; Executes a given hotkey associated with this mod. &quot;&quot;&quot;</span>
-            <span class="k">assert</span> <span class="n">action</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">action</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;press&quot;</span><span class="p">,</span> <span class="s2">&quot;release&quot;</span><span class="p">),</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid action. Must be press or release&quot;</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">action</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">action</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;press&quot;</span><span class="p">,</span> <span class="s2">&quot;release&quot;</span><span class="p">),</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Invalid action. Must be press or release&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="p">{</span>
                 <span class="o">**</span><span class="p">{</span>
                     <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="n">category</span><span class="p">,</span>
@@ -163,6 +185,7 @@
                     <span class="p">{}</span> <span class="k">if</span> <span class="n">action</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="n">action</span><span class="p">}</span>
                 <span class="p">)</span>
             <span class="p">})</span>
+
         <span class="k">return</span> <span class="n">func</span>
 
     <span class="c1"># =========================</span>
@@ -207,6 +230,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;sources&quot;</span><span class="p">)</span></div>
 
+
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_list_commands</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns a list of available commands. Note: Also included in ```get_client_info()``` &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;list commands&quot;</span><span class="p">)</span>
@@ -228,7 +252,7 @@
 
 <div class="viewcode-block" id="Player.get_callback_states">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_callback_states">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_callback_states</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">CallbackType</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_callback_states</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">CallbackType</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Tells you what callbacks are currently enabled in the client. Use ``set_callbacks()`` to enable them.</span>
 
@@ -243,7 +267,7 @@
 
 <div class="viewcode-block" id="Player.set_callbacks">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.set_callbacks">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callbacks</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">CallbackType</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]):</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callbacks</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">CallbackType</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Enable more callbacks being sent to the player.</span>
 
@@ -266,7 +290,7 @@
 
 <div class="viewcode-block" id="Player.get_block">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_block">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Asks for a specific block somewhere in the world</span>
 
@@ -283,14 +307,73 @@
 
 <div class="viewcode-block" id="Player.list_loaded_chunk_segments">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.list_loaded_chunk_segments">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_loaded_chunk_segments</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_loaded_chunk_segments</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns a list of loaded chunk segments. &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">(</span><span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;list loaded chunks&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;chunks&quot;</span><span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="Player.get_player_inventory_contents">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_player_inventory_contents">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_player_inventory_contents</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns JSON data of the player&#39;s inventory. Throws an error if a container is open&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;get player inventory&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Player.get_player_inventory">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_player_inventory">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_player_inventory</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;PlayerInventory&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns an object of the player&#39;s inventory. Throws an error if a container is open&quot;&quot;&quot;</span>
+
+        <span class="n">inventory</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_player_inventory_contents</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">PlayerInventory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inventory</span><span class="p">[</span><span class="s2">&quot;slots&quot;</span><span class="p">],</span> <span class="n">inventory</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="Player.get_open_inventory_contents">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_open_inventory_contents">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_open_inventory_contents</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;get open inventory&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Player.click_container_button">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.click_container_button">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">click_container_button</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">button</span> <span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;click inventory button&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;button&quot;</span><span class="p">:</span> <span class="n">button</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="Player.get_merchant_trades">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_merchant_trades">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_merchant_trades</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;get trades&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Player.select_trade">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.select_trade">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">select_trade</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span> <span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;select trade&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">index</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="Player.set_anvil_name">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.set_anvil_name">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_anvil_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;set anvil name&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="Player.set_beacon_effect">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.set_beacon_effect">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_beacon_effect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">primary</span> <span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">secondary</span> <span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;set beacon effect&quot;</span><span class="p">,</span> <span class="p">{</span>
+            <span class="o">**</span><span class="p">({}</span> <span class="k">if</span> <span class="n">primary</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span>  <span class="p">{</span><span class="s2">&quot;primary&quot;</span><span class="p">:</span> <span class="n">primary</span><span class="p">}),</span>
+            <span class="o">**</span><span class="p">({}</span> <span class="k">if</span> <span class="n">secondary</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;secondary&quot;</span><span class="p">:</span> <span class="n">secondary</span><span class="p">})</span>
+        <span class="p">})</span></div>
+
+<div class="viewcode-block" id="Player.get_enchantments">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_enchantments">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_enchantments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;get enchantments&quot;</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="Player.get_chunk">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_chunk">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_chunk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">cz</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Chunk</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_chunk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">cz</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Chunk</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Asks for a specific chunk somewhere in the world.</span>
 <span class="sd">        :param cx: Location of the chunk, note this is 16x smaller than the normal coordinates</span>
@@ -300,7 +383,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">pt</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">write_packet</span><span class="p">(</span><span class="s2">&quot;get chunk&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;cx&quot;</span><span class="p">:</span> <span class="n">cx</span><span class="p">,</span> <span class="s2">&quot;cz&quot;</span><span class="p">:</span> <span class="n">cz</span><span class="p">})</span>
         <span class="k">if</span> <span class="n">pt</span> <span class="o">==</span> <span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;j&#39;</span><span class="p">):</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_json</span><span class="p">(</span><span class="n">pt</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_handle_json</span><span class="p">(</span><span class="n">pt</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;Unreachable&quot;</span>
         <span class="k">return</span> <span class="n">Chunk</span><span class="o">.</span><span class="n">from_network</span><span class="p">(</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data</span><span class="p">))</span></div>
 
 
@@ -527,7 +611,7 @@
 
 <div class="viewcode-block" id="Player.force_inputs">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.force_inputs">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">force_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">InputButton</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]]):</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">force_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">InputButton</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]]):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Force down/up buttons. If a button is not mentioned, it will not be impacted. Meaning that if it is already pressed,</span>
 <span class="sd">        it will still be pressed if you do not update its state.</span>
@@ -547,7 +631,7 @@
 
 <div class="viewcode-block" id="Player.remove_forced_inputs">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.remove_forced_inputs">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">remove_forced_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">InputButton</span><span class="p">]):</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">remove_forced_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">InputButton</span><span class="p">]):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Disables the forced state of inputs. If a button is not mentioned, it will not be impacted.</span>
 <span class="sd">        A complete list of inputs will result in identical behavior to ``clear_inputs()``</span>
@@ -569,11 +653,11 @@
 <div class="viewcode-block" id="Player.arotate">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.arotate">[docs]</a>
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">arotate</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">pitch</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-        <span class="n">yaw</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-        <span class="n">speed</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
-        <span class="n">method</span><span class="p">:</span> <span class="n">RoMethod</span> <span class="o">=</span> <span class="n">RoMethod</span><span class="o">.</span><span class="n">SINE_IN_OUT</span><span class="p">,</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">pitch</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+            <span class="n">yaw</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+            <span class="n">speed</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+            <span class="n">method</span><span class="p">:</span> <span class="n">RoMethod</span> <span class="o">=</span> <span class="n">RoMethod</span><span class="o">.</span><span class="n">SINE_IN_OUT</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Smoothly, and realistically, rotate the player.</span>
@@ -642,7 +726,7 @@
 <div class="viewcode-block" id="Player.set_directional_walk">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.set_directional_walk">[docs]</a>
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_directional_walk</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">degrees</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">speed</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">degrees</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">speed</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Force the player to walk in a certain direction. Directional walking allows you to make the player walk towards a block.</span>
@@ -665,7 +749,7 @@
 <div class="viewcode-block" id="Player.set_directional_walk_vector">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.set_directional_walk_vector">[docs]</a>
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_directional_walk_vector</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">speed</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">speed</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Force the player to walk in a certain direction. Directional walking allows you to make the player walk towards a block.</span>
@@ -700,12 +784,538 @@
 </div>
 
 
+
 <span class="c1"># Generate functions for all the mod integrations</span>
 <span class="k">for</span> <span class="p">(</span><span class="n">dump_cmd</span><span class="p">,</span> <span class="n">get_cmd</span><span class="p">,</span> <span class="n">set_cmd</span><span class="p">,</span> <span class="n">exec_cmd</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_MOD_INTEGRATIONS</span><span class="p">:</span>
     <span class="nb">setattr</span><span class="p">(</span><span class="n">Player</span><span class="p">,</span> <span class="n">dump_cmd</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">),</span> <span class="n">Player</span><span class="o">.</span><span class="n">_generate_dump_mesa_config</span><span class="p">(</span><span class="n">dump_cmd</span><span class="p">))</span>
     <span class="nb">setattr</span><span class="p">(</span><span class="n">Player</span><span class="p">,</span> <span class="n">get_cmd</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">),</span> <span class="n">Player</span><span class="o">.</span><span class="n">_generate_get_mesa_config_item</span><span class="p">(</span><span class="n">get_cmd</span><span class="p">))</span>
     <span class="nb">setattr</span><span class="p">(</span><span class="n">Player</span><span class="p">,</span> <span class="n">set_cmd</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">),</span> <span class="n">Player</span><span class="o">.</span><span class="n">_generate_set_mesa_config_item</span><span class="p">(</span><span class="n">set_cmd</span><span class="p">))</span>
     <span class="nb">setattr</span><span class="p">(</span><span class="n">Player</span><span class="p">,</span> <span class="n">exec_cmd</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">),</span> <span class="n">Player</span><span class="o">.</span><span class="n">_generate_exec_mesa_config_item</span><span class="p">(</span><span class="n">exec_cmd</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="Inventory">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Inventory">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Inventory</span><span class="p">:</span>
+    <span class="c1"># Constant</span>
+    <span class="n">container_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Set on instance</span>
+    <span class="n">screen_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">player</span><span class="p">:</span> <span class="n">Player</span>
+    <span class="n">slot_data</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span>
+
+    <span class="c1"># Starting slot of player inventory, None</span>
+    <span class="c1"># if player inventory is disabled</span>
+    <span class="n">player_inventory_offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">9</span>
+
+    <span class="n">container_offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">container_width</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">container_height</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">player</span><span class="p">:</span> <span class="n">Player</span><span class="p">,</span> <span class="n">slot_data</span><span class="p">,</span> <span class="n">screen_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">horse_data</span> <span class="p">:</span> <span class="n">Dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">player</span> <span class="o">=</span> <span class="n">player</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">screen_name</span> <span class="o">=</span> <span class="n">screen_name</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">slot_data</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span> <span class="o">**</span><span class="n">slot</span><span class="p">}</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">slot</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">slot_data</span><span class="p">)]</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">container_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Cannot initialize absract inventory&quot;</span>
+
+<div class="viewcode-block" id="Inventory.get_slot">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Inventory.get_slot">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_slot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">slot</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Gets a slot by its id &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">slot_data</span><span class="p">[</span><span class="n">slot</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Inventory.get_inventory_slot">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Inventory.get_inventory_slot">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_inventory_slot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">column</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets a slot WITHIN THE PLAYER&#39;S INVENTORY. This will work</span>
+<span class="sd">        regardless of what inventory is open, with the exception of the lecture,</span>
+<span class="sd">        and other inventories that lack the player&#39;s inventory.</span>
+
+<span class="sd">        :param row: A row, starting at 0, counting up FROM the TOP of the screen. (0 is the top)</span>
+<span class="sd">        :param column: A column, starting at 0, counting up LEFT to right of the screen. (0 is the left)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">player_inventory_offset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;This inventory lacks the player&#39;s inventory&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="n">row</span> <span class="o">*</span> <span class="mi">9</span> <span class="o">+</span> <span class="n">column</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">player_inventory_offset</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Inventory.get_container_slot">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Inventory.get_container_slot">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_container_slot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">column</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets a slot WITHIN THE CONTAINER&#39;S INVENTORY. This will ONLY work</span>
+<span class="sd">        if the container has a row/col based inventory.</span>
+
+<span class="sd">        :param row: A row, starting at 0, counting up FROM the TOP of the screen. (0 is the top)</span>
+<span class="sd">        :param column: A column, starting at 0, counting up LEFT to right of the screen. (0 is the left)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">container_offset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;This inventory lacks the container&#39;s inventory&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span>
+            <span class="n">row</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">container_width</span> <span class="o">+</span> <span class="n">column</span>
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">container_offset</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="PlayerInventory">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.PlayerInventory">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PlayerInventory</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">9</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;inventory&quot;</span>
+
+    <span class="n">container_offset</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">container_width</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">container_height</span> <span class="o">=</span> <span class="mi">2</span>
+
+<div class="viewcode-block" id="PlayerInventory.get_offhand">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.PlayerInventory.get_offhand">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_offhand</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PlayerInventory.get_crafting_slot">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.PlayerInventory.get_crafting_slot">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_crafting_slot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">offset</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PlayerInventory.get_crafting_output">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.PlayerInventory.get_crafting_output">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_crafting_output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PlayerInventory.get_helmet">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.PlayerInventory.get_helmet">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_helmet</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PlayerInventory.get_chestplate">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.PlayerInventory.get_chestplate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_chestplate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PlayerInventory.get_legging">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.PlayerInventory.get_legging">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_legging</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PlayerInventory.get_boots">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.PlayerInventory.get_boots">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_boots</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span></div>
+</div>
+
+
+<div class="viewcode-block" id="Generic9x1">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Generic9x1">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Generic9x1</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;generic_9x1&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">9</span>
+
+    <span class="n">container_offset</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">container_width</span> <span class="o">=</span> <span class="mi">9</span>
+    <span class="n">container_height</span> <span class="o">=</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="Generic9x2">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Generic9x2">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Generic9x2</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;generic_9x2&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">18</span>
+
+    <span class="n">container_offset</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">container_width</span> <span class="o">=</span> <span class="mi">9</span>
+    <span class="n">container_height</span> <span class="o">=</span> <span class="mi">2</span></div>
+
+
+<div class="viewcode-block" id="Generic9x3">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Generic9x3">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Generic9x3</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;generic_9x3&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">27</span>
+
+    <span class="n">container_offset</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">container_width</span> <span class="o">=</span> <span class="mi">9</span>
+    <span class="n">container_height</span> <span class="o">=</span> <span class="mi">3</span></div>
+
+
+<div class="viewcode-block" id="Generic9x4">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Generic9x4">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Generic9x4</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;generic_9x4&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">36</span>
+
+    <span class="n">container_offset</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">container_width</span> <span class="o">=</span> <span class="mi">9</span>
+    <span class="n">container_height</span> <span class="o">=</span> <span class="mi">4</span></div>
+
+
+<div class="viewcode-block" id="Generic9x5">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Generic9x5">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Generic9x5</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;generic_9x5&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">45</span>
+
+    <span class="n">container_offset</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">container_width</span> <span class="o">=</span> <span class="mi">9</span>
+    <span class="n">container_height</span> <span class="o">=</span> <span class="mi">5</span></div>
+
+
+<div class="viewcode-block" id="Generic9x6">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Generic9x6">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Generic9x6</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;generic_9x6&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">54</span>
+
+    <span class="n">container_offset</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">container_width</span> <span class="o">=</span> <span class="mi">9</span>
+    <span class="n">container_height</span> <span class="o">=</span> <span class="mi">6</span></div>
+
+
+<div class="viewcode-block" id="Generic3x3">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Generic3x3">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Generic3x3</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;generic_3x3&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">9</span>
+
+    <span class="n">container_offset</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">container_width</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">container_height</span> <span class="o">=</span> <span class="mi">3</span></div>
+
+
+<div class="viewcode-block" id="Crafter">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Crafter">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Crafter</span><span class="p">(</span><span class="n">Generic3x3</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;crafter&quot;</span>
+
+    <span class="c1"># TODO: Buttons</span>
+
+<div class="viewcode-block" id="Crafter.get_crafting_output">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Crafter.get_crafting_output">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_crafting_output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span></div>
+</div>
+
+<div class="viewcode-block" id="ShulkerBox">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.ShulkerBox">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ShulkerBox</span><span class="p">(</span><span class="n">Generic9x3</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;shulker_box&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="Generic2Input">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Generic2Input">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Generic2Input</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">3</span>
+
+<div class="viewcode-block" id="Generic2Input.get_input1">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Generic2Input.get_input1">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_input1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Generic2Input.get_input2">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Generic2Input.get_input2">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_input2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Generic2Input.get_output">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Generic2Input.get_output">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span></div>
+</div>
+
+
+<div class="viewcode-block" id="Anvil">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Anvil">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Anvil</span><span class="p">(</span><span class="n">Generic2Input</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;anvil&quot;</span>
+
+<div class="viewcode-block" id="Anvil.set_name">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Anvil.set_name">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">set_anvil_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span></div>
+</div>
+
+
+<div class="viewcode-block" id="Grindstone">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Grindstone">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Grindstone</span><span class="p">(</span><span class="n">Generic2Input</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;grindstone&quot;</span></div>
+
+
+<div class="viewcode-block" id="Merchant">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Merchant">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Merchant</span><span class="p">(</span><span class="n">Generic2Input</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;merchant&quot;</span>
+
+<div class="viewcode-block" id="Merchant.get_trades">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Merchant.get_trades">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_trades</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">get_merchant_trades</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Merchant.select_trade">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Merchant.select_trade">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">select_trade</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span> <span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">select_trade</span><span class="p">(</span><span class="n">index</span><span class="p">)</span></div>
+</div>
+
+
+<div class="viewcode-block" id="CartographyTable">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.CartographyTable">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CartographyTable</span><span class="p">(</span><span class="n">Generic2Input</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;cartography_table&quot;</span></div>
+
+
+<div class="viewcode-block" id="Beacon">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Beacon">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Beacon</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;beacon&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="Beacon.get_payment_slot">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Beacon.get_payment_slot">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_payment_slot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Beacon.set_effects">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Beacon.set_effects">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_effects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">primary</span> <span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">secondary</span> <span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">set_beacon_effect</span><span class="p">(</span><span class="n">primary</span><span class="p">,</span> <span class="n">secondary</span><span class="p">)</span></div>
+</div>
+
+
+<div class="viewcode-block" id="Furnace">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Furnace">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Furnace</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;furnace&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">3</span>
+
+<div class="viewcode-block" id="Furnace.get_furnace_output">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Furnace.get_furnace_output">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_furnace_output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Furnace.get_furnace_fuel">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Furnace.get_furnace_fuel">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_furnace_fuel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Furnace.get_furnace_ingredient">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Furnace.get_furnace_ingredient">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_furnace_ingredient</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+</div>
+
+<div class="viewcode-block" id="BlastFurnace">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.BlastFurnace">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BlastFurnace</span><span class="p">(</span><span class="n">Furnace</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;blast_furnace&quot;</span></div>
+
+<div class="viewcode-block" id="Smoker">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Smoker">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Smoker</span><span class="p">(</span><span class="n">Furnace</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;smoker&quot;</span></div>
+
+<div class="viewcode-block" id="BrewingStand">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.BrewingStand">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BrewingStand</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;brewing_stand&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">5</span>
+
+<div class="viewcode-block" id="BrewingStand.get_blaze_powder">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.BrewingStand.get_blaze_powder">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_blaze_powder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BrewingStand.get_potion_ingredient">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.BrewingStand.get_potion_ingredient">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_potion_ingredient</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BrewingStand.get_potion_output">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.BrewingStand.get_potion_output">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_potion_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">index</span> <span class="o">&lt;=</span> <span class="mi">2</span>
+        <span class="c1"># No offset</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="n">index</span><span class="p">)</span></div>
+</div>
+
+<div class="viewcode-block" id="CraftingTable">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.CraftingTable">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CraftingTable</span><span class="p">(</span><span class="n">Generic3x3</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;crafting_table&quot;</span>
+    <span class="n">container_offset</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">10</span>
+
+<div class="viewcode-block" id="CraftingTable.get_crafting_output">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.CraftingTable.get_crafting_output">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_crafting_output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+</div>
+
+<div class="viewcode-block" id="EnchantmentTable">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.EnchantmentTable">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">EnchantmentTable</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;enchantment&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">2</span>
+
+<div class="viewcode-block" id="EnchantmentTable.get_item">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.EnchantmentTable.get_item">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_item</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="EnchantmentTable.get_lapis">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.EnchantmentTable.get_lapis">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_lapis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EnchantmentTable.get_enchants">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.EnchantmentTable.get_enchants">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_enchants</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">get_enchantments</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="EnchantmentTable.select_enchantment">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.EnchantmentTable.select_enchantment">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">select_enchantment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span> <span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">index</span> <span class="o">&lt;=</span> <span class="mi">2</span>
+
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">click_container_button</span><span class="p">(</span><span class="n">index</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Hopper">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Hopper">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Hopper</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;hopper&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">5</span>
+
+    <span class="n">container_offset</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">container_width</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">container_height</span> <span class="o">=</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="Lectern">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Lectern">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Lectern</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;lectern&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+    <span class="c1"># TODO: Buttons</span>
+<div class="viewcode-block" id="Loom">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Loom">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Loom</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;loom&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">4</span>
+<div class="viewcode-block" id="Loom.get_banner">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Loom.get_banner">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_banner</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Loom.get_dye">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Loom.get_dye">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dye</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Loom.get_pattern">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Loom.get_pattern">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_pattern</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Loom.get_output">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Loom.get_output">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span></div>
+</div>
+
+
+<div class="viewcode-block" id="SmithingTable">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.SmithingTable">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SmithingTable</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;smithing&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">4</span>
+
+<div class="viewcode-block" id="SmithingTable.get_template">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.SmithingTable.get_template">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_template</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SmithingTable.get_base_item">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.SmithingTable.get_base_item">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_base_item</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SmithingTable.get_additional_item">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.SmithingTable.get_additional_item">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_additional_item</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SmithingTable.get_output">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.SmithingTable.get_output">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span></div>
+</div>
+
+<div class="viewcode-block" id="StoneCutter">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.StoneCutter">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">StoneCutter</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;stonecutter&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="c1"># TODO: Buttons</span>
+
+<div class="viewcode-block" id="StoneCutter.get_input">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.StoneCutter.get_input">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="StoneCutter.get_output">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.StoneCutter.get_output">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+</div>
+
+
+<span class="c1"># Includes: Horse, Donkey, Mule, Llama, Camel, etc</span>
+<span class="c1">#   All these animals share a saddle slot, and an amor slot (these can be hidden)</span>
+<span class="c1">#   along with an inventory which is somethimes there </span>
+<div class="viewcode-block" id="EntityWithInventory">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.EntityWithInventory">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">EntityWithInventory</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="c1"># Feels like such a Microsoft thing to do, keep</span>
+    <span class="c1"># adding new stuff and wedge it under an old system</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;horse&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">player</span><span class="p">:</span> <span class="n">Player</span><span class="p">,</span> <span class="n">slot_data</span><span class="p">,</span> <span class="n">screen_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">horse_data</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">horse_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">container_height</span> <span class="o">=</span> <span class="mi">3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">container_width</span> <span class="o">=</span> <span class="n">horse_data</span><span class="p">[</span><span class="s2">&quot;inventory cols&quot;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">container_height</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">player</span><span class="p">,</span> <span class="n">slot_data</span><span class="p">,</span> <span class="n">screen_name</span><span class="p">,</span> <span class="n">horse_data</span><span class="o">=</span><span class="n">horse_data</span><span class="p">)</span>
+<div class="viewcode-block" id="EntityWithInventory.get_saddle">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.EntityWithInventory.get_saddle">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_saddle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="EntityWithInventory.get_armor">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.EntityWithInventory.get_armor">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_armor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+</div>
+
 </pre></div>
 
           </div>
