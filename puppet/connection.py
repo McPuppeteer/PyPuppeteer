@@ -140,6 +140,7 @@ class ClientConnection:
                     idlen = struct.unpack("!h", await self.reader.readexactly(2))[0]
                     id = (await self.reader.readexactly(idlen)).decode("utf-8")
 
+                    
                     if not id in self.promises:
                         if self.handle_error(PuppeteerError("GLOBAL ERROR: Unknown id returned"), FORMAT_ERROR):
                             return
