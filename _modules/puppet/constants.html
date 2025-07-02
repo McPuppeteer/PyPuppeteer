@@ -69,6 +69,20 @@
     <span class="n">CLOSE_CONTAINER</span> <span class="o">=</span> <span class="s2">&quot;CLOSE_CONTAINER&quot;</span>
     <span class="n">SET_CURSOR_ITEM</span> <span class="o">=</span> <span class="s2">&quot;SET_CURSOR_ITEM&quot;</span></div>
 
+<div class="viewcode-block" id="SlotActionType">
+<a class="viewcode-back" href="../../puppet.html#puppet.constants.SlotActionType">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SlotActionType</span><span class="p">(</span><span class="n">enum</span><span class="o">.</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    NOTE: This is taken from Yarn, so it might change from version to version</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">PICKUP</span> <span class="o">=</span> <span class="s2">&quot;PICKUP&quot;</span>          <span class="c1"># raw id 0</span>
+    <span class="n">QUICK_MOVE</span> <span class="o">=</span> <span class="s2">&quot;QUICK_MOVE&quot;</span>  <span class="c1"># raw id 1</span>
+    <span class="n">SWAP</span> <span class="o">=</span> <span class="s2">&quot;SWAP&quot;</span>              <span class="c1"># raw id 2</span>
+    <span class="n">CLONE</span> <span class="o">=</span> <span class="s2">&quot;CLONE&quot;</span>            <span class="c1"># raw id 3</span>
+    <span class="n">THROW</span> <span class="o">=</span> <span class="s2">&quot;THROW&quot;</span>            <span class="c1"># raw id 4</span>
+    <span class="n">QUICK_CRAFT</span> <span class="o">=</span> <span class="s2">&quot;QUICK_CRAFT&quot;</span><span class="c1"># raw id 5</span>
+    <span class="n">PICKUP_ALL</span> <span class="o">=</span> <span class="s2">&quot;PICKUP_ALL&quot;</span>  <span class="c1"># raw id 6</span></div>
+
 
 <div class="viewcode-block" id="PacketCallbackState">
 <a class="viewcode-back" href="../../puppet.html#puppet.constants.PacketCallbackState">[docs]</a>
@@ -106,6 +120,21 @@
 
     <span class="n">OBJECT_SERIALIZED</span> <span class="o">=</span> <span class="s2">&quot;OBJECT_SERIALIZED&quot;</span>
     <span class="n">OBJECT_SERIALIZED_NEXT</span> <span class="o">=</span> <span class="s2">&quot;OBJECT_SERIALIZED_NEXT&quot;</span></div>
+
+
+<div class="viewcode-block" id="Direction">
+<a class="viewcode-back" href="../../puppet.html#puppet.constants.Direction">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Direction</span><span class="p">(</span><span class="n">enum</span><span class="o">.</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="n">NORTH</span> <span class="o">=</span> <span class="s2">&quot;NORTH&quot;</span>
+    <span class="n">SOUTH</span> <span class="o">=</span> <span class="s2">&quot;SOUTH&quot;</span>
+
+    <span class="n">EAST</span> <span class="o">=</span> <span class="s2">&quot;EAST&quot;</span>
+    <span class="n">WEST</span> <span class="o">=</span> <span class="s2">&quot;WEST&quot;</span>
+
+    <span class="n">UP</span> <span class="o">=</span> <span class="s2">&quot;UP&quot;</span>
+    <span class="n">DOWN</span> <span class="o">=</span> <span class="s2">&quot;DOWN&quot;</span></div>
+
+
 
 
 <div class="viewcode-block" id="InputButton">
@@ -162,7 +191,10 @@
     <span class="n">EXPONENTIAL_IN</span> <span class="o">=</span> <span class="s2">&quot;exponentialIn&quot;</span>  <span class="c1"># Exponential ease-in</span>
     <span class="n">EXPONENTIAL_OUT</span> <span class="o">=</span> <span class="s2">&quot;exponentialOut&quot;</span>  <span class="c1"># Exponential ease-out</span>
     <span class="n">EXPONENTIAL_IN_OUT</span> <span class="o">=</span> <span class="s2">&quot;exponentialInOut&quot;</span>  <span class="c1"># Exponential ease-in-out</span>
-    <span class="n">ELASTIC_OUT</span> <span class="o">=</span> <span class="s2">&quot;elasticOut&quot;</span>  <span class="c1"># Elastic ease-out (spring-like, bouncy)</span></div>
+    <span class="n">ELASTIC_OUT</span> <span class="o">=</span> <span class="s2">&quot;elasticOut&quot;</span>  <span class="c1"># Elastic ease-out (spring-like, bouncy)</span>
+
+    <span class="c1"># Only is supported by auto_use and auto_place</span>
+    <span class="n">INSTANT</span> <span class="o">=</span> <span class="s2">&quot;instant&quot;</span></div>
 
 
 
