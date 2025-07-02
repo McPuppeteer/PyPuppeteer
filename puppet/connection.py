@@ -116,7 +116,6 @@ class ClientConnection:
                     if info.get("callback", False):
 
                         if self.callback_handler is not None:
-                            print(info)
                             await self.callback_handler(info)
 
                         continue
@@ -171,7 +170,6 @@ class ClientConnection:
                                          FORMAT_ERROR):
                         return
         except Exception as e:
-            print(e)
             print_stack(e)
             
         finally:

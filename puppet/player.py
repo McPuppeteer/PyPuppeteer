@@ -351,7 +351,6 @@ class Player:
 
 
         ret = await fut
-        print("FOO")
 
         # We don't care about this much
         asyncio.create_task(self._allow_dead(self._set_callbacks({
