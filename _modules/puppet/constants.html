@@ -70,6 +70,42 @@
     <span class="n">SET_CURSOR_ITEM</span> <span class="o">=</span> <span class="s2">&quot;SET_CURSOR_ITEM&quot;</span></div>
 
 
+<div class="viewcode-block" id="PacketCallbackState">
+<a class="viewcode-back" href="../../puppet.html#puppet.constants.PacketCallbackState">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PacketCallbackState</span><span class="p">(</span><span class="n">enum</span><span class="o">.</span><span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    How packet callback states are handled.</span>
+
+<span class="sd">    When a packet is set to notify, it only tells you _that_ a packet is sent, and not any</span>
+<span class="sd">    additional information.</span>
+
+<span class="sd">    When a packet is set to &quot;network serialized&quot; the structure is simular to the protocol</span>
+<span class="sd">    as described in the wiki, meaning all packet types are supported, but difficult to make</span>
+<span class="sd">    use of. See: https://minecraft.wiki/w/Java_Edition_protocol/Packets</span>
+
+<span class="sd">    When a packet is set to &quot;object serialized&quot; the structure is simular to how it is represented</span>
+<span class="sd">    internally. This mode is typically easier to use, often just key-value data structures. However,</span>
+<span class="sd">    is simply unusable for many packet types, due to complex internal data structures.</span>
+
+<span class="sd">    **Note** that in this mode keys are taken from the Yarn mappings used during the mods compilation,</span>
+<span class="sd">    meaning that it is subject to change, even if the Minecraft version number is the exact same.</span>
+
+<span class="sd">    ====================================================================================</span>
+
+<span class="sd">    You can optimally set a packet type to &quot;next&quot; meaning you only receive the next packet.</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">DISABLED</span> <span class="o">=</span> <span class="s2">&quot;DISABLED&quot;</span>
+
+    <span class="n">NOTIFY_ONLY</span> <span class="o">=</span> <span class="s2">&quot;NOTIFY_ONLY&quot;</span>
+    <span class="n">NOTIFY_NEXT</span> <span class="o">=</span> <span class="s2">&quot;NOTIFY_NEXT&quot;</span>
+
+    <span class="n">NETWORK_SERIALIZED</span> <span class="o">=</span> <span class="s2">&quot;NETWORK_SERIALIZED&quot;</span>
+    <span class="n">NETWORK_SERIALIZED_NEXT</span> <span class="o">=</span> <span class="s2">&quot;NETWORK_SERIALIZED_NEXT&quot;</span>
+
+    <span class="n">OBJECT_SERIALIZED</span> <span class="o">=</span> <span class="s2">&quot;OBJECT_SERIALIZED&quot;</span>
+    <span class="n">OBJECT_SERIALIZED_NEXT</span> <span class="o">=</span> <span class="s2">&quot;OBJECT_SERIALIZED_NEXT&quot;</span></div>
 
 
 <div class="viewcode-block" id="InputButton">
@@ -94,6 +130,9 @@
 
 <span class="n">string_callback_dict</span> <span class="o">=</span> <span class="p">{</span>
     <span class="n">v</span><span class="o">.</span><span class="n">value</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">CallbackType</span><span class="o">.</span><span class="n">__members__</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+<span class="p">}</span>
+<span class="n">string_packet_state_dict</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">v</span><span class="o">.</span><span class="n">value</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">PacketCallbackState</span><span class="o">.</span><span class="n">__members__</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
 <span class="p">}</span>
 
 
