@@ -1,5 +1,9 @@
+import asyncio
 from io import BytesIO
+from tkinter.constants import DISABLED
 from typing import *
+
+from genson.schema.strategies import Boolean
 
 from .connection import *
 from .world import Chunk
@@ -28,20 +32,30 @@ class Player:
     ```
     """
 
-    _callbacks: Dict[str, Callable[[Dict[Any, Any]], None]]
+    _callbacks: Dict[str, Callable[[Dict[Any, Any]], Coroutine[Any, Any, None]]]
+
+    async def panic(self):
+        return await self.handle_packet("panic")
 
     # =========================
     #   Connection Management
     # =========================
+    default_callback: Callable[[Dict[Any, Any]], Coroutine[Any, Any, None]] | None
 
     async def _callback_handler(self, info):
-        print(info)
+        callback = self._callbacks.get(info["type"])
+        if callback is None:
+            if self.default_callback is not None:
+                await self.default_callback(info)
+            return
+        await callback(info)
 
     def __init__(self, connection: ClientConnection):
         self.connection = connection
         self.connection.callback_handler = self._callback_handler
 
         self._callbacks = {}
+        self.default_callback = None
 
     async def __aenter__(self):
         return self
@@ -93,6 +107,54 @@ class Player:
         :raises PuppeteerError: If the JSON contains an error status.
         """
         return self._handle_json(*await self.connection.write_packet(message, extra))
+
+    async def wait_for_chat(self, predicate: Callable[[str], Boolean]):
+        fut = asyncio.get_running_loop().create_future()
+        old_val = self._callbacks.get(CallbackType.CHAT.value)
+
+        async def tmp(info):
+            if predicate(info["message"]):
+                fut.set_result(info)
+            # Respect old callbacks
+            if old_val is not None:
+                await old_val(info)
+
+        self._callbacks[CallbackType.CHAT.value] = tmp
+
+        # Wait for message
+        ret = await fut
+
+        # Restore
+        if old_val is not None:
+            self._callbacks[CallbackType.CHAT.value] = old_val
+        return ret
+
+    async def wait_for_change(self):
+        oldCallbackType = ((await self._get_callback_states())
+                           .get(CallbackType.PLAYER_POSITION, False))
+        await self._set_callbacks({
+            CallbackType.PLAYER_POSITION: True
+        })
+        info = await self.get_player_info()
+        fut = asyncio.get_running_loop().create_future()
+        old = self._callbacks.get(CallbackType.PLAYER_POSITION.value)
+
+        async def tmp(ninfo):
+            if info["x"] != ninfo["x"] or info["y"] != ninfo["y"] or info["z"] != ninfo["z"]:
+                fut.set_result(ninfo)
+            if old is not None:
+                await old(ninfo)
+
+        self._callbacks[CallbackType.PLAYER_POSITION.value] = tmp
+        ret = await fut
+        self._callbacks[CallbackType.PLAYER_POSITION.value] = old
+
+        if not oldCallbackType:
+            await self._set_callbacks({
+                CallbackType.PLAYER_POSITION: oldCallbackType
+            })
+
+        return ret
 
     # =========================
     #   Mod Integration Helpers
@@ -147,6 +209,13 @@ class Player:
 
         return func
 
+    async def _allow_dead(self, coroutine : Coroutine):
+        """ When running as a task, don't crash if the connection is dead."""
+        if self.connection.running:
+            await coroutine
+        else:
+            # This is just to stop the warnings
+            asyncio.create_task(coroutine).cancel()
     # =========================
     #   Client/Player Info
     # =========================
@@ -194,30 +263,128 @@ class Player:
     #   Callback Management
     # =========================
 
-    async def get_callback_states(self) -> Dict[CallbackType, bool]:
+    async def _get_callback_states(self) -> Dict[CallbackType, bool]:
         """
-        Tells you what callbacks are currently enabled in the client. Use ``set_callbacks()`` to enable them.
+        Tells you what callbacks are currently enabled in the client. Use ``_set_callbacks()`` to enable them.
 
         :return: A dictionary of the callback states.
         """
         result = await self.handle_packet("get callbacks")
         return {
             string_callback_dict.get(k): v
-            for k, v in result["callbacks"].items()
+            for k, v in result["typical callbacks"].items()
         }
 
-    async def set_callbacks(self, callbacks: Dict[CallbackType, bool]):
+    async def _get_packet_callback_states(self) -> Dict[str, PacketCallbackState]:
+        result = await self.handle_packet("get callbacks")
+
+        return {
+            k: string_packet_state_dict.get(v)
+            for k, v in result["packet callbacks"].items()
+        }
+
+    async def _set_callbacks(self, callbacks: Dict[CallbackType, bool]):
         """
         Enable more callbacks being sent to the player.
 
-        :param callbacks: A dictionary (identical to the return of ``get_callback_states()``) of what callbacks you want to enable.
+        :param callbacks: A dictionary (identical to the return of ``_get_callback_states()``) of what callbacks you want to enable.
         """
         payload = {k.value: v for k, v in callbacks.items()}
         return await self.handle_packet("set callbacks", {"callbacks": payload})
 
-    async def clear_callbacks(self):
+    async def _set_packet_callbacks(self, callbacks: Dict[str, PacketCallbackState]):
+        """
+        Enable specific packet callbacks being sent to the player.
+        You should use ``_get_packet_callback_states()`` for a canonical list of packets enabled
+        for this version. An example packet callback id is: ``clientbound/minecraft:set_chunk_cache_center``
+
+        You should also use the wiki as a reference: https://minecraft.wiki/w/Java_Edition_protocol/Packets
+
+        Also see PacketCallbackState for additional information.
+
+        :param callbacks: A dictionary (identical to the return of ``_get_packet_callback_states()``) of what callbacks you want to enable.
+        """
+        return await self.handle_packet("set callbacks", {
+            "callbacks": {
+                k: v.value
+                for k, v in callbacks.items()
+            }
+        })
+
+    async def _clear_callbacks(self):
         """ Clear all callbacks being sent to the player.  """
         return await self.handle_packet("clear callbacks")
+    async def clear_callbacks(self):
+        self._callbacks = {}
+        return await self._clear_callbacks()
+
+    async def set_callback(self, type: CallbackType, callback :  Callable[[Dict[Any, Any]], Coroutine[Any, Any, None]]):
+        self._callbacks[type.value] = callback
+        await self._set_callbacks({
+            type: True
+        })
+    async def remove_callback(self, type : CallbackType):
+        await self._set_callbacks({
+            type: False
+        })
+        del self._callbacks[type.value]
+    async def wait_for_callback(self, type : CallbackType):
+        old_state = (await self._get_callback_states()).get(type, False)
+
+        fut = asyncio.get_event_loop().create_future()
+        old_callback = self._callbacks.get(type.value)
+
+        async def tmp(info):
+            fut.set_result(info)
+            if old_callback is not None:
+                await old_callback(info)
+                self._callbacks[type.value] = old_callback
+            else:
+                del self._callbacks[type.value]
+
+        self._callbacks[type.value] = tmp
+
+        # Try to save some time
+        asyncio.create_task(self._set_callbacks({
+            type: True
+        }))
+
+
+        ret = await fut
+        print("FOO")
+
+        # We don't care about this much
+        asyncio.create_task(self._allow_dead(self._set_callbacks({
+            type: old_state
+        })))
+
+        return ret
+
+
+
+
+    async def set_packet_callback(self, idd : str, callbackType : PacketCallbackState, callback :  Callable[[Dict[Any, Any]], Coroutine[Any, Any, None]]):
+        assert callbackType != PacketCallbackState.DISABLED
+
+        def removal_wrapper(*args, **kwargs):
+            del self._callbacks[idd]
+            return callback(*args, **kwargs)
+
+        # `Next` style callback types only trigger once
+        if callbackType in (PacketCallbackState.NETWORK_SERIALIZED_NEXT, PacketCallbackState.NOTIFY_NEXT, PacketCallbackState.OBJECT_SERIALIZED_NEXT):
+            self._callbacks[idd] = removal_wrapper
+        else:
+            self._callbacks[idd] = callback
+
+        await self._set_packet_callbacks({idd: callbackType})
+    async def remove_packet_callback(self, idd : str):
+        del self._callbacks[idd]
+        await self._set_packet_callbacks({
+            idd: PacketCallbackState.DISABLED
+        })
+
+
+
 
     # =========================
     #   World/Block/Chunk Access
@@ -237,8 +404,9 @@ class Player:
             return self._handle_json(pt, data)
         return data.unpack()
 
-    async def list_loaded_chunk_segments(self) -> List:
-        """ Returns a list of loaded chunk segments. """
+    async def list_loaded_chunks(self) -> List:
+        """ Returns a list of loaded chunks."""
+
         return (await self.handle_packet("list loaded chunks")).get("chunks")
 
     async def get_player_inventory_contents(self):
@@ -254,25 +422,27 @@ class Player:
     async def get_open_inventory_contents(self):
         return await self.handle_packet("get open inventory")
 
-    async def click_container_button(self, button : int):
+    async def click_container_button(self, button: int):
         return await self.handle_packet("click inventory button", {"button": button})
 
     async def get_merchant_trades(self):
         return await self.handle_packet("get trades")
 
-    async def select_trade(self, index : int):
+    async def select_trade(self, index: int):
         return await self.handle_packet("select trade", {"index": index})
 
-    async def set_anvil_name(self, name : str):
+    async def set_anvil_name(self, name: str):
         return await self.handle_packet("set anvil name", {"name": name})
 
-    async def set_beacon_effect(self, primary : str | None, secondary : str | None = None):
+    async def set_beacon_effect(self, primary: str | None, secondary: str | None = None):
         return await self.handle_packet("set beacon effect", {
-            **({} if primary is None else  {"primary": primary}),
+            **({} if primary is None else {"primary": primary}),
             **({} if secondary is None else {"secondary": secondary})
         })
+
     async def get_enchantments(self):
         return await self.handle_packet("get enchantments")
+
     async def get_chunk(self, cx: int, cz: int) -> Chunk:
         """
         Asks for a specific chunk somewhere in the world.
@@ -621,7 +791,7 @@ class Inventory:
     container_width: int = None
     container_height: int = None
 
-    def __init__(self, player: Player, slot_data, screen_name: str | None = None, horse_data : Dict | None = None):
+    def __init__(self, player: Player, slot_data, screen_name: str | None = None, horse_data: Dict | None = None):
         self.player = player
         self.screen_name = screen_name
 
@@ -690,6 +860,7 @@ class PlayerInventory(Inventory):
     def get_boots(self):
         return self.get_slot(8)
 
+
 class Generic9x1(Inventory):
     container_type = "generic_9x1"
     player_inventory_offset = 9
@@ -697,6 +868,7 @@ class Generic9x1(Inventory):
     container_offset = 0
     container_width = 9
     container_height = 1
+
 
 class Generic9x2(Inventory):
     container_type = "generic_9x2"
@@ -706,6 +878,7 @@ class Generic9x2(Inventory):
     container_width = 9
     container_height = 2
 
+
 class Generic9x3(Inventory):
     container_type = "generic_9x3"
     player_inventory_offset = 27
@@ -713,6 +886,7 @@ class Generic9x3(Inventory):
     container_offset = 0
     container_width = 9
     container_height = 3
+
 
 class Generic9x4(Inventory):
     container_type = "generic_9x4"
@@ -722,6 +896,7 @@ class Generic9x4(Inventory):
     container_width = 9
     container_height = 4
 
+
 class Generic9x5(Inventory):
     container_type = "generic_9x5"
     player_inventory_offset = 45
@@ -729,6 +904,7 @@ class Generic9x5(Inventory):
     container_offset = 0
     container_width = 9
     container_height = 5
+
 
 class Generic9x6(Inventory):
     container_type = "generic_9x6"
@@ -738,6 +914,7 @@ class Generic9x6(Inventory):
     container_width = 9
     container_height = 6
 
+
 class Generic3x3(Inventory):
     container_type = "generic_3x3"
     player_inventory_offset = 9
@@ -746,6 +923,7 @@ class Generic3x3(Inventory):
     container_width = 3
     container_height = 3
 
+
 class Crafter(Generic3x3):
     container_type = "crafter"
 
@@ -753,6 +931,8 @@ class Crafter(Generic3x3):
 
     def get_crafting_output(self):
         return self.get_slot(45)
+
+
 class ShulkerBox(Generic9x3):
     container_type = "shulker_box"
 
@@ -762,30 +942,38 @@ class Generic2Input(Inventory):
 
     def get_input1(self):
         return self.get_slot(0)
+
     def get_input2(self):
         return self.get_slot(1)
+
     def get_output(self):
         return self.get_slot(2)
+
 
 class Anvil(Generic2Input):
     container_type = "anvil"
 
-    async def set_name(self, name : str):
+    async def set_name(self, name: str):
         return await self.player.set_anvil_name(name)
+
 
 class Grindstone(Generic2Input):
     container_type = "grindstone"
+
 
 class Merchant(Generic2Input):
     container_type = "merchant"
 
     async def get_trades(self):
         return await self.player.get_merchant_trades()
-    async def select_trade(self, index : int):
+
+    async def select_trade(self, index: int):
         return await self.player.select_trade(index)
+
 
 class CartographyTable(Generic2Input):
     container_type = "cartography_table"
+
 
 class Beacon(Inventory):
     container_type = "beacon"
@@ -793,8 +981,10 @@ class Beacon(Inventory):
 
     def get_payment_slot(self):
         return self.get_slot(0)
-    async def set_effects(self, primary : None | str = None, secondary : None | str = None):
+
+    async def set_effects(self, primary: None | str = None, secondary: None | str = None):
         return self.player.set_beacon_effect(primary, secondary)
+
 
 class Furnace(Inventory):
     container_type = "furnace"
@@ -802,14 +992,22 @@ class Furnace(Inventory):
 
     def get_furnace_output(self):
         return self.get_slot(2)
+
     def get_furnace_fuel(self):
         return self.get_slot(1)
+
     def get_furnace_ingredient(self):
         return self.get_slot(0)
+
+
 class BlastFurnace(Furnace):
     container_type = "blast_furnace"
+
+
 class Smoker(Furnace):
     container_type = "smoker"
+
+
 class BrewingStand(Inventory):
     container_type = "brewing_stand"
     player_inventory_offset = 5
@@ -819,10 +1017,13 @@ class BrewingStand(Inventory):
 
     def get_potion_ingredient(self):
         return self.get_slot(3)
-    def get_potion_output(self, index = 0):
+
+    def get_potion_output(self, index=0):
         assert index <= 2
         # No offset
         return self.get_slot(index)
+
+
 class CraftingTable(Generic3x3):
     container_type = "crafting_table"
     container_offset = 1
@@ -830,18 +1031,22 @@ class CraftingTable(Generic3x3):
 
     def get_crafting_output(self):
         return self.get_slot(0)
+
+
 class EnchantmentTable(Inventory):
     container_type = "enchantment"
     player_inventory_offset = 2
 
     def get_item(self):
         return self.get_slot(0)
+
     def get_lapis(self):
         return self.get_slot(1)
 
     async def get_enchants(self):
         return await self.player.get_enchantments()
-    async def select_enchantment(self, index : int):
+
+    async def select_enchantment(self, index: int):
         assert 0 <= index <= 2
 
         return await self.player.click_container_button(index)
@@ -855,21 +1060,29 @@ class Hopper(Inventory):
     container_width = 5
     container_height = 1
 
+
 class Lectern(Inventory):
     container_type = "lectern"
     player_inventory_offset = None
     # TODO: Buttons
+
+
 class Loom(Inventory):
     container_type = "loom"
     player_inventory_offset = 4
+
     def get_banner(self):
         return self.get_slot(0)
+
     def get_dye(self):
         return self.get_slot(1)
+
     def get_pattern(self):
         return self.get_slot(2)
+
     def get_output(self):
         return self.get_slot(3)
+
 
 class SmithingTable(Inventory):
     container_type = "smithing"
@@ -877,21 +1090,29 @@ class SmithingTable(Inventory):
 
     def get_template(self):
         return self.get_slot(0)
+
     def get_base_item(self):
         return self.get_slot(1)
+
     def get_additional_item(self):
         return self.get_slot(2)
+
     def get_output(self):
         return self.get_slot(3)
+
+
 class StoneCutter(Inventory):
     container_type = "stonecutter"
     player_inventory_offset = 2
+
     # TODO: Buttons
 
     def get_input(self):
         return self.get_slot(0)
+
     def get_output(self):
         return self.get_slot(1)
+
 
 # Includes: Horse, Donkey, Mule, Llama, Camel, etc
 #   All these animals share a saddle slot, and an amor slot (these can be hidden)
@@ -901,7 +1122,7 @@ class EntityWithInventory(Inventory):
     # adding new stuff and wedge it under an old system
     container_type = "horse"
 
-    def __init__(self, player: Player, slot_data, screen_name: str | None = None, horse_data = None):
+    def __init__(self, player: Player, slot_data, screen_name: str | None = None, horse_data=None):
         assert horse_data is not None
 
         self.container_height = 3
@@ -910,7 +1131,9 @@ class EntityWithInventory(Inventory):
         self.player_inventory_offset = 2 + 3 * self.container_height
 
         super().__init__(player, slot_data, screen_name, horse_data=horse_data)
+
     def get_saddle(self):
         return self.get_slot(0)
+
     def get_armor(self):
         return self.get_slot(1)

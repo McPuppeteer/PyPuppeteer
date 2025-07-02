@@ -104,7 +104,6 @@ class ClientConnection:
         try:
             while self.running:
                 header = await self.reader.readexactly(1 + 4)
-
                 packet_type, length = struct.unpack("!ci", header)
 
                 buffer = await self.reader.readexactly(length)
@@ -117,6 +116,7 @@ class ClientConnection:
                     if info.get("callback", False):
 
                         if self.callback_handler is not None:
+                            print(info)
                             await self.callback_handler(info)
 
                         continue

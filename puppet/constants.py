@@ -34,7 +34,40 @@ class CallbackType(enum.Enum):
     CLOSE_CONTAINER = "CLOSE_CONTAINER"
     SET_CURSOR_ITEM = "SET_CURSOR_ITEM"
 
+class PacketCallbackState(enum.Enum):
+    """
+    How packet callback states are handled.
 
+    When a packet is set to notify, it only tells you _that_ a packet is sent, and not any
+    additional information.
+
+    When a packet is set to "network serialized" the structure is simular to the protocol
+    as described in the wiki, meaning all packet types are supported, but difficult to make
+    use of. See: https://minecraft.wiki/w/Java_Edition_protocol/Packets
+
+    When a packet is set to "object serialized" the structure is simular to how it is represented
+    internally. This mode is typically easier to use, often just key-value data structures. However,
+    is simply unusable for many packet types, due to complex internal data structures.
+
+    **Note** that in this mode keys are taken from the Yarn mappings used during the mods compilation,
+    meaning that it is subject to change, even if the Minecraft version number is the exact same.
+
+    ====================================================================================
+
+    You can optimally set a packet type to "next" meaning you only receive the next packet.
+
+
+    """
+    DISABLED = "DISABLED"
+
+    NOTIFY_ONLY = "NOTIFY_ONLY"
+    NOTIFY_NEXT = "NOTIFY_NEXT"
+
+    NETWORK_SERIALIZED = "NETWORK_SERIALIZED"
+    NETWORK_SERIALIZED_NEXT = "NETWORK_SERIALIZED_NEXT"
+
+    OBJECT_SERIALIZED = "OBJECT_SERIALIZED"
+    OBJECT_SERIALIZED_NEXT = "OBJECT_SERIALIZED_NEXT"
 
 class InputButton(enum.Enum):
     """
@@ -55,6 +88,9 @@ class InputButton(enum.Enum):
 
 string_callback_dict = {
     v.value: v for k, v in CallbackType.__members__.items()
+}
+string_packet_state_dict = {
+    v.value: v for k, v in PacketCallbackState.__members__.items()
 }
 
 
