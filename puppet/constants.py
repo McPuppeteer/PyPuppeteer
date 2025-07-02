@@ -33,6 +33,17 @@ class CallbackType(enum.Enum):
     SET_CONTAINER_PROPERTIES = "SET_CONTAINER_PROPERTIES"
     CLOSE_CONTAINER = "CLOSE_CONTAINER"
     SET_CURSOR_ITEM = "SET_CURSOR_ITEM"
+class SlotActionType(enum.Enum):
+    """
+    NOTE: This is taken from Yarn, so it might change from version to version
+    """
+    PICKUP = "PICKUP"          # raw id 0
+    QUICK_MOVE = "QUICK_MOVE"  # raw id 1
+    SWAP = "SWAP"              # raw id 2
+    CLONE = "CLONE"            # raw id 3
+    THROW = "THROW"            # raw id 4
+    QUICK_CRAFT = "QUICK_CRAFT"# raw id 5
+    PICKUP_ALL = "PICKUP_ALL"  # raw id 6
 
 class PacketCallbackState(enum.Enum):
     """
@@ -68,6 +79,18 @@ class PacketCallbackState(enum.Enum):
 
     OBJECT_SERIALIZED = "OBJECT_SERIALIZED"
     OBJECT_SERIALIZED_NEXT = "OBJECT_SERIALIZED_NEXT"
+
+class Direction(enum.Enum):
+    NORTH = "NORTH"
+    SOUTH = "SOUTH"
+
+    EAST = "EAST"
+    WEST = "WEST"
+
+    UP = "UP"
+    DOWN = "DOWN"
+
+
 
 class InputButton(enum.Enum):
     """
@@ -119,6 +142,9 @@ class RoMethod(enum.Enum):
     EXPONENTIAL_OUT = "exponentialOut"  # Exponential ease-out
     EXPONENTIAL_IN_OUT = "exponentialInOut"  # Exponential ease-in-out
     ELASTIC_OUT = "elasticOut"  # Elastic ease-out (spring-like, bouncy)
+
+    # Only is supported by auto_use and auto_place
+    INSTANT = "instant"
 
 
 class PuppeteerErrorType(enum.Enum):

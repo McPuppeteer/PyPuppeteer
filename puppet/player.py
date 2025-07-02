@@ -108,54 +108,14 @@ class Player:
         """
         return self._handle_json(*await self.connection.write_packet(message, extra))
 
-    async def wait_for_chat(self, predicate: Callable[[str], Boolean]):
-        fut = asyncio.get_running_loop().create_future()
-        old_val = self._callbacks.get(CallbackType.CHAT.value)
+    async def wait_for_chat(self, predicate: Callable[[str], Boolean] | str) -> str:
+        if type(predicate) is str:
+            old = predicate
+            predicate = lambda x: old in x
 
-        async def tmp(info):
-            if predicate(info["message"]):
-                fut.set_result(info)
-            # Respect old callbacks
-            if old_val is not None:
-                await old_val(info)
-
-        self._callbacks[CallbackType.CHAT.value] = tmp
-
-        # Wait for message
-        ret = await fut
-
-        # Restore
-        if old_val is not None:
-            self._callbacks[CallbackType.CHAT.value] = old_val
+        while not predicate(ret := (await self.wait_for_callback(CallbackType.CHAT))["message"]):
+            pass
         return ret
-
-    async def wait_for_change(self):
-        oldCallbackType = ((await self._get_callback_states())
-                           .get(CallbackType.PLAYER_POSITION, False))
-        await self._set_callbacks({
-            CallbackType.PLAYER_POSITION: True
-        })
-        info = await self.get_player_info()
-        fut = asyncio.get_running_loop().create_future()
-        old = self._callbacks.get(CallbackType.PLAYER_POSITION.value)
-
-        async def tmp(ninfo):
-            if info["x"] != ninfo["x"] or info["y"] != ninfo["y"] or info["z"] != ninfo["z"]:
-                fut.set_result(ninfo)
-            if old is not None:
-                await old(ninfo)
-
-        self._callbacks[CallbackType.PLAYER_POSITION.value] = tmp
-        ret = await fut
-        self._callbacks[CallbackType.PLAYER_POSITION.value] = old
-
-        if not oldCallbackType:
-            await self._set_callbacks({
-                CallbackType.PLAYER_POSITION: oldCallbackType
-            })
-
-        return ret
-
     # =========================
     #   Mod Integration Helpers
     # =========================
@@ -258,6 +218,9 @@ class Player:
         # we don't have to bother the exception system
         _, jso = await self.connection.write_packet("test baritone")
         return jso["status"] == "ok"
+
+    async def ping(self):
+        return await self.handle_packet("ping")
 
     # =========================
     #   Callback Management
@@ -408,6 +371,50 @@ class Player:
 
         return (await self.handle_packet("list loaded chunks")).get("chunks")
 
+    async def click_slot(self, slot : int, button : int, action : SlotActionType):
+        """
+        Simulates a single slot click/action. This is a low level function, slot ids change
+        based on the current screen.
+
+        Actions in the inventory are a determined by combinations of the button
+        and the actions.
+
+        See: https://minecraft.wiki/w/Java_Edition_protocol/Packets#Click_Container
+
+        :param slot: Slot id, depends on current inventory.
+        :param button: See wiki
+        :param action: See wiki
+        """
+
+        return await self.handle_packet("click slot", {
+            "slot": slot,
+            "button": button,
+            "action": action.value
+        })
+    async def swap_slots(self, slot1 : int, slot2 : int, useOffhand : bool = False):
+        """
+        Attempts to swap slots in an inventory. Either with clicking, or with offhand swaps.
+
+        When useOffhand is set to false, will click slot1, then slot2, then slot1 again. This
+        will not avoid merging of the same item type.
+
+        When useOffhand is set to true, will swap slot1 with the offhand, then slot2, then slot1.
+        This gets the same result, but avoids merging items, **however** may look suspicious.
+
+        :param slot1: Slot id, depends on current inventory.
+        :param slot2: Slot id, depends on current inventory.
+        :param useOffhand: Use the offhand instead of clicking.
+        :return:
+        """
+
+        return await self.handle_packet("swap slots", {
+            "slot1": slot1,
+            "slot2": slot2,
+            "useOffhand": useOffhand
+        })
+
+
+
     async def get_player_inventory_contents(self):
         """ Returns JSON data of the player's inventory. Throws an error if a container is open"""
         return await self.handle_packet("get player inventory")
@@ -455,6 +462,19 @@ class Player:
             self._handle_json(pt, data)
             assert False, "Unreachable"
         return Chunk.from_network(BytesIO(data))
+    async def search_for_blocks(self, blocks : List[str] | str):
+        """
+        Finds all the blocks of a certain type/types somewhere in the players render distance.
+        This is MUCH faster than getting the entire world with ``get_chunk()``
+        Note: Ids are in the form: ``minecraft:grass_block``
+
+
+        :param blocks: A list of strings, or a single string
+        :return: On success, a list of blocks
+        """
+        if type(blocks) is str:
+            blocks = (blocks, )
+        return await self.handle_packet("search for blocks", {"blocks": blocks})
 
     # =========================
     #   World/Server Management
@@ -660,7 +680,7 @@ class Player:
             pitch: float,
             yaw: float,
             speed: float = 3,
-            method: RoMethod = RoMethod.SINE_IN_OUT,
+            method: RoMethod = RoMethod.LINEAR,
     ):
         """
         Smoothly, and realistically, rotate the player.
@@ -671,6 +691,9 @@ class Player:
                       this will not be true.
         :param method: What interpolation method is used. This will not change the time required to rotate, but instead how it looks.
         """
+
+        assert method != RoMethod.INSTANT, "Not a supported rotation method."
+
         return await self.handle_packet(
             "algorithmic rotation",
             {
@@ -712,6 +735,51 @@ class Player:
     async def use(self):
         """ Tells the player to use an item/block. Single right click """
         return await self.handle_packet("use key click")
+    async def auto_use(self,
+                       x : int, y  : int, z : int,
+                       speed : float = 3, method : RoMethod = RoMethod.LINEAR,
+                       direction_of_use : Direction | None = None):
+        """
+        Look at block and click it.
+
+        :param x: X location of block
+        :param y: Y location of block
+        :param z: Z location of block
+        :param speed: Degrees per tick speed of rotation
+        :param method: Rotation method
+        :param direction_of_use: What direction of the block to clic
+        :return:
+        """
+
+        return await self.handle_packet("auto use", {
+            "x": x, "y": y, "z": z,
+            "degrees per tick": speed,
+            "method": method.value,
+            **({} if direction_of_use is None else {"direction" : direction_of_use.value})
+        })
+
+    async def auto_place(self,
+                         x: int, y: int, z: int,
+                         speed : float = 3, method : RoMethod = RoMethod.LINEAR,
+                         direction_to_place_on : Direction | None = None
+                         ):
+        """
+        Place a block
+
+        :param x: X location of block to place
+        :param y: Y location of block to place
+        :param z: Z location of block to place
+        :param speed: Degrees per tick speed of rotation
+        :param method: Rotation method
+        :param direction_to_place_on: What block to place on. For example, use down to
+                                      place on the block UNDER the location you specify
+        """
+        return await self.handle_packet("auto place", {
+            "x": x, "y": y, "z": z,
+            "degrees per tick": speed,
+            "method": method.value,
+            **({} if direction_to_place_on is None else {"direction" : direction_to_place_on.value})
+        })
 
     async def set_directional_walk(
             self, degrees: float, speed: float = 1, force: bool = False
