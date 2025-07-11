@@ -14,17 +14,22 @@ class Section:
 
 
 
-    def __init__(self, bit_length, palette, longs):
+    def __init__(self, bit_length, edge_bits, palette, longs):
         self.bit_length = bit_length
         self.palette = palette
+        self.edge_bits = edge_bits
 
         self.longs = longs
 
 
     def _get_raw_id(self, sx : int, sy : int, sz : int):
-        blockIndex = sy + sz * 16 + sx * 16 * 16
-        bitIndex = blockIndex * self.bit_length
+        # A section filled with one type
+        if self.bit_length == 0:
+            return 0
 
+        # This math hurts my head
+        blockIndex = (sy << self.edge_bits | sz) << self.edge_bits | sx
+        bitIndex = blockIndex * self.bit_length
 
         num = self.longs[bitIndex // 64]
 
@@ -41,16 +46,17 @@ class Section:
     @classmethod
     def from_network(cls, reader : BytesIO):
         # Section format: [short: Bits per block][int: amount of longs][byte: nbt tag type][nbt: palette][array of longs]
-        bitSize, longCount = struct.unpack("!hi", reader.read(6))
-        
+        bitSize, edgeBits, longCount = struct.unpack("!hhi", reader.read(8))
 
+        # Minecraft network nbt is prefixed with a type, which breaks
+        # the nbt reader unless we consume it.
         assert nbtlib.List.tag_id == reader.read(1)[0]
 
         palette = nbtlib.List.parse(reader).unpack()
-        
+
         longs = struct.unpack(f"!{longCount}Q", reader.read(longCount*8))
         
-        return cls(bitSize, palette, longs)
+        return cls(bitSize, edgeBits,  palette, longs)
 
 
 
@@ -72,7 +78,6 @@ class Chunk:
         # Chunk format: [byte: nbt tag type][nbt: block entites][int: section bottom][int: section top][short: section count][sections]
 
         block_entities = nbtlib.List.parse(reader).unpack()
-
 
         sections = []
 

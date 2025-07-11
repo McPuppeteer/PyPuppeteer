@@ -1,9 +1,7 @@
 import asyncio
 from io import BytesIO
-from tkinter.constants import DISABLED
 from typing import *
 
-from genson.schema.strategies import Boolean
 
 from .connection import *
 from .world import Chunk
@@ -108,7 +106,7 @@ class Player:
         """
         return self._handle_json(*await self.connection.write_packet(message, extra))
 
-    async def wait_for_chat(self, predicate: Callable[[str], Boolean] | str) -> str:
+    async def wait_for_chat(self, predicate: Callable[[str], bool] | str) -> str:
         if type(predicate) is str:
             old = predicate
             predicate = lambda x: old in x
