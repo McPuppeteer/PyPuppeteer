@@ -1,0 +1,1706 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>puppet.player &#8212; McPuppeteer 0.0.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=686e5160" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <script src="../../_static/documentation_options.js?v=e3a6060d"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for puppet.player</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">io</span><span class="w"> </span><span class="kn">import</span> <span class="n">BytesIO</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.connection</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.world</span><span class="w"> </span><span class="kn">import</span> <span class="n">Chunk</span>
+
+<span class="n">_MOD_INTEGRATIONS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="p">(</span><span class="s2">&quot;dump itemscroller config&quot;</span><span class="p">,</span> <span class="s2">&quot;get itemscroller config item&quot;</span><span class="p">,</span> <span class="s2">&quot;set itemscroller config item&quot;</span><span class="p">,</span>
+     <span class="s2">&quot;exec itemscroller config item&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;dump litematica config&quot;</span><span class="p">,</span> <span class="s2">&quot;get litematica config item&quot;</span><span class="p">,</span> <span class="s2">&quot;set litematica config item&quot;</span><span class="p">,</span>
+     <span class="s2">&quot;exec litematica config item&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;dump tweakeroo config&quot;</span><span class="p">,</span> <span class="s2">&quot;get tweakeroo config item&quot;</span><span class="p">,</span> <span class="s2">&quot;set tweakeroo config item&quot;</span><span class="p">,</span> <span class="s2">&quot;exec tweakeroo config item&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;dump malilib config&quot;</span><span class="p">,</span> <span class="s2">&quot;get malilib config item&quot;</span><span class="p">,</span> <span class="s2">&quot;set malilib config item&quot;</span><span class="p">,</span> <span class="s2">&quot;exec malilib config item&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;dump minihud config&quot;</span><span class="p">,</span> <span class="s2">&quot;get minihud config item&quot;</span><span class="p">,</span> <span class="s2">&quot;set minihud config item&quot;</span><span class="p">,</span> <span class="s2">&quot;exec minihud config item&quot;</span><span class="p">),</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="Player">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Player</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Main wrapper class around the connection. It is recommended to</span>
+<span class="sd">    create a new instance using the ```discover()``` function, in</span>
+<span class="sd">    addition to using a context manager.</span>
+
+<span class="sd">    Ex:</span>
+<span class="sd">    ```</span>
+<span class="sd">    async with Player.discover() as p:</span>
+<span class="sd">        print(await p.attack())</span>
+<span class="sd">    ```</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_callbacks</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">Coroutine</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]]</span>
+
+<div class="viewcode-block" id="Player.panic">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.panic">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">panic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;panic&quot;</span><span class="p">)</span></div>
+
+
+    <span class="c1"># =========================</span>
+    <span class="c1">#   Connection Management</span>
+    <span class="c1"># =========================</span>
+    <span class="n">default_callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">Coroutine</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_callback_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">info</span><span class="p">):</span>
+        <span class="n">callback</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callbacks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">callback</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_callback</span><span class="p">(</span><span class="n">info</span><span class="p">)</span>
+            <span class="k">return</span>
+        <span class="k">await</span> <span class="n">callback</span><span class="p">(</span><span class="n">info</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">connection</span><span class="p">:</span> <span class="n">ClientConnection</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connection</span> <span class="o">=</span> <span class="n">connection</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">callback_handler</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callback_handler</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_callbacks</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default_callback</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="fm">__aenter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="fm">__aexit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">tb</span><span class="p">):</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="fm">__aexit__</span><span class="p">(</span><span class="n">exc_type</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">tb</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Player.discover">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.discover">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">discover</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">with_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Discover and connect to a player by broadcast.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">async</span> <span class="k">for</span> <span class="n">broadcast</span><span class="p">,</span> <span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="ow">in</span> <span class="n">gen_broadcasts</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">with_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">broadcast</span><span class="p">[</span><span class="s2">&quot;player username&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">with_name</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">connection</span> <span class="o">=</span> <span class="n">ClientConnection</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">broadcast</span><span class="p">[</span><span class="s2">&quot;port&quot;</span><span class="p">])</span>
+            <span class="k">await</span> <span class="n">connection</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">connection</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;Unreachable&quot;</span></div>
+
+
+    <span class="c1"># =========================</span>
+    <span class="c1">#   Packet Handling</span>
+    <span class="c1"># =========================</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_handle_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">packet_type</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">json</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handles JSON packets received from the server.</span>
+
+<span class="sd">        :param packet_type: The type of the packet (should be &#39;j&#39;).</span>
+<span class="sd">        :param json: The JSON data received.</span>
+<span class="sd">        :return: The processed JSON data.</span>
+<span class="sd">        :raises PuppeteerError: If the JSON contains an error status.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">packet_type</span> <span class="o">==</span> <span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;j&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">json</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;status&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;error&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PuppeteerError</span><span class="p">(</span>
+                <span class="s2">&quot;Error: &quot;</span> <span class="o">+</span> <span class="n">json</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;message&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
+                <span class="n">etype</span><span class="o">=</span><span class="n">str2error</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)),</span>
+            <span class="p">)</span>
+        <span class="k">del</span> <span class="n">json</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span>
+        <span class="k">del</span> <span class="n">json</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">json</span>
+
+<div class="viewcode-block" id="Player.handle_packet">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.handle_packet">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">handle_packet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">extra</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write a json packet, send it, and raise any errors.</span>
+<span class="sd">        :raises PuppeteerError: If the JSON contains an error status.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_json</span><span class="p">(</span><span class="o">*</span><span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">write_packet</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">extra</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="Player.wait_for_chat">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.wait_for_chat">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">wait_for_chat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">predicate</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">predicate</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+            <span class="n">old</span> <span class="o">=</span> <span class="n">predicate</span>
+            <span class="n">predicate</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">old</span> <span class="ow">in</span> <span class="n">x</span>
+
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">predicate</span><span class="p">(</span><span class="n">ret</span> <span class="o">:=</span> <span class="p">(</span><span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">wait_for_callback</span><span class="p">(</span><span class="n">CallbackType</span><span class="o">.</span><span class="n">CHAT</span><span class="p">))[</span><span class="s2">&quot;message&quot;</span><span class="p">]):</span>
+            <span class="k">pass</span>
+        <span class="k">return</span> <span class="n">ret</span></div>
+
+    <span class="c1"># =========================</span>
+    <span class="c1">#   Mod Integration Helpers</span>
+    <span class="c1"># =========================</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_dump_mesa_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot; Returns the config json associated with this mod. &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">func</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_get_mesa_config_item</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">category</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot; Returns the config json value of the config item associated with this mod. &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="p">{</span>
+                <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="n">category</span><span class="p">,</span>
+                <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+            <span class="p">})</span>
+
+        <span class="k">return</span> <span class="n">func</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_set_mesa_config_item</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">category</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot; Sets the config value for a given mod config item. &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="p">{</span>
+                <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="n">category</span><span class="p">,</span>
+                <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+                <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">value</span><span class="p">,</span>
+            <span class="p">})</span>
+
+        <span class="k">return</span> <span class="n">func</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_exec_mesa_config_item</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">category</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot; Executes a given hotkey associated with this mod. &quot;&quot;&quot;</span>
+            <span class="k">assert</span> <span class="n">action</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">action</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;press&quot;</span><span class="p">,</span> <span class="s2">&quot;release&quot;</span><span class="p">),</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Invalid action. Must be press or release&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="p">{</span>
+                <span class="o">**</span><span class="p">{</span>
+                    <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="n">category</span><span class="p">,</span>
+                    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span>
+                <span class="p">},</span>
+                <span class="o">**</span><span class="p">(</span>
+                    <span class="p">{}</span> <span class="k">if</span> <span class="n">action</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="n">action</span><span class="p">}</span>
+                <span class="p">)</span>
+            <span class="p">})</span>
+
+        <span class="k">return</span> <span class="n">func</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_allow_dead</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coroutine</span> <span class="p">:</span> <span class="n">Coroutine</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; When running as a task, don&#39;t crash if the connection is dead.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">running</span><span class="p">:</span>
+            <span class="k">await</span> <span class="n">coroutine</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># This is just to stop the warnings</span>
+            <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="n">coroutine</span><span class="p">)</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
+    <span class="c1"># =========================</span>
+    <span class="c1">#   Client/Player Info</span>
+    <span class="c1"># =========================</span>
+
+<div class="viewcode-block" id="Player.get_client_info">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_client_info">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_client_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns a dictionary of a bunch of information about the game client &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;get client info&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Player.get_player_info">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_player_info">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_player_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns a dictionary of a bunch of information about the player, you MUST be in game to do this. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;get player info&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Player.get_installed_mods">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_installed_mods">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_installed_mods</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns a list of installed mods. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;get mod list&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mods&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Player.get_sources">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_sources">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_sources</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This will give you a bunch of information about the mod version,</span>
+<span class="sd">        including the git commit hash, a link to where the source code</span>
+<span class="sd">        for that build can be found, and the AGPL license.</span>
+
+<span class="sd">        This is included to abide by the AGPL, which requires</span>
+<span class="sd">        any user of the program, even across the network, to have</span>
+<span class="sd">        the ability to have the source code.</span>
+
+<span class="sd">        Note: If you are forking the mod, please modify: `fabric.mod.json`</span>
+<span class="sd">              to include your github repo.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;sources&quot;</span><span class="p">)</span></div>
+
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_list_commands</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns a list of available commands. Note: Also included in ```get_client_info()``` &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;list commands&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Player.has_baritone">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.has_baritone">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">has_baritone</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns true if baritone is installed. &quot;&quot;&quot;</span>
+
+        <span class="c1"># Typically &quot;test baritone&quot; returns an error, but this way</span>
+        <span class="c1"># we don&#39;t have to bother the exception system</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">jso</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">write_packet</span><span class="p">(</span><span class="s2">&quot;test baritone&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">jso</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;ok&quot;</span></div>
+
+
+<div class="viewcode-block" id="Player.ping">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.ping">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">ping</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;ping&quot;</span><span class="p">)</span></div>
+
+
+    <span class="c1"># =========================</span>
+    <span class="c1">#   Callback Management</span>
+    <span class="c1"># =========================</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_get_callback_states</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">CallbackType</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tells you what callbacks are currently enabled in the client. Use ``_set_callbacks()`` to enable them.</span>
+
+<span class="sd">        :return: A dictionary of the callback states.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;get callbacks&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">string_callback_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">):</span> <span class="n">v</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;typical callbacks&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_get_packet_callback_states</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">PacketCallbackState</span><span class="p">]:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;get callbacks&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">string_packet_state_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;packet callbacks&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_set_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callbacks</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">CallbackType</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Enable more callbacks being sent to the player.</span>
+
+<span class="sd">        :param callbacks: A dictionary (identical to the return of ``_get_callback_states()``) of what callbacks you want to enable.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="o">.</span><span class="n">value</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">callbacks</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;set callbacks&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;callbacks&quot;</span><span class="p">:</span> <span class="n">payload</span><span class="p">})</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_set_packet_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callbacks</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">PacketCallbackState</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Enable specific packet callbacks being sent to the player.</span>
+<span class="sd">        You should use ``_get_packet_callback_states()`` for a canonical list of packets enabled</span>
+<span class="sd">        for this version. An example packet callback id is: ``clientbound/minecraft:set_chunk_cache_center``</span>
+
+<span class="sd">        You should also use the wiki as a reference: https://minecraft.wiki/w/Java_Edition_protocol/Packets</span>
+
+<span class="sd">        Also see PacketCallbackState for additional information.</span>
+
+<span class="sd">        :param callbacks: A dictionary (identical to the return of ``_get_packet_callback_states()``) of what callbacks you want to enable.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;set callbacks&quot;</span><span class="p">,</span> <span class="p">{</span>
+            <span class="s2">&quot;callbacks&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="o">.</span><span class="n">value</span>
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">callbacks</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">}</span>
+        <span class="p">})</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_clear_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Clear all callbacks being sent to the player.  &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;clear callbacks&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="Player.clear_callbacks">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.clear_callbacks">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">clear_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_callbacks</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clear_callbacks</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Player.set_callback">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.set_callback">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">:</span> <span class="n">CallbackType</span><span class="p">,</span> <span class="n">callback</span> <span class="p">:</span>  <span class="n">Callable</span><span class="p">[[</span><span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">Coroutine</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_callbacks</span><span class="p">[</span><span class="nb">type</span><span class="o">.</span><span class="n">value</span><span class="p">]</span> <span class="o">=</span> <span class="n">callback</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_callbacks</span><span class="p">({</span>
+            <span class="nb">type</span><span class="p">:</span> <span class="kc">True</span>
+        <span class="p">})</span></div>
+
+<div class="viewcode-block" id="Player.remove_callback">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.remove_callback">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">remove_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span> <span class="p">:</span> <span class="n">CallbackType</span><span class="p">):</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_callbacks</span><span class="p">({</span>
+            <span class="nb">type</span><span class="p">:</span> <span class="kc">False</span>
+        <span class="p">})</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callbacks</span><span class="p">[</span><span class="nb">type</span><span class="o">.</span><span class="n">value</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Player.wait_for_callback">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.wait_for_callback">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">wait_for_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span> <span class="p">:</span> <span class="n">CallbackType</span><span class="p">):</span>
+        <span class="n">old_state</span> <span class="o">=</span> <span class="p">(</span><span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_callback_states</span><span class="p">())</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">type</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">fut</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span><span class="o">.</span><span class="n">create_future</span><span class="p">()</span>
+        <span class="n">old_callback</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callbacks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">type</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">tmp</span><span class="p">(</span><span class="n">info</span><span class="p">):</span>
+            <span class="n">fut</span><span class="o">.</span><span class="n">set_result</span><span class="p">(</span><span class="n">info</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">old_callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">await</span> <span class="n">old_callback</span><span class="p">(</span><span class="n">info</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_callbacks</span><span class="p">[</span><span class="nb">type</span><span class="o">.</span><span class="n">value</span><span class="p">]</span> <span class="o">=</span> <span class="n">old_callback</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callbacks</span><span class="p">[</span><span class="nb">type</span><span class="o">.</span><span class="n">value</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_callbacks</span><span class="p">[</span><span class="nb">type</span><span class="o">.</span><span class="n">value</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp</span>
+
+        <span class="c1"># Try to save some time</span>
+        <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_set_callbacks</span><span class="p">({</span>
+            <span class="nb">type</span><span class="p">:</span> <span class="kc">True</span>
+        <span class="p">}))</span>
+
+
+        <span class="n">ret</span> <span class="o">=</span> <span class="k">await</span> <span class="n">fut</span>
+
+        <span class="c1"># We don&#39;t care about this much</span>
+        <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_allow_dead</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_set_callbacks</span><span class="p">({</span>
+            <span class="nb">type</span><span class="p">:</span> <span class="n">old_state</span>
+        <span class="p">})))</span>
+
+        <span class="k">return</span> <span class="n">ret</span></div>
+
+
+
+
+
+<div class="viewcode-block" id="Player.set_packet_callback">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.set_packet_callback">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_packet_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idd</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">callbackType</span> <span class="p">:</span> <span class="n">PacketCallbackState</span><span class="p">,</span> <span class="n">callback</span> <span class="p">:</span>  <span class="n">Callable</span><span class="p">[[</span><span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">Coroutine</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]):</span>
+        <span class="k">assert</span> <span class="n">callbackType</span> <span class="o">!=</span> <span class="n">PacketCallbackState</span><span class="o">.</span><span class="n">DISABLED</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">removal_wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callbacks</span><span class="p">[</span><span class="n">idd</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">callback</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># `Next` style callback types only trigger once</span>
+        <span class="k">if</span> <span class="n">callbackType</span> <span class="ow">in</span> <span class="p">(</span><span class="n">PacketCallbackState</span><span class="o">.</span><span class="n">NETWORK_SERIALIZED_NEXT</span><span class="p">,</span> <span class="n">PacketCallbackState</span><span class="o">.</span><span class="n">NOTIFY_NEXT</span><span class="p">,</span> <span class="n">PacketCallbackState</span><span class="o">.</span><span class="n">OBJECT_SERIALIZED_NEXT</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_callbacks</span><span class="p">[</span><span class="n">idd</span><span class="p">]</span> <span class="o">=</span> <span class="n">removal_wrapper</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_callbacks</span><span class="p">[</span><span class="n">idd</span><span class="p">]</span> <span class="o">=</span> <span class="n">callback</span>
+
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_packet_callbacks</span><span class="p">({</span><span class="n">idd</span><span class="p">:</span> <span class="n">callbackType</span><span class="p">})</span></div>
+
+<div class="viewcode-block" id="Player.remove_packet_callback">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.remove_packet_callback">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">remove_packet_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idd</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callbacks</span><span class="p">[</span><span class="n">idd</span><span class="p">]</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_packet_callbacks</span><span class="p">({</span>
+            <span class="n">idd</span><span class="p">:</span> <span class="n">PacketCallbackState</span><span class="o">.</span><span class="n">DISABLED</span>
+        <span class="p">})</span></div>
+
+
+
+
+
+    <span class="c1"># =========================</span>
+    <span class="c1">#   World/Block/Chunk Access</span>
+    <span class="c1"># =========================</span>
+
+<div class="viewcode-block" id="Player.get_block">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_block">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Asks for a specific block somewhere in the world</span>
+
+<span class="sd">        :param x: The x coordinate of the block to ask.</span>
+<span class="sd">        :param y: The y coordinate of the block to ask.</span>
+<span class="sd">        :param z: The z coordinate of the block to ask.</span>
+<span class="sd">        :return: A dictionary of the block data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pt</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">write_packet</span><span class="p">(</span><span class="s2">&quot;get block&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="n">z</span><span class="p">})</span>
+        <span class="k">if</span> <span class="n">pt</span> <span class="o">==</span> <span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;j&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_json</span><span class="p">(</span><span class="n">pt</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">unpack</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Player.list_loaded_chunks">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.list_loaded_chunks">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_loaded_chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns a list of loaded chunks.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;list loaded chunks&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;chunks&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Player.click_slot">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.click_slot">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">click_slot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">slot</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">button</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">action</span> <span class="p">:</span> <span class="n">SlotActionType</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Simulates a single slot click/action. This is a low level function, slot ids change</span>
+<span class="sd">        based on the current screen.</span>
+
+<span class="sd">        Actions in the inventory are a determined by combinations of the button</span>
+<span class="sd">        and the actions.</span>
+
+<span class="sd">        See: https://minecraft.wiki/w/Java_Edition_protocol/Packets#Click_Container</span>
+
+<span class="sd">        :param slot: Slot id, depends on current inventory.</span>
+<span class="sd">        :param button: See wiki</span>
+<span class="sd">        :param action: See wiki</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;click slot&quot;</span><span class="p">,</span> <span class="p">{</span>
+            <span class="s2">&quot;slot&quot;</span><span class="p">:</span> <span class="n">slot</span><span class="p">,</span>
+            <span class="s2">&quot;button&quot;</span><span class="p">:</span> <span class="n">button</span><span class="p">,</span>
+            <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="n">action</span><span class="o">.</span><span class="n">value</span>
+        <span class="p">})</span></div>
+
+<div class="viewcode-block" id="Player.swap_slots">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.swap_slots">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">swap_slots</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">slot1</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">slot2</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">useOffhand</span> <span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Attempts to swap slots in an inventory. Either with clicking, or with offhand swaps.</span>
+
+<span class="sd">        When useOffhand is set to false, will click slot1, then slot2, then slot1 again. This</span>
+<span class="sd">        will not avoid merging of the same item type.</span>
+
+<span class="sd">        When useOffhand is set to true, will swap slot1 with the offhand, then slot2, then slot1.</span>
+<span class="sd">        This gets the same result, but avoids merging items, **however** may look suspicious.</span>
+
+<span class="sd">        :param slot1: Slot id, depends on current inventory.</span>
+<span class="sd">        :param slot2: Slot id, depends on current inventory.</span>
+<span class="sd">        :param useOffhand: Use the offhand instead of clicking.</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;swap slots&quot;</span><span class="p">,</span> <span class="p">{</span>
+            <span class="s2">&quot;slot1&quot;</span><span class="p">:</span> <span class="n">slot1</span><span class="p">,</span>
+            <span class="s2">&quot;slot2&quot;</span><span class="p">:</span> <span class="n">slot2</span><span class="p">,</span>
+            <span class="s2">&quot;useOffhand&quot;</span><span class="p">:</span> <span class="n">useOffhand</span>
+        <span class="p">})</span></div>
+
+
+
+
+<div class="viewcode-block" id="Player.get_player_inventory_contents">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_player_inventory_contents">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_player_inventory_contents</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns JSON data of the player&#39;s inventory. Throws an error if a container is open&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;get player inventory&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Player.get_player_inventory">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_player_inventory">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_player_inventory</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;PlayerInventory&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns an object of the player&#39;s inventory. Throws an error if a container is open&quot;&quot;&quot;</span>
+
+        <span class="n">inventory</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_player_inventory_contents</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">PlayerInventory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inventory</span><span class="p">[</span><span class="s2">&quot;slots&quot;</span><span class="p">],</span> <span class="n">inventory</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="Player.get_open_inventory_contents">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_open_inventory_contents">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_open_inventory_contents</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;get open inventory&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Player.click_container_button">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.click_container_button">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">click_container_button</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">button</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;click inventory button&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;button&quot;</span><span class="p">:</span> <span class="n">button</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="Player.get_merchant_trades">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_merchant_trades">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_merchant_trades</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;get trades&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Player.select_trade">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.select_trade">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">select_trade</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;select trade&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">index</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="Player.set_anvil_name">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.set_anvil_name">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_anvil_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;set anvil name&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="Player.set_beacon_effect">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.set_beacon_effect">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_beacon_effect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">primary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">secondary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;set beacon effect&quot;</span><span class="p">,</span> <span class="p">{</span>
+            <span class="o">**</span><span class="p">({}</span> <span class="k">if</span> <span class="n">primary</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;primary&quot;</span><span class="p">:</span> <span class="n">primary</span><span class="p">}),</span>
+            <span class="o">**</span><span class="p">({}</span> <span class="k">if</span> <span class="n">secondary</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;secondary&quot;</span><span class="p">:</span> <span class="n">secondary</span><span class="p">})</span>
+        <span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="Player.get_enchantments">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_enchantments">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_enchantments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;get enchantments&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Player.get_chunk">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_chunk">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_chunk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">cz</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Chunk</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Asks for a specific chunk somewhere in the world.</span>
+<span class="sd">        :param cx: Location of the chunk, note this is 16x smaller than the normal coordinates</span>
+<span class="sd">        :param cz: Location of the chunk, note this is 16x smaller than the normal coordinates</span>
+
+<span class="sd">        :return: On success, a Chunk object, or raises an error</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pt</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">write_packet</span><span class="p">(</span><span class="s2">&quot;get chunk&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;cx&quot;</span><span class="p">:</span> <span class="n">cx</span><span class="p">,</span> <span class="s2">&quot;cz&quot;</span><span class="p">:</span> <span class="n">cz</span><span class="p">})</span>
+        <span class="k">if</span> <span class="n">pt</span> <span class="o">==</span> <span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;j&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_handle_json</span><span class="p">(</span><span class="n">pt</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;Unreachable&quot;</span>
+        <span class="k">return</span> <span class="n">Chunk</span><span class="o">.</span><span class="n">from_network</span><span class="p">(</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Player.search_for_blocks">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.search_for_blocks">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">search_for_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blocks</span> <span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Finds all the blocks of a certain type/types somewhere in the players render distance.</span>
+<span class="sd">        This is MUCH faster than getting the entire world with ``get_chunk()``</span>
+<span class="sd">        Note: Ids are in the form: ``minecraft:grass_block``</span>
+
+
+<span class="sd">        :param blocks: A list of strings, or a single string</span>
+<span class="sd">        :return: On success, a list of blocks</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+            <span class="n">blocks</span> <span class="o">=</span> <span class="p">(</span><span class="n">blocks</span><span class="p">,</span> <span class="p">)</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;search for blocks&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;blocks&quot;</span><span class="p">:</span> <span class="n">blocks</span><span class="p">})</span></div>
+
+
+    <span class="c1"># =========================</span>
+    <span class="c1">#   World/Server Management</span>
+    <span class="c1"># =========================</span>
+
+<div class="viewcode-block" id="Player.get_server_list">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_server_list">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_server_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Gets all the multiplayer servers in your server list, along with the &quot;hidden&quot; ones (your direct connect history). &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;get server list&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Player.get_world_list">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_world_list">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_world_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        List ALL the worlds on this minecraft instances .minecraft folder.</span>
+
+<span class="sd">        This can be slow on some installs, as some users may have **thousands** of worlds.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;get worlds&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Player.join_world">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.join_world">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">join_world</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Joins a local world. The name **needs** to be from the &#39;load name&#39; from getWorldList()</span>
+
+<span class="sd">        :param name: The name of the world to join, **needs** to match the &#39;load name&#39; from ``getWorldList()``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;join world&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;load world&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="Player.join_server">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.join_server">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">join_server</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Joins a multiplayer server</span>
+
+<span class="sd">        :param address: Server ip to connect to</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;join server&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;address&quot;</span><span class="p">:</span> <span class="n">address</span><span class="p">})</span></div>
+
+
+    <span class="c1"># =========================</span>
+    <span class="c1">#   Player State Queries</span>
+    <span class="c1"># =========================</span>
+
+<div class="viewcode-block" id="Player.get_freecam_state">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_freecam_state">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_freecam_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Tells you if freecam is currently enabled. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;is freecam&quot;</span><span class="p">))[</span><span class="s2">&quot;is freecam&quot;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Player.get_freerot_state">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_freerot_state">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_freerot_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Tells you if freeroot is currently enabled. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;is freerot&quot;</span><span class="p">))[</span><span class="s2">&quot;is freerot&quot;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Player.get_no_walk_state">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_no_walk_state">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_no_walk_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Tells you if no walk is currently enabled. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;is nowalk&quot;</span><span class="p">))[</span><span class="s2">&quot;is nowalk&quot;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Player.get_headless_state">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_headless_state">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_headless_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Tells your if the client is currently headless. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;is headless&quot;</span><span class="p">))[</span><span class="s2">&quot;is headless&quot;</span><span class="p">]</span></div>
+
+
+    <span class="c1"># =========================</span>
+    <span class="c1">#   Player State Setters</span>
+    <span class="c1"># =========================</span>
+
+<div class="viewcode-block" id="Player.set_freecam">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.set_freecam">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_freecam</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Set if freecam is currently enabled. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;set freecam&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">enabled</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="Player.set_freerot">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.set_freerot">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_freerot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Set if freeroot is currently enabled. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;set freerot&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">enabled</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="Player.set_no_walk">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.set_no_walk">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_no_walk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Set if no walk is currently enabled. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;set nowalk&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">enabled</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="Player.set_headless">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.set_headless">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_headless</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Put the client into a &quot;headless&quot; state. This means you will no longer</span>
+<span class="sd">        see the window on your screen. It theoretically should take less</span>
+<span class="sd">        resources to run, as the rendering system is disabled, however,</span>
+<span class="sd">        at least on my system, the effect is minimal.</span>
+
+<span class="sd">        This is a **dangerous** mode! If, for whatever reason, your Puppeteer</span>
+<span class="sd">        server crashes, will have **no method to recover**. And will be left</span>
+<span class="sd">        with nothing but the task manager to save you!</span>
+
+<span class="sd">        **Use with caution!**</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;set headless&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">enabled</span><span class="p">})</span></div>
+
+
+    <span class="c1"># =========================</span>
+    <span class="c1">#   Baritone/Automation</span>
+    <span class="c1"># =========================</span>
+
+<div class="viewcode-block" id="Player.baritone_goto">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.baritone_goto">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">baritone_goto</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tells baritone to go to a specific location.</span>
+
+<span class="sd">        :param x: The x coordinate</span>
+<span class="sd">        :param y: The y coordinate</span>
+<span class="sd">        :param z: The z coordinate</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span>
+            <span class="s2">&quot;baritone goto&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="n">z</span><span class="p">}</span>
+        <span class="p">)</span></div>
+
+
+    <span class="c1"># =========================</span>
+    <span class="c1">#   Chat/Command Messaging</span>
+    <span class="c1"># =========================</span>
+
+<div class="viewcode-block" id="Player.send_chat_message">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.send_chat_message">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">send_chat_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sends a public chat message. If prepended with &quot;/&quot;, will execute a command.</span>
+
+<span class="sd">        :param message: The message to send.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span>
+            <span class="s2">&quot;send chat message&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="n">message</span><span class="p">}</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Player.send_execute_command">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.send_execute_command">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">send_execute_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Runs a command.</span>
+
+<span class="sd">        :param message: The command to execute</span>
+
+<span class="sd">        Note: Do **NOT** include the &quot;/&quot;</span>
+
+<span class="sd">        Ex: ``gamemode creative`` to set the gamemode to creative.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span>
+            <span class="s2">&quot;execute command&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="n">message</span><span class="p">}</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Player.display_message">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.display_message">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">display_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Displays a message in chat. This is private</span>
+<span class="sd">        :param message:  Message to display in chat</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span>
+            <span class="s2">&quot;display chat message&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="n">message</span><span class="p">}</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Player.overview_message">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.overview_message">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">overview_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Shows a message above the users hotbar, this is great for informational status updates.</span>
+
+<span class="sd">        For example, telling the user when something is starting and ending.</span>
+
+<span class="sd">        :param message: Message to display above the hotbar</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span>
+            <span class="s2">&quot;overview message&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="n">message</span><span class="p">}</span>
+        <span class="p">)</span></div>
+
+
+    <span class="c1"># =========================</span>
+    <span class="c1">#   Input/Control</span>
+    <span class="c1"># =========================</span>
+
+<div class="viewcode-block" id="Player.clear_inputs">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.clear_inputs">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">clear_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Remove all forced button presses. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;clear force input&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Player.get_forced_inputs">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_forced_inputs">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_forced_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reports the state of if certain input methods are forced. A key not being present</span>
+<span class="sd">        indicates that no input is being forced. If a key is set to false, it is being forced up.</span>
+<span class="sd">        And if a key is set to true, it is forced down.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;get forced input&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;inputs&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Player.force_inputs">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.force_inputs">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">force_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">InputButton</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Force down/up buttons. If a button is not mentioned, it will not be impacted. Meaning that if it is already pressed,</span>
+<span class="sd">        it will still be pressed if you do not update its state.</span>
+
+<span class="sd">        :param inputs: List of tuples of (InputButton, bool). Where the bool is the **forced state** of the input. Meaning</span>
+<span class="sd">                       setting to False indicates the **user cannot press** that key.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span>
+            <span class="s2">&quot;force inputs&quot;</span><span class="p">,</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">:</span> <span class="n">k</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">inputs</span>
+                <span class="p">}</span>
+            <span class="p">},</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Player.remove_forced_inputs">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.remove_forced_inputs">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">remove_forced_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">InputButton</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Disables the forced state of inputs. If a button is not mentioned, it will not be impacted.</span>
+<span class="sd">        A complete list of inputs will result in identical behavior to ``clear_inputs()``</span>
+
+<span class="sd">        :param inputs: A list if inputs, each input will have is state no longer controlled.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span>
+            <span class="s2">&quot;force inputs&quot;</span><span class="p">,</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;remove&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">k</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">]</span>
+            <span class="p">},</span>
+        <span class="p">)</span></div>
+
+
+    <span class="c1"># =========================</span>
+    <span class="c1">#   Player Movement/Rotation</span>
+    <span class="c1"># =========================</span>
+
+<div class="viewcode-block" id="Player.arotate">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.arotate">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">arotate</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">pitch</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+            <span class="n">yaw</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+            <span class="n">speed</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+            <span class="n">method</span><span class="p">:</span> <span class="n">RoMethod</span> <span class="o">=</span> <span class="n">RoMethod</span><span class="o">.</span><span class="n">LINEAR</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Smoothly, and realistically, rotate the player.</span>
+
+<span class="sd">        :param pitch: Pitch angle in degrees.</span>
+<span class="sd">        :param yaw: Yaw angle in degrees.</span>
+<span class="sd">        :param speed: Speed of rotation. This can be generally interpreted as `degrees per tick`, but with certain rotation methods</span>
+<span class="sd">                      this will not be true.</span>
+<span class="sd">        :param method: What interpolation method is used. This will not change the time required to rotate, but instead how it looks.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">assert</span> <span class="n">method</span> <span class="o">!=</span> <span class="n">RoMethod</span><span class="o">.</span><span class="n">INSTANT</span><span class="p">,</span> <span class="s2">&quot;Not a supported rotation method.&quot;</span>
+
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span>
+            <span class="s2">&quot;algorithmic rotation&quot;</span><span class="p">,</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;pitch&quot;</span><span class="p">:</span> <span class="n">pitch</span><span class="p">,</span>
+                <span class="s2">&quot;yaw&quot;</span><span class="p">:</span> <span class="n">yaw</span><span class="p">,</span>
+                <span class="s2">&quot;degrees per tick&quot;</span><span class="p">:</span> <span class="n">speed</span><span class="p">,</span>
+                <span class="s2">&quot;interpolation&quot;</span><span class="p">:</span> <span class="n">method</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Player.irotate">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.irotate">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">irotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pitch</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">yaw</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Instantly set the player&#39;s rotation. This looks like you are cheating.</span>
+
+<span class="sd">        :param pitch: Pitch angle in degrees.</span>
+<span class="sd">        :param yaw: Yaw angle in degrees.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span>
+            <span class="s2">&quot;instantaneous rotation&quot;</span><span class="p">,</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;pitch&quot;</span><span class="p">:</span> <span class="n">pitch</span><span class="p">,</span>
+                <span class="s2">&quot;yaw&quot;</span><span class="p">:</span> <span class="n">yaw</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Player.set_hotbar_slot">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.set_hotbar_slot">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_hotbar_slot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">slot</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the current hotbar slot.</span>
+
+<span class="sd">        :param slot: [1, 9] are valid hotbar slots</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="mi">1</span> <span class="o">&lt;=</span> <span class="n">slot</span> <span class="o">&lt;=</span> <span class="mi">9</span><span class="p">,</span> <span class="s2">&quot;Invalid slot value&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;set hotbar slot&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;slot&quot;</span><span class="p">:</span> <span class="n">slot</span><span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="Player.attack">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.attack">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">attack</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Tells the player to punch. Single left click &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;attack key click&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Player.use">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.use">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">use</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Tells the player to use an item/block. Single right click &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;use key click&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Player.auto_use">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.auto_use">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">auto_use</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                       <span class="n">x</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span>  <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">z</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                       <span class="n">speed</span> <span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">method</span> <span class="p">:</span> <span class="n">RoMethod</span> <span class="o">=</span> <span class="n">RoMethod</span><span class="o">.</span><span class="n">LINEAR</span><span class="p">,</span>
+                       <span class="n">direction_of_use</span> <span class="p">:</span> <span class="n">Direction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Look at block and click it.</span>
+
+<span class="sd">        :param x: X location of block</span>
+<span class="sd">        :param y: Y location of block</span>
+<span class="sd">        :param z: Z location of block</span>
+<span class="sd">        :param speed: Degrees per tick speed of rotation</span>
+<span class="sd">        :param method: Rotation method</span>
+<span class="sd">        :param direction_of_use: What direction of the block to clic</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;auto use&quot;</span><span class="p">,</span> <span class="p">{</span>
+            <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="n">z</span><span class="p">,</span>
+            <span class="s2">&quot;degrees per tick&quot;</span><span class="p">:</span> <span class="n">speed</span><span class="p">,</span>
+            <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="n">method</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="o">**</span><span class="p">({}</span> <span class="k">if</span> <span class="n">direction_of_use</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;direction&quot;</span> <span class="p">:</span> <span class="n">direction_of_use</span><span class="o">.</span><span class="n">value</span><span class="p">})</span>
+        <span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="Player.auto_place">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.auto_place">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">auto_place</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                         <span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                         <span class="n">speed</span> <span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">method</span> <span class="p">:</span> <span class="n">RoMethod</span> <span class="o">=</span> <span class="n">RoMethod</span><span class="o">.</span><span class="n">LINEAR</span><span class="p">,</span>
+                         <span class="n">direction_to_place_on</span> <span class="p">:</span> <span class="n">Direction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+                         <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Place a block</span>
+
+<span class="sd">        :param x: X location of block to place</span>
+<span class="sd">        :param y: Y location of block to place</span>
+<span class="sd">        :param z: Z location of block to place</span>
+<span class="sd">        :param speed: Degrees per tick speed of rotation</span>
+<span class="sd">        :param method: Rotation method</span>
+<span class="sd">        :param direction_to_place_on: What block to place on. For example, use down to</span>
+<span class="sd">                                      place on the block UNDER the location you specify</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;auto place&quot;</span><span class="p">,</span> <span class="p">{</span>
+            <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="n">z</span><span class="p">,</span>
+            <span class="s2">&quot;degrees per tick&quot;</span><span class="p">:</span> <span class="n">speed</span><span class="p">,</span>
+            <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="n">method</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="o">**</span><span class="p">({}</span> <span class="k">if</span> <span class="n">direction_to_place_on</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;direction&quot;</span> <span class="p">:</span> <span class="n">direction_to_place_on</span><span class="o">.</span><span class="n">value</span><span class="p">})</span>
+        <span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="Player.set_directional_walk">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.set_directional_walk">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_directional_walk</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">degrees</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">speed</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Force the player to walk in a certain direction. Directional walking allows you to make the player walk towards a block.</span>
+<span class="sd">        The direction the player is walking in is absolute, meaning the user can look around without interfacing.</span>
+
+<span class="sd">        :param degrees: The **global** direction, in degrees, from 0-360, of where the user will walk.</span>
+<span class="sd">        :param speed: Should be from 0-1. With zero being no movement, and one being regular walk speed.</span>
+<span class="sd">        :param force: If false, will clamp the speed. If true, will allow any speed value, basically being speed hacks.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span>
+            <span class="s2">&quot;set directional movement degree&quot;</span><span class="p">,</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;direction&quot;</span><span class="p">:</span> <span class="n">degrees</span><span class="p">,</span>
+                <span class="s2">&quot;speed&quot;</span><span class="p">:</span> <span class="n">speed</span><span class="p">,</span>
+                <span class="s2">&quot;force&quot;</span><span class="p">:</span> <span class="n">force</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Player.set_directional_walk_vector">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.set_directional_walk_vector">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_directional_walk_vector</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">speed</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Force the player to walk in a certain direction. Directional walking allows you to make the player walk towards a block.</span>
+<span class="sd">        The direction the player is walking in is absolute, meaning the user can look around without interfacing.</span>
+
+<span class="sd">        The difference between this and ``set_directional_walk()`` is that you input a global vector. For example,</span>
+<span class="sd">        to walk in the `+x` direction, use parameters x=1, z=0. To walk equally in the `+x` and `+z` direction, use</span>
+<span class="sd">        parameters x=1, z=1. Negative directions **are** supported. Vectors **are normalized**. so feel free to use</span>
+<span class="sd">        large values.</span>
+
+<span class="sd">        :param x: The x component of the direction.</span>
+<span class="sd">        :param z: The z component of the direction.</span>
+<span class="sd">        :param speed: Should be from 0-1. With zero being no movement, and one being regular walk speed.</span>
+<span class="sd">        :param force: If false, will clamp the speed. If true, will allow any speed value, basically being speed hacks.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span>
+            <span class="s2">&quot;set directional movement vector&quot;</span><span class="p">,</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span>
+                <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="n">z</span><span class="p">,</span>
+                <span class="s2">&quot;speed&quot;</span><span class="p">:</span> <span class="n">speed</span><span class="p">,</span>
+                <span class="s2">&quot;force&quot;</span><span class="p">:</span> <span class="n">force</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Player.stop_directional_walk">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.stop_directional_walk">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">stop_directional_walk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;No longer be directional walking&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;clear directional movement&quot;</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="c1"># Generate functions for all the mod integrations</span>
+<span class="k">for</span> <span class="p">(</span><span class="n">dump_cmd</span><span class="p">,</span> <span class="n">get_cmd</span><span class="p">,</span> <span class="n">set_cmd</span><span class="p">,</span> <span class="n">exec_cmd</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_MOD_INTEGRATIONS</span><span class="p">:</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="n">Player</span><span class="p">,</span> <span class="n">dump_cmd</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">),</span> <span class="n">Player</span><span class="o">.</span><span class="n">_generate_dump_mesa_config</span><span class="p">(</span><span class="n">dump_cmd</span><span class="p">))</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="n">Player</span><span class="p">,</span> <span class="n">get_cmd</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">),</span> <span class="n">Player</span><span class="o">.</span><span class="n">_generate_get_mesa_config_item</span><span class="p">(</span><span class="n">get_cmd</span><span class="p">))</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="n">Player</span><span class="p">,</span> <span class="n">set_cmd</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">),</span> <span class="n">Player</span><span class="o">.</span><span class="n">_generate_set_mesa_config_item</span><span class="p">(</span><span class="n">set_cmd</span><span class="p">))</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="n">Player</span><span class="p">,</span> <span class="n">exec_cmd</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">),</span> <span class="n">Player</span><span class="o">.</span><span class="n">_generate_exec_mesa_config_item</span><span class="p">(</span><span class="n">exec_cmd</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="Inventory">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Inventory">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Inventory</span><span class="p">:</span>
+    <span class="c1"># Constant</span>
+    <span class="n">container_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Set on instance</span>
+    <span class="n">screen_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">player</span><span class="p">:</span> <span class="n">Player</span>
+    <span class="n">slot_data</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span>
+
+    <span class="c1"># Starting slot of player inventory, None</span>
+    <span class="c1"># if player inventory is disabled</span>
+    <span class="n">player_inventory_offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">9</span>
+
+    <span class="n">container_offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">container_width</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">container_height</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">player</span><span class="p">:</span> <span class="n">Player</span><span class="p">,</span> <span class="n">slot_data</span><span class="p">,</span> <span class="n">screen_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">horse_data</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">player</span> <span class="o">=</span> <span class="n">player</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">screen_name</span> <span class="o">=</span> <span class="n">screen_name</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">slot_data</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span> <span class="o">**</span><span class="n">slot</span><span class="p">}</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">slot</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">slot_data</span><span class="p">)]</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">container_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Cannot initialize absract inventory&quot;</span>
+
+<div class="viewcode-block" id="Inventory.get_slot">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Inventory.get_slot">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_slot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">slot</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Gets a slot by its id &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">slot_data</span><span class="p">[</span><span class="n">slot</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Inventory.get_inventory_slot">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Inventory.get_inventory_slot">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_inventory_slot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">column</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets a slot WITHIN THE PLAYER&#39;S INVENTORY. This will work</span>
+<span class="sd">        regardless of what inventory is open, with the exception of the lecture,</span>
+<span class="sd">        and other inventories that lack the player&#39;s inventory.</span>
+
+<span class="sd">        :param row: A row, starting at 0, counting up FROM the TOP of the screen. (0 is the top)</span>
+<span class="sd">        :param column: A column, starting at 0, counting up LEFT to right of the screen. (0 is the left)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">player_inventory_offset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;This inventory lacks the player&#39;s inventory&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="n">row</span> <span class="o">*</span> <span class="mi">9</span> <span class="o">+</span> <span class="n">column</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">player_inventory_offset</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Inventory.get_container_slot">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Inventory.get_container_slot">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_container_slot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">column</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets a slot WITHIN THE CONTAINER&#39;S INVENTORY. This will ONLY work</span>
+<span class="sd">        if the container has a row/col based inventory.</span>
+
+<span class="sd">        :param row: A row, starting at 0, counting up FROM the TOP of the screen. (0 is the top)</span>
+<span class="sd">        :param column: A column, starting at 0, counting up LEFT to right of the screen. (0 is the left)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">container_offset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;This inventory lacks the container&#39;s inventory&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span>
+            <span class="n">row</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">container_width</span> <span class="o">+</span> <span class="n">column</span>
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">container_offset</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="PlayerInventory">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.PlayerInventory">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PlayerInventory</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">9</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;inventory&quot;</span>
+
+    <span class="n">container_offset</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">container_width</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">container_height</span> <span class="o">=</span> <span class="mi">2</span>
+
+<div class="viewcode-block" id="PlayerInventory.get_offhand">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.PlayerInventory.get_offhand">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_offhand</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PlayerInventory.get_crafting_slot">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.PlayerInventory.get_crafting_slot">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_crafting_slot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">offset</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PlayerInventory.get_crafting_output">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.PlayerInventory.get_crafting_output">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_crafting_output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PlayerInventory.get_helmet">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.PlayerInventory.get_helmet">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_helmet</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PlayerInventory.get_chestplate">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.PlayerInventory.get_chestplate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_chestplate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PlayerInventory.get_legging">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.PlayerInventory.get_legging">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_legging</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PlayerInventory.get_boots">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.PlayerInventory.get_boots">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_boots</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Generic9x1">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Generic9x1">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Generic9x1</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;generic_9x1&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">9</span>
+
+    <span class="n">container_offset</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">container_width</span> <span class="o">=</span> <span class="mi">9</span>
+    <span class="n">container_height</span> <span class="o">=</span> <span class="mi">1</span></div>
+
+
+
+<div class="viewcode-block" id="Generic9x2">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Generic9x2">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Generic9x2</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;generic_9x2&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">18</span>
+
+    <span class="n">container_offset</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">container_width</span> <span class="o">=</span> <span class="mi">9</span>
+    <span class="n">container_height</span> <span class="o">=</span> <span class="mi">2</span></div>
+
+
+
+<div class="viewcode-block" id="Generic9x3">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Generic9x3">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Generic9x3</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;generic_9x3&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">27</span>
+
+    <span class="n">container_offset</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">container_width</span> <span class="o">=</span> <span class="mi">9</span>
+    <span class="n">container_height</span> <span class="o">=</span> <span class="mi">3</span></div>
+
+
+
+<div class="viewcode-block" id="Generic9x4">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Generic9x4">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Generic9x4</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;generic_9x4&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">36</span>
+
+    <span class="n">container_offset</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">container_width</span> <span class="o">=</span> <span class="mi">9</span>
+    <span class="n">container_height</span> <span class="o">=</span> <span class="mi">4</span></div>
+
+
+
+<div class="viewcode-block" id="Generic9x5">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Generic9x5">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Generic9x5</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;generic_9x5&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">45</span>
+
+    <span class="n">container_offset</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">container_width</span> <span class="o">=</span> <span class="mi">9</span>
+    <span class="n">container_height</span> <span class="o">=</span> <span class="mi">5</span></div>
+
+
+
+<div class="viewcode-block" id="Generic9x6">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Generic9x6">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Generic9x6</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;generic_9x6&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">54</span>
+
+    <span class="n">container_offset</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">container_width</span> <span class="o">=</span> <span class="mi">9</span>
+    <span class="n">container_height</span> <span class="o">=</span> <span class="mi">6</span></div>
+
+
+
+<div class="viewcode-block" id="Generic3x3">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Generic3x3">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Generic3x3</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;generic_3x3&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">9</span>
+
+    <span class="n">container_offset</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">container_width</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">container_height</span> <span class="o">=</span> <span class="mi">3</span></div>
+
+
+
+<div class="viewcode-block" id="Crafter">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Crafter">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Crafter</span><span class="p">(</span><span class="n">Generic3x3</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;crafter&quot;</span>
+
+    <span class="c1"># TODO: Buttons</span>
+
+<div class="viewcode-block" id="Crafter.get_crafting_output">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Crafter.get_crafting_output">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_crafting_output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="ShulkerBox">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.ShulkerBox">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ShulkerBox</span><span class="p">(</span><span class="n">Generic9x3</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;shulker_box&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="Generic2Input">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Generic2Input">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Generic2Input</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">3</span>
+
+<div class="viewcode-block" id="Generic2Input.get_input1">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Generic2Input.get_input1">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_input1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Generic2Input.get_input2">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Generic2Input.get_input2">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_input2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Generic2Input.get_output">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Generic2Input.get_output">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Anvil">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Anvil">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Anvil</span><span class="p">(</span><span class="n">Generic2Input</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;anvil&quot;</span>
+
+<div class="viewcode-block" id="Anvil.set_name">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Anvil.set_name">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">set_anvil_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Grindstone">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Grindstone">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Grindstone</span><span class="p">(</span><span class="n">Generic2Input</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;grindstone&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="Merchant">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Merchant">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Merchant</span><span class="p">(</span><span class="n">Generic2Input</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;merchant&quot;</span>
+
+<div class="viewcode-block" id="Merchant.get_trades">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Merchant.get_trades">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_trades</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">get_merchant_trades</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Merchant.select_trade">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Merchant.select_trade">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">select_trade</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">select_trade</span><span class="p">(</span><span class="n">index</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="CartographyTable">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.CartographyTable">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CartographyTable</span><span class="p">(</span><span class="n">Generic2Input</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;cartography_table&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="Beacon">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Beacon">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Beacon</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;beacon&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="Beacon.get_payment_slot">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Beacon.get_payment_slot">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_payment_slot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Beacon.set_effects">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Beacon.set_effects">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_effects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">primary</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">secondary</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">set_beacon_effect</span><span class="p">(</span><span class="n">primary</span><span class="p">,</span> <span class="n">secondary</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Furnace">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Furnace">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Furnace</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;furnace&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">3</span>
+
+<div class="viewcode-block" id="Furnace.get_furnace_output">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Furnace.get_furnace_output">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_furnace_output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Furnace.get_furnace_fuel">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Furnace.get_furnace_fuel">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_furnace_fuel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Furnace.get_furnace_ingredient">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Furnace.get_furnace_ingredient">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_furnace_ingredient</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="BlastFurnace">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.BlastFurnace">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BlastFurnace</span><span class="p">(</span><span class="n">Furnace</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;blast_furnace&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="Smoker">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Smoker">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Smoker</span><span class="p">(</span><span class="n">Furnace</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;smoker&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="BrewingStand">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.BrewingStand">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BrewingStand</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;brewing_stand&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">5</span>
+
+<div class="viewcode-block" id="BrewingStand.get_blaze_powder">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.BrewingStand.get_blaze_powder">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_blaze_powder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BrewingStand.get_potion_ingredient">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.BrewingStand.get_potion_ingredient">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_potion_ingredient</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BrewingStand.get_potion_output">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.BrewingStand.get_potion_output">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_potion_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">index</span> <span class="o">&lt;=</span> <span class="mi">2</span>
+        <span class="c1"># No offset</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="n">index</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="CraftingTable">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.CraftingTable">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CraftingTable</span><span class="p">(</span><span class="n">Generic3x3</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;crafting_table&quot;</span>
+    <span class="n">container_offset</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">10</span>
+
+<div class="viewcode-block" id="CraftingTable.get_crafting_output">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.CraftingTable.get_crafting_output">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_crafting_output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="EnchantmentTable">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.EnchantmentTable">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">EnchantmentTable</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;enchantment&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">2</span>
+
+<div class="viewcode-block" id="EnchantmentTable.get_item">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.EnchantmentTable.get_item">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_item</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EnchantmentTable.get_lapis">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.EnchantmentTable.get_lapis">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_lapis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EnchantmentTable.get_enchants">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.EnchantmentTable.get_enchants">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_enchants</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">get_enchantments</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="EnchantmentTable.select_enchantment">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.EnchantmentTable.select_enchantment">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">select_enchantment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">index</span> <span class="o">&lt;=</span> <span class="mi">2</span>
+
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">click_container_button</span><span class="p">(</span><span class="n">index</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Hopper">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Hopper">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Hopper</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;hopper&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">5</span>
+
+    <span class="n">container_offset</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">container_width</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">container_height</span> <span class="o">=</span> <span class="mi">1</span></div>
+
+
+
+<div class="viewcode-block" id="Lectern">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Lectern">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Lectern</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;lectern&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+    <span class="c1"># TODO: Buttons</span>
+
+
+<div class="viewcode-block" id="Loom">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Loom">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Loom</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;loom&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">4</span>
+
+<div class="viewcode-block" id="Loom.get_banner">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Loom.get_banner">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_banner</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Loom.get_dye">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Loom.get_dye">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dye</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Loom.get_pattern">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Loom.get_pattern">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_pattern</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Loom.get_output">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Loom.get_output">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="SmithingTable">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.SmithingTable">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SmithingTable</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;smithing&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">4</span>
+
+<div class="viewcode-block" id="SmithingTable.get_template">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.SmithingTable.get_template">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_template</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SmithingTable.get_base_item">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.SmithingTable.get_base_item">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_base_item</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SmithingTable.get_additional_item">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.SmithingTable.get_additional_item">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_additional_item</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SmithingTable.get_output">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.SmithingTable.get_output">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="StoneCutter">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.StoneCutter">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">StoneCutter</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;stonecutter&quot;</span>
+    <span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="c1"># TODO: Buttons</span>
+
+<div class="viewcode-block" id="StoneCutter.get_input">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.StoneCutter.get_input">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="StoneCutter.get_output">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.StoneCutter.get_output">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="c1"># Includes: Horse, Donkey, Mule, Llama, Camel, etc</span>
+<span class="c1">#   All these animals share a saddle slot, and an amor slot (these can be hidden)</span>
+<span class="c1">#   along with an inventory which is somethimes there </span>
+<div class="viewcode-block" id="EntityWithInventory">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.EntityWithInventory">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">EntityWithInventory</span><span class="p">(</span><span class="n">Inventory</span><span class="p">):</span>
+    <span class="c1"># Feels like such a Microsoft thing to do, keep</span>
+    <span class="c1"># adding new stuff and wedge it under an old system</span>
+    <span class="n">container_type</span> <span class="o">=</span> <span class="s2">&quot;horse&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">player</span><span class="p">:</span> <span class="n">Player</span><span class="p">,</span> <span class="n">slot_data</span><span class="p">,</span> <span class="n">screen_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">horse_data</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">horse_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">container_height</span> <span class="o">=</span> <span class="mi">3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">container_width</span> <span class="o">=</span> <span class="n">horse_data</span><span class="p">[</span><span class="s2">&quot;inventory cols&quot;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">player_inventory_offset</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">container_height</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">player</span><span class="p">,</span> <span class="n">slot_data</span><span class="p">,</span> <span class="n">screen_name</span><span class="p">,</span> <span class="n">horse_data</span><span class="o">=</span><span class="n">horse_data</span><span class="p">)</span>
+
+<div class="viewcode-block" id="EntityWithInventory.get_saddle">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.EntityWithInventory.get_saddle">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_saddle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EntityWithInventory.get_armor">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.EntityWithInventory.get_armor">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_armor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slot</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">McPuppeteer</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../puppet.html">puppet package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2025, PsychedelicPalimpsest.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.1.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
