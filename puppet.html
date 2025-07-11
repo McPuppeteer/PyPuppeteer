@@ -202,7 +202,7 @@ addition to using a context manager.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="puppet.player.Player.default_callback">
-<span class="sig-name descname"><span class="pre">default_callback</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code><span class="pre">[[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code><span class="pre">[</span><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code><span class="pre">,</span> <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code><span class="pre">]],</span> <code class="xref py py-class docutils literal notranslate"><span class="pre">Coroutine</span></code><span class="pre">[</span><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code><span class="pre">,</span> <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code><span class="pre">,</span> <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code><span class="pre">]]]</span></em><a class="headerlink" href="#puppet.player.Player.default_callback" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">default_callback</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code><span class="pre">[[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code><span class="pre">[</span><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code><span class="pre">,</span> <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code><span class="pre">]],</span> <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">Coroutine</span></code><span class="pre">[</span><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code><span class="pre">,</span> <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code><span class="pre">,</span> <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code><span class="pre">]]]]</span></em><a class="headerlink" href="#puppet.player.Player.default_callback" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -221,9 +221,20 @@ addition to using a context manager.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.wait_for_chat">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">wait_for_chat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">predicate</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.wait_for_chat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.wait_for_chat" title="Link to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+<dd><p>Wait until a specific pattern in a chat message is received.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>predicate</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – A function OR a string. If a string type is received, checks
+if the string appears EXACTLY. If a function is received, acts
+as a predicate. The function is assumed to take a single string
+as an argument, and return a boolean. Where a <code class="docutils literal notranslate"><span class="pre">true</span></code> value causes
+the function to return.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The message that ends the wait</p>
 </dd>
 </dl>
 </dd></dl>
@@ -270,37 +281,75 @@ the ability to have the source code.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.ping">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ping</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.ping"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.ping" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Pings the server.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.clear_callbacks">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">clear_callbacks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.clear_callbacks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.clear_callbacks" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Clear all the callbacks.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.set_callback">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.set_callback"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.set_callback" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Set a function that will be called when an event occurs for the client.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>type</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.constants.CallbackType" title="puppet.constants.CallbackType"><code class="xref py py-class docutils literal notranslate"><span class="pre">CallbackType</span></code></a></span>) – What type of event will fire the callback.</p></li>
+<li><p><strong>callback</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]], <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Coroutine</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]]]]</span>) – The function you want to call on that event.
+Can be a coroutine, or a regular function. Taking
+the event json as a parameter.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.remove_callback">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">remove_callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.remove_callback"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.remove_callback" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Remove a previously set callback.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.wait_for_callback">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">wait_for_callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.wait_for_callback"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.wait_for_callback" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Binds until the client has an event occur. And return that event</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.set_packet_callback">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_packet_callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callbackType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.set_packet_callback"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.set_packet_callback" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Set a function that will be called when the client receives a packet (or sends one).
+See the documentation of PacketCallbackState for more information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>idd</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The <cite>resource id</cite> of the packet. See: <a class="reference external" href="https://minecraft.wiki/w/Java_Edition_protocol/Packets">https://minecraft.wiki/w/Java_Edition_protocol/Packets</a>
+For a list of all the minecraft protocol packets and their network definition.</p></li>
+<li><p><strong>callbackType</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.constants.PacketCallbackState" title="puppet.constants.PacketCallbackState"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketCallbackState</span></code></a></span>) – See PacketCallbackState</p></li>
+<li><p><strong>callback</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]], <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Coroutine</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]]]]</span>) – The function you want to call on that event. Can be a coroutine, or a regular function.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.remove_packet_callback">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">remove_packet_callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idd</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.remove_packet_callback"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.remove_packet_callback" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Remove a single packet callback.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>idd</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The <cite>resource id</cite> of the packet whose callback you wish to no longer see.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.get_block">
@@ -1889,10 +1938,10 @@ for input, callbacks, rotation, and more.</p>
 <p>How packet callback states are handled.</p>
 <p>When a packet is set to notify, it only tells you _that_ a packet is sent, and not any
 additional information.</p>
-<p>When a packet is set to “network serialized” the structure is simular to the protocol
+<p>When a packet is set to “network serialized” the structure is similar to the protocol
 as described in the wiki, meaning all packet types are supported, but difficult to make
 use of. See: <a class="reference external" href="https://minecraft.wiki/w/Java_Edition_protocol/Packets">https://minecraft.wiki/w/Java_Edition_protocol/Packets</a></p>
-<p>When a packet is set to “object serialized” the structure is simular to how it is represented
+<p>When a packet is set to “object serialized” the structure is similar to how it is represented
 internally. This mode is typically easier to use, often just key-value data structures. However,
 is simply unusable for many packet types, due to complex internal data structures.</p>
 <p><strong>Note</strong> that in this mode keys are taken from the Yarn mappings used during the mods compilation,

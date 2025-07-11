@@ -48,7 +48,7 @@
     <span class="p">(</span><span class="s2">&quot;dump malilib config&quot;</span><span class="p">,</span> <span class="s2">&quot;get malilib config item&quot;</span><span class="p">,</span> <span class="s2">&quot;set malilib config item&quot;</span><span class="p">,</span> <span class="s2">&quot;exec malilib config item&quot;</span><span class="p">),</span>
     <span class="p">(</span><span class="s2">&quot;dump minihud config&quot;</span><span class="p">,</span> <span class="s2">&quot;get minihud config item&quot;</span><span class="p">,</span> <span class="s2">&quot;set minihud config item&quot;</span><span class="p">,</span> <span class="s2">&quot;exec minihud config item&quot;</span><span class="p">),</span>
 <span class="p">)</span>
-
+<span class="n">CALLBACK_TYPE</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">Coroutine</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="Player">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player">[docs]</a>
@@ -65,7 +65,7 @@
 <span class="sd">    ```</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">_callbacks</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">Coroutine</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]]</span>
+    <span class="n">_callbacks</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">CALLBACK_TYPE</span><span class="p">]</span>
 
 <div class="viewcode-block" id="Player.panic">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.panic">[docs]</a>
@@ -76,16 +76,16 @@
     <span class="c1"># =========================</span>
     <span class="c1">#   Connection Management</span>
     <span class="c1"># =========================</span>
-    <span class="n">default_callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">Coroutine</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">default_callback</span> <span class="p">:</span> <span class="n">CALLBACK_TYPE</span>
 
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_callback_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">info</span><span class="p">):</span>
         <span class="n">callback</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callbacks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">])</span>
+        <span class="n">callback</span> <span class="o">=</span> <span class="n">callback</span> <span class="k">if</span> <span class="n">callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_callback</span>
         <span class="k">if</span> <span class="n">callback</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_callback</span><span class="p">(</span><span class="n">info</span><span class="p">)</span>
             <span class="k">return</span>
-        <span class="k">await</span> <span class="n">callback</span><span class="p">(</span><span class="n">info</span><span class="p">)</span>
-
+        <span class="n">res</span> <span class="o">=</span> <span class="n">callback</span><span class="p">(</span><span class="n">info</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">iscoroutine</span><span class="p">(</span><span class="n">res</span><span class="p">):</span>
+            <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">connection</span><span class="p">:</span> <span class="n">ClientConnection</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">connection</span> <span class="o">=</span> <span class="n">connection</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">callback_handler</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callback_handler</span>
@@ -153,6 +153,16 @@
 <div class="viewcode-block" id="Player.wait_for_chat">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.wait_for_chat">[docs]</a>
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">wait_for_chat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">predicate</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Wait until a specific pattern in a chat message is received.</span>
+
+<span class="sd">        :param predicate: A function OR a string. If a string type is received, checks</span>
+<span class="sd">                          if the string appears EXACTLY. If a function is received, acts</span>
+<span class="sd">                          as a predicate. The function is assumed to take a single string</span>
+<span class="sd">                          as an argument, and return a boolean. Where a ``true`` value causes</span>
+<span class="sd">                          the function to return.</span>
+<span class="sd">        :return: The message that ends the wait</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">predicate</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
             <span class="n">old</span> <span class="o">=</span> <span class="n">predicate</span>
             <span class="n">predicate</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">old</span> <span class="ow">in</span> <span class="n">x</span>
@@ -282,6 +292,9 @@
 <div class="viewcode-block" id="Player.ping">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.ping">[docs]</a>
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">ping</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Pings the server.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;ping&quot;</span><span class="p">)</span></div>
 
 
@@ -302,6 +315,11 @@
         <span class="p">}</span>
 
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_get_packet_callback_states</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">PacketCallbackState</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tells you what packet callbacks are enabled in the client. Use ``_set_packet_callbacks()`` to enable them.</span>
+
+<span class="sd">        :return: A dictionary of the packet callback states.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">handle_packet</span><span class="p">(</span><span class="s2">&quot;get callbacks&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="p">{</span>
@@ -343,29 +361,45 @@
 <div class="viewcode-block" id="Player.clear_callbacks">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.clear_callbacks">[docs]</a>
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">clear_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Clear all the callbacks. &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_callbacks</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clear_callbacks</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="Player.set_callback">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.set_callback">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">:</span> <span class="n">CallbackType</span><span class="p">,</span> <span class="n">callback</span> <span class="p">:</span>  <span class="n">Callable</span><span class="p">[[</span><span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">Coroutine</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]):</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">:</span> <span class="n">CallbackType</span><span class="p">,</span> <span class="n">callback</span> <span class="p">:</span>  <span class="n">CALLBACK_TYPE</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set a function that will be called when an event occurs for the client.</span>
+
+<span class="sd">        :param type: What type of event will fire the callback.</span>
+<span class="sd">        :param callback: The function you want to call on that event.</span>
+<span class="sd">                         Can be a coroutine, or a regular function. Taking</span>
+<span class="sd">                         the event json as a parameter.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_callbacks</span><span class="p">[</span><span class="nb">type</span><span class="o">.</span><span class="n">value</span><span class="p">]</span> <span class="o">=</span> <span class="n">callback</span>
-        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_callbacks</span><span class="p">({</span>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_callbacks</span><span class="p">({</span>
             <span class="nb">type</span><span class="p">:</span> <span class="kc">True</span>
         <span class="p">})</span></div>
+
 
 <div class="viewcode-block" id="Player.remove_callback">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.remove_callback">[docs]</a>
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">remove_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span> <span class="p">:</span> <span class="n">CallbackType</span><span class="p">):</span>
-        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_callbacks</span><span class="p">({</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Remove a previously set callback. &quot;&quot;&quot;</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_callbacks</span><span class="p">({</span>
             <span class="nb">type</span><span class="p">:</span> <span class="kc">False</span>
         <span class="p">})</span>
-        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callbacks</span><span class="p">[</span><span class="nb">type</span><span class="o">.</span><span class="n">value</span><span class="p">]</span></div>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callbacks</span><span class="p">[</span><span class="nb">type</span><span class="o">.</span><span class="n">value</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">r</span></div>
+
 
 <div class="viewcode-block" id="Player.wait_for_callback">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.wait_for_callback">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">wait_for_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span> <span class="p">:</span> <span class="n">CallbackType</span><span class="p">):</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">wait_for_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span> <span class="p">:</span> <span class="n">CallbackType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Binds until the client has an event occur. And return that event&quot;&quot;&quot;</span>
+
         <span class="n">old_state</span> <span class="o">=</span> <span class="p">(</span><span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_callback_states</span><span class="p">())</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">type</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
         <span class="n">fut</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span><span class="o">.</span><span class="n">create_future</span><span class="p">()</span>
@@ -402,7 +436,16 @@
 
 <div class="viewcode-block" id="Player.set_packet_callback">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.set_packet_callback">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_packet_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idd</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">callbackType</span> <span class="p">:</span> <span class="n">PacketCallbackState</span><span class="p">,</span> <span class="n">callback</span> <span class="p">:</span>  <span class="n">Callable</span><span class="p">[[</span><span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">Coroutine</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]):</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_packet_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idd</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">callbackType</span> <span class="p">:</span> <span class="n">PacketCallbackState</span><span class="p">,</span> <span class="n">callback</span> <span class="p">:</span>  <span class="n">CALLBACK_TYPE</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set a function that will be called when the client receives a packet (or sends one).</span>
+<span class="sd">        See the documentation of PacketCallbackState for more information.</span>
+
+<span class="sd">        :param idd: The `resource id` of the packet. See: https://minecraft.wiki/w/Java_Edition_protocol/Packets</span>
+<span class="sd">                    For a list of all the minecraft protocol packets and their network definition.</span>
+<span class="sd">        :param callbackType: See PacketCallbackState</span>
+<span class="sd">        :param callback: The function you want to call on that event. Can be a coroutine, or a regular function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">assert</span> <span class="n">callbackType</span> <span class="o">!=</span> <span class="n">PacketCallbackState</span><span class="o">.</span><span class="n">DISABLED</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">removal_wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -415,11 +458,16 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_callbacks</span><span class="p">[</span><span class="n">idd</span><span class="p">]</span> <span class="o">=</span> <span class="n">callback</span>
 
-        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_packet_callbacks</span><span class="p">({</span><span class="n">idd</span><span class="p">:</span> <span class="n">callbackType</span><span class="p">})</span></div>
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_packet_callbacks</span><span class="p">({</span><span class="n">idd</span><span class="p">:</span> <span class="n">callbackType</span><span class="p">})</span></div>
 
 <div class="viewcode-block" id="Player.remove_packet_callback">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.remove_packet_callback">[docs]</a>
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">remove_packet_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idd</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove a single packet callback.</span>
+
+<span class="sd">        :param idd: The `resource id` of the packet whose callback you wish to no longer see.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callbacks</span><span class="p">[</span><span class="n">idd</span><span class="p">]</span>
         <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_packet_callbacks</span><span class="p">({</span>
             <span class="n">idd</span><span class="p">:</span> <span class="n">PacketCallbackState</span><span class="o">.</span><span class="n">DISABLED</span>
