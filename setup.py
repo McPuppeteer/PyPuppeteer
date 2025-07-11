@@ -1,11 +1,8 @@
 from setuptools import setup
-import os
-DIR = os.path.dirname(os.path.abspath(__file__))
 
-
-with open(os.path.join(DIR, "README.md"), "r", encoding='utf-8') as file:
+with open("README.md", "r", encoding='utf-8') as file:
   long_description = file.read()
-with open(os.path.join(DIR, "requirements.txt"), "r", encoding='utf-8') as file:
+with open("requirements.txt", "r", encoding='utf-8') as file:
   deps = [l.strip() for l in file.read().split("\n")]
 
 
