@@ -52,11 +52,11 @@ class PacketCallbackState(enum.Enum):
     When a packet is set to notify, it only tells you _that_ a packet is sent, and not any
     additional information.
 
-    When a packet is set to "network serialized" the structure is simular to the protocol
+    When a packet is set to "network serialized" the structure is similar to the protocol
     as described in the wiki, meaning all packet types are supported, but difficult to make
     use of. See: https://minecraft.wiki/w/Java_Edition_protocol/Packets
 
-    When a packet is set to "object serialized" the structure is simular to how it is represented
+    When a packet is set to "object serialized" the structure is similar to how it is represented
     internally. This mode is typically easier to use, often just key-value data structures. However,
     is simply unusable for many packet types, due to complex internal data structures.
 

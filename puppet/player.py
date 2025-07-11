@@ -15,7 +15,7 @@ _MOD_INTEGRATIONS = (
     ("dump malilib config", "get malilib config item", "set malilib config item", "exec malilib config item"),
     ("dump minihud config", "get minihud config item", "set minihud config item", "exec minihud config item"),
 )
-
+CALLBACK_TYPE = Callable[[Dict[Any, Any]], Coroutine[Any, Any, None] | None] | None
 
 class Player:
     """
@@ -30,7 +30,7 @@ class Player:
     ```
     """
 
-    _callbacks: Dict[str, Callable[[Dict[Any, Any]], Coroutine[Any, Any, None]]]
+    _callbacks: Dict[str, CALLBACK_TYPE]
 
     async def panic(self):
         return await self.handle_packet("panic")
@@ -38,16 +38,16 @@ class Player:
     # =========================
     #   Connection Management
     # =========================
-    default_callback: Callable[[Dict[Any, Any]], Coroutine[Any, Any, None]] | None
+    default_callback : CALLBACK_TYPE
 
     async def _callback_handler(self, info):
         callback = self._callbacks.get(info["type"])
+        callback = callback if callback is not None else self.default_callback
         if callback is None:
-            if self.default_callback is not None:
-                await self.default_callback(info)
             return
-        await callback(info)
-
+        res = callback(info)
+        if asyncio.iscoroutine(res):
+            asyncio.create_task(res)
     def __init__(self, connection: ClientConnection):
         self.connection = connection
         self.connection.callback_handler = self._callback_handler
@@ -107,6 +107,16 @@ class Player:
         return self._handle_json(*await self.connection.write_packet(message, extra))
 
     async def wait_for_chat(self, predicate: Callable[[str], bool] | str) -> str:
+        """
+        Wait until a specific pattern in a chat message is received.
+
+        :param predicate: A function OR a string. If a string type is received, checks
+                          if the string appears EXACTLY. If a function is received, acts
+                          as a predicate. The function is assumed to take a single string
+                          as an argument, and return a boolean. Where a ``true`` value causes
+                          the function to return.
+        :return: The message that ends the wait
+        """
         if type(predicate) is str:
             old = predicate
             predicate = lambda x: old in x
@@ -218,6 +228,9 @@ class Player:
         return jso["status"] == "ok"
 
     async def ping(self):
+        """
+        Pings the server.
+        """
         return await self.handle_packet("ping")
 
     # =========================
@@ -237,6 +250,11 @@ class Player:
         }
 
     async def _get_packet_callback_states(self) -> Dict[str, PacketCallbackState]:
+        """
+        Tells you what packet callbacks are enabled in the client. Use ``_set_packet_callbacks()`` to enable them.
+
+        :return: A dictionary of the packet callback states.
+        """
         result = await self.handle_packet("get callbacks")
 
         return {
@@ -276,20 +294,36 @@ class Player:
         """ Clear all callbacks being sent to the player.  """
         return await self.handle_packet("clear callbacks")
     async def clear_callbacks(self):
+        """ Clear all the callbacks. """
         self._callbacks = {}
         return await self._clear_callbacks()
 
-    async def set_callback(self, type: CallbackType, callback :  Callable[[Dict[Any, Any]], Coroutine[Any, Any, None]]):
+    async def set_callback(self, type: CallbackType, callback :  CALLBACK_TYPE):
+        """
+        Set a function that will be called when an event occurs for the client.
+
+        :param type: What type of event will fire the callback.
+        :param callback: The function you want to call on that event.
+                         Can be a coroutine, or a regular function. Taking
+                         the event json as a parameter.
+        """
+
         self._callbacks[type.value] = callback
-        await self._set_callbacks({
+        return await self._set_callbacks({
             type: True
         })
+
     async def remove_callback(self, type : CallbackType):
-        await self._set_callbacks({
+        """ Remove a previously set callback. """
+        r = await self._set_callbacks({
             type: False
         })
         del self._callbacks[type.value]
-    async def wait_for_callback(self, type : CallbackType):
+        return r
+
+    async def wait_for_callback(self, type : CallbackType) -> dict:
+        """ Binds until the client has an event occur. And return that event"""
+
         old_state = (await self._get_callback_states()).get(type, False)
 
         fut = asyncio.get_event_loop().create_future()
@@ -323,7 +357,16 @@ class Player:
 
 
 
-    async def set_packet_callback(self, idd : str, callbackType : PacketCallbackState, callback :  Callable[[Dict[Any, Any]], Coroutine[Any, Any, None]]):
+    async def set_packet_callback(self, idd : str, callbackType : PacketCallbackState, callback :  CALLBACK_TYPE):
+        """
+        Set a function that will be called when the client receives a packet (or sends one).
+        See the documentation of PacketCallbackState for more information.
+
+        :param idd: The `resource id` of the packet. See: https://minecraft.wiki/w/Java_Edition_protocol/Packets
+                    For a list of all the minecraft protocol packets and their network definition.
+        :param callbackType: See PacketCallbackState
+        :param callback: The function you want to call on that event. Can be a coroutine, or a regular function.
+        """
         assert callbackType != PacketCallbackState.DISABLED
 
         def removal_wrapper(*args, **kwargs):
@@ -336,8 +379,13 @@ class Player:
         else:
             self._callbacks[idd] = callback
 
-        await self._set_packet_callbacks({idd: callbackType})
+        return await self._set_packet_callbacks({idd: callbackType})
     async def remove_packet_callback(self, idd : str):
+        """
+        Remove a single packet callback.
+
+        :param idd: The `resource id` of the packet whose callback you wish to no longer see.
+        """
         del self._callbacks[idd]
         await self._set_packet_callbacks({
             idd: PacketCallbackState.DISABLED
