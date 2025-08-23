@@ -1,6 +1,8 @@
 import asyncio
 from io import BytesIO
+from json.encoder import py_encode_basestring
 from typing import *
+from collections.abc import Iterable
 
 
 from .connection import *
@@ -16,6 +18,133 @@ _MOD_INTEGRATIONS = (
     ("dump minihud config", "get minihud config item", "set minihud config item", "exec minihud config item"),
 )
 CALLBACK_TYPE = Callable[[Dict[Any, Any]], Coroutine[Any, Any, None] | None] | None
+def _handle_json(packet_type: int, json: Dict) -> Dict:
+    """
+    Handles JSON packets received from the server.
+
+    :param packet_type: The type of the packet (should be 'j').
+    :param json: The JSON data received.
+    :return: The processed JSON data.
+    :raises PuppeteerError: If the JSON contains an error status.
+    """
+    assert packet_type == ord('j')
+    if json.get("status") == "error":
+        raise PuppeteerError(
+            "Error: " + json.get("message", ""),
+            etype=str2error(json.get("type")),
+        )
+    del json["status"]
+    del json["id"]
+    return json
+
+
+T = TypeVar("T")
+R = TypeVar("R")
+class PacketFuture(Generic[T], Awaitable[T]):
+    """
+    A special awaitable object. Typically you can use this like
+    a regular couroutine (i.e. you await it). However it also can
+    be passed along to other functions to bundle packets together
+
+    TODO: ELABORATE
+    """
+
+    _connection : ClientConnection
+    _message : str
+    _extra : Dict | None
+    _raw : bool
+    _required_type : int
+    _modifier : Callable[[dict], T] | None
+    
+
+    _executed : bool
+    def __init__(self, connection : ClientConnection, message: str, extra: Dict | None = None, raw : bool = False, required_type : int = ord('j'), modifier : Callable[[dict], T] | None = None):
+        """
+        :param connection: The client connection to use when its time to send the packet
+        :param message: Command string to specify what command is being used  
+        :param extra: Extra JSON data to be sent along
+        :param raw: Set to true for json error handling, false for binary or NBT
+        :param required_type: Should be ord('n'), ord('j'), or ord('b')
+        :param modifier: A predicate of how to process the packet. When null the raw packet
+                         contents are returned. Packet contents are determined by the packet
+                         return type.
+        """
+        self._connection = connection
+        self._message = message
+        self._extra = extra
+        self._raw = raw
+        self._modifier = modifier
+        self._required_type = required_type
+
+        self._executed = False
+    
+    def _transform_future(self, fut : Awaitable[Any]) -> Awaitable[T]:
+        async def tmp():
+            packet_type, data = await fut
+
+            if packet_type == ord('j') and data.get("status") == "error":
+                raise PuppeteerError(
+                    "Error: " + data.get("message", ""),
+                    etype=str2error(data.get("type"))
+                )
+
+            if packet_type != self._required_type:
+                raise PuppeteerError("Packet type was not as expeced")
+            if not self._raw:
+                data = _handle_json(packet_type, data)
+            if self._modifier is not None:
+                data = self._modifier(data)
+
+
+            return cast(T, data)
+        return tmp()
+
+    def map(self, predicate : Callable[[T], R]) -> "PacketFuture[R]":
+        """
+        Stack a new modifier ontop of an current modifiers. This
+        creates a new PacketFormat instance.
+
+        :param predicate: Take the old return value, and transform it.
+        """
+        assert not self._executed
+        oldModifier = self._modifier
+        def tmp(data):
+            if oldModifier is not None:
+                data = oldModifier(data)
+            return predicate(data)
+        return cast(PacketFuture[R], PacketFuture(
+            self._connection, self._message, extra=self._extra, raw=self._raw, required_type=self._required_type, modifier=tmp))
+
+
+
+        
+    def soft_send(self) -> tuple[dict, Awaitable[T]]:
+        """
+        Generates the packet as it would be if sent to the network.
+        This is used for bundled packets.
+        """
+        packet, fut =  self._connection._write_packet_internal(self._message, self._extra)
+        return packet, cast(Awaitable[T], self._transform_future(fut))
+
+    async def as_co(self) -> T:
+        """ Convert into a regualar coroutine """
+        return await self 
+
+
+
+    def __await__(self):
+        assert not self._executed, AttributeError("This Packet has already been sent")
+
+        self._executed = True
+
+        fut = self._transform_future(self._connection.write_packet(self._message, self._extra))
+        return fut.__await__()
+
+
+
+
+
+
 
 class Player:
     """
@@ -32,8 +161,8 @@ class Player:
 
     _callbacks: Dict[str, CALLBACK_TYPE]
 
-    async def panic(self):
-        return await self.handle_packet("panic")
+    def panic(self):
+        return PacketFuture(self.connection, "panic")
 
     # =========================
     #   Connection Management
@@ -76,35 +205,6 @@ class Player:
 
         assert False, "Unreachable"
 
-    # =========================
-    #   Packet Handling
-    # =========================
-
-    def _handle_json(self, packet_type: int, json: Dict) -> Dict:
-        """
-        Handles JSON packets received from the server.
-
-        :param packet_type: The type of the packet (should be 'j').
-        :param json: The JSON data received.
-        :return: The processed JSON data.
-        :raises PuppeteerError: If the JSON contains an error status.
-        """
-        assert packet_type == ord('j')
-        if json.get("status") == "error":
-            raise PuppeteerError(
-                "Error: " + json.get("message", ""),
-                etype=str2error(json.get("type")),
-            )
-        del json["status"]
-        del json["id"]
-        return json
-
-    async def handle_packet(self, message: str, extra: Dict = None):
-        """
-        Write a json packet, send it, and raise any errors.
-        :raises PuppeteerError: If the JSON contains an error status.
-        """
-        return self._handle_json(*await self.connection.write_packet(message, extra))
 
     async def wait_for_chat(self, predicate: Callable[[str], bool] | str) -> str:
         """
@@ -129,43 +229,43 @@ class Player:
     # =========================
 
     @classmethod
-    def _generate_dump_mesa_config(cls, cmd: str):
-        async def func(self):
+    def _generate_dump_mesa_config(cls, cmd: str) -> Callable[[], PacketFuture[dict]]:
+        def func(self):
             """ Returns the config json associated with this mod. """
-            return await self.handle_packet(cmd)
+            return PacketFuture(self.connection, cmd)
 
-        return func
+        return cast(Callable[[], PacketFuture[dict]], func)
 
     @classmethod
-    def _generate_get_mesa_config_item(cls, cmd: str):
-        async def func(self, category: str, name: str):
+    def _generate_get_mesa_config_item(cls, cmd: str) -> Callable[[], PacketFuture[dict]]:
+        def func(self, category: str, name: str):
             """ Returns the config json value of the config item associated with this mod. """
-            return await self.handle_packet(cmd, {
+            return PacketFuture(self.connection, cmd, {
                 "category": category,
                 "name": name,
             })
 
-        return func
+        return cast(Callable[[], PacketFuture[dict]], func)
 
     @classmethod
-    def _generate_set_mesa_config_item(cls, cmd: str):
-        async def func(self, category: str, name: str, value):
+    def _generate_set_mesa_config_item(cls, cmd: str) -> Callable[[], PacketFuture[dict]]:
+        def func(self, category: str, name: str, value):
             """ Sets the config value for a given mod config item. """
-            return await self.handle_packet(cmd, {
+            return PacketFuture(self.connection, cmd, {
                 "category": category,
                 "name": name,
                 "value": value,
             })
 
-        return func
-
+        return cast(Callable[[], PacketFuture[dict]], func)
     @classmethod
     def _generate_exec_mesa_config_item(cls, cmd: str):
-        async def func(self, category: str, name: str, action: str = None):
+        def func(self, category: str, name: str, action: str = None):
             """ Executes a given hotkey associated with this mod. """
             assert action is None or action in ("press", "release"), ValueError(
                 "Invalid action. Must be press or release")
-            return await self.handle_packet(cmd, {
+
+            return PacketFuture(self.connection, cmd, {
                 **{
                     "category": category,
                     "name": name
@@ -184,23 +284,33 @@ class Player:
         else:
             # This is just to stop the warnings
             asyncio.create_task(coroutine).cancel()
+
+
+    def bundle(self, packets : Iterable[PacketFuture[Any]]) -> PacketFuture[Tuple[Awaitable[Any]]]:
+        packets, futures = zip(* (p.soft_send() for p in packets) )
+
+        return PacketFuture(self.connection, "bundle", {"packets": packets, "method": "instant" }, modifier=lambda _: futures)
+ 
+
+
+
     # =========================
     #   Client/Player Info
     # =========================
 
-    async def get_client_info(self):
+    def get_client_info(self) -> PacketFuture[dict]:
         """ Returns a dictionary of a bunch of information about the game client """
-        return await self.handle_packet("get client info")
+        return PacketFuture(self.connection, "get client info")
 
-    async def get_player_info(self):
+    def get_player_info(self) -> PacketFuture[dict]:
         """ Returns a dictionary of a bunch of information about the player, you MUST be in game to do this. """
-        return await self.handle_packet("get player info")
+        return PacketFuture(self.connection, "get player info")
 
-    async def get_installed_mods(self):
+    def get_installed_mods(self) -> PacketFuture[list[dict]]:
         """ Returns a list of installed mods. """
-        return (await self.handle_packet("get mod list")).get("mods")
+        return PacketFuture(self.connection, "get mod list", modifier=lambda dic: dic.get("mods"))
 
-    async def get_sources(self):
+    def get_sources(self) -> PacketFuture[dict]:
         """
         This will give you a bunch of information about the mod version,
         including the git commit hash, a link to where the source code
@@ -213,65 +323,65 @@ class Player:
         Note: If you are forking the mod, please modify: `fabric.mod.json`
               to include your github repo.
         """
-        return await self.handle_packet("sources")
+        return PacketFuture(self.connection, "sources")
 
-    async def _list_commands(self):
+    def _list_commands(self) -> PacketFuture[dict]:
         """ Returns a list of available commands. Note: Also included in ```get_client_info()``` """
-        return await self.handle_packet("list commands")
+        return PacketFuture(self.connection, "list commands")
 
-    async def has_baritone(self):
-        """ Returns true if baritone is installed. """
+    async def has_baritone(self) -> bool:
+        """ Returns true if baritone is installed. NOTE: Not a PacketFuture"""
 
         # Typically "test baritone" returns an error, but this way
         # we don't have to bother the exception system
         _, jso = await self.connection.write_packet("test baritone")
         return jso["status"] == "ok"
 
-    async def ping(self):
+    def ping(self) -> PacketFuture[dict]:
         """
         Pings the server.
         """
-        return await self.handle_packet("ping")
+        return PacketFuture(self.connection, "ping")
 
     # =========================
     #   Callback Management
     # =========================
 
-    async def _get_callback_states(self) -> Dict[CallbackType, bool]:
+    def _get_callback_states(self) -> PacketFuture[Dict[CallbackType, bool]]:
         """
         Tells you what callbacks are currently enabled in the client. Use ``_set_callbacks()`` to enable them.
 
         :return: A dictionary of the callback states.
         """
-        result = await self.handle_packet("get callbacks")
-        return {
+        return cast(PacketFuture[Dict[CallbackType, bool]],
+                    PacketFuture(self.connection, "get callbacks", modifier=lambda result: {
             string_callback_dict.get(k): v
             for k, v in result["typical callbacks"].items()
-        }
+        }))
 
-    async def _get_packet_callback_states(self) -> Dict[str, PacketCallbackState]:
+    def _get_packet_callback_states(self) -> PacketFuture[Dict[str, PacketCallbackState]]:
         """
         Tells you what packet callbacks are enabled in the client. Use ``_set_packet_callbacks()`` to enable them.
 
         :return: A dictionary of the packet callback states.
         """
-        result = await self.handle_packet("get callbacks")
+        return cast(PacketFuture[Dict[str, PacketCallbackState]],
+                    PacketFuture(self.connection, "get callbacks", modifier=lambda result: {
+                        k: string_packet_state_dict.get(v)
+                        for k, v in result["packet callbacks"].items()
+        }))
 
-        return {
-            k: string_packet_state_dict.get(v)
-            for k, v in result["packet callbacks"].items()
-        }
 
-    async def _set_callbacks(self, callbacks: Dict[CallbackType, bool]):
+    def _set_callbacks(self, callbacks: Dict[CallbackType, bool]) -> PacketFuture[dict]:
         """
         Enable more callbacks being sent to the player.
 
         :param callbacks: A dictionary (identical to the return of ``_get_callback_states()``) of what callbacks you want to enable.
         """
         payload = {k.value: v for k, v in callbacks.items()}
-        return await self.handle_packet("set callbacks", {"callbacks": payload})
+        return PacketFuture(self.connection, "set callbacks", {"callbacks": payload})
 
-    async def _set_packet_callbacks(self, callbacks: Dict[str, PacketCallbackState]):
+    def _set_packet_callbacks(self, callbacks: Dict[str, PacketCallbackState]) -> PacketFuture[dict]:
         """
         Enable specific packet callbacks being sent to the player.
         You should use ``_get_packet_callback_states()`` for a canonical list of packets enabled
@@ -283,22 +393,22 @@ class Player:
 
         :param callbacks: A dictionary (identical to the return of ``_get_packet_callback_states()``) of what callbacks you want to enable.
         """
-        return await self.handle_packet("set callbacks", {
+        return PacketFuture(self.connection, "set callbacks", {
             "callbacks": {
                 k: v.value
                 for k, v in callbacks.items()
             }
         })
 
-    async def _clear_callbacks(self):
+    def _clear_callbacks(self) -> PacketFuture[Any]:
         """ Clear all callbacks being sent to the player.  """
-        return await self.handle_packet("clear callbacks")
-    async def clear_callbacks(self):
+        return PacketFuture(self.connection, "clear callbacks")
+    def clear_callbacks(self) -> PacketFuture[Any]:
         """ Clear all the callbacks. """
         self._callbacks = {}
-        return await self._clear_callbacks()
+        return self._clear_callbacks()
 
-    async def set_callback(self, type: CallbackType, callback :  CALLBACK_TYPE):
+    def set_callback(self, type: CallbackType, callback :  CALLBACK_TYPE) -> PacketFuture[dict]:
         """
         Set a function that will be called when an event occurs for the client.
 
@@ -309,17 +419,17 @@ class Player:
         """
 
         self._callbacks[type.value] = callback
-        return await self._set_callbacks({
+        return self._set_callbacks({
             type: True
         })
 
-    async def remove_callback(self, type : CallbackType):
+    def remove_callback(self, type : CallbackType) -> PacketFuture[dict]:
         """ Remove a previously set callback. """
-        r = await self._set_callbacks({
+        del self._callbacks[type.value]
+
+        return self._set_callbacks({
             type: False
         })
-        del self._callbacks[type.value]
-        return r
 
     async def wait_for_callback(self, type : CallbackType) -> dict:
         """ Binds until the client has an event occur. And return that event"""
@@ -330,7 +440,8 @@ class Player:
         old_callback = self._callbacks.get(type.value)
 
         async def tmp(info):
-            fut.set_result(info)
+            if not fut.done():
+                fut.set_result(info)
             if old_callback is not None:
                 await old_callback(info)
                 self._callbacks[type.value] = old_callback
@@ -342,7 +453,8 @@ class Player:
         # Try to save some time
         asyncio.create_task(self._set_callbacks({
             type: True
-        }))
+        }).as_co())
+
 
 
         ret = await fut
@@ -350,14 +462,14 @@ class Player:
         # We don't care about this much
         asyncio.create_task(self._allow_dead(self._set_callbacks({
             type: old_state
-        })))
+        }).as_co()))
 
         return ret
 
 
 
 
-    async def set_packet_callback(self, idd : str, callbackType : PacketCallbackState, callback :  CALLBACK_TYPE):
+    def set_packet_callback(self, idd : str, callbackType : PacketCallbackState, callback :  CALLBACK_TYPE) -> PacketFuture[dict]:
         """
         Set a function that will be called when the client receives a packet (or sends one).
         See the documentation of PacketCallbackState for more information.
@@ -379,15 +491,16 @@ class Player:
         else:
             self._callbacks[idd] = callback
 
-        return await self._set_packet_callbacks({idd: callbackType})
-    async def remove_packet_callback(self, idd : str):
+        return self._set_packet_callbacks({idd: callbackType})
+
+    def remove_packet_callback(self, idd : str) -> PacketFuture[dict]:
         """
         Remove a single packet callback.
 
         :param idd: The `resource id` of the packet whose callback you wish to no longer see.
         """
         del self._callbacks[idd]
-        await self._set_packet_callbacks({
+        return self._set_packet_callbacks({
             idd: PacketCallbackState.DISABLED
         })
 
@@ -398,7 +511,7 @@ class Player:
     #   World/Block/Chunk Access
     # =========================
 
-    async def get_block(self, x: int, y: int, z: int) -> Dict:
+    def get_block(self, x: int, y: int, z: int) -> PacketFuture[Dict]:
         """
         Asks for a specific block somewhere in the world
 
@@ -407,17 +520,16 @@ class Player:
         :param z: The z coordinate of the block to ask.
         :return: A dictionary of the block data.
         """
-        pt, data = await self.connection.write_packet("get block", {"x": x, "y": y, "z": z})
-        if pt == ord('j'):
-            return self._handle_json(pt, data)
-        return data.unpack()
 
-    async def list_loaded_chunks(self) -> List:
+        return PacketFuture(self.connection, "get block", {"x": x, "y": y, "z": z}, required_type=ord('n'), raw=True, modifier=lambda data: data.unpack())
+
+
+    def list_loaded_chunks(self) -> PacketFuture[List]:
         """ Returns a list of loaded chunks."""
 
-        return (await self.handle_packet("list loaded chunks")).get("chunks")
+        return cast(PacketFuture[List],  PacketFuture(self.connection, "list loaded chunks", modifier=lambda data: data.get("chunks")))
 
-    async def click_slot(self, slot : int, button : int, action : SlotActionType):
+    def click_slot(self, slot : int, button : int, action : SlotActionType) -> PacketFuture[dict]:
         """
         Simulates a single slot click/action. This is a low level function, slot ids change
         based on the current screen.
@@ -432,12 +544,12 @@ class Player:
         :param action: See wiki
         """
 
-        return await self.handle_packet("click slot", {
+        return PacketFuture(self.connection, "click slot", {
             "slot": slot,
             "button": button,
             "action": action.value
         })
-    async def swap_slots(self, slot1 : int, slot2 : int, useOffhand : bool = False):
+    def swap_slots(self, slot1 : int, slot2 : int, useOffhand : bool = False) -> PacketFuture[dict]:
         """
         Attempts to swap slots in an inventory. Either with clicking, or with offhand swaps.
 
@@ -453,7 +565,7 @@ class Player:
         :return:
         """
 
-        return await self.handle_packet("swap slots", {
+        return PacketFuture(self.connection, "swap slots", {
             "slot1": slot1,
             "slot2": slot2,
             "useOffhand": useOffhand
@@ -461,41 +573,43 @@ class Player:
 
 
 
-    async def get_player_inventory_contents(self):
+    def get_player_inventory_contents(self):
         """ Returns JSON data of the player's inventory. Throws an error if a container is open"""
-        return await self.handle_packet("get player inventory")
+        return PacketFuture(self.connection, "get player inventory")
 
-    async def get_player_inventory(self) -> "PlayerInventory":
+    def get_player_inventory(self) -> PacketFuture["PlayerInventory"]:
         """ Returns an object of the player's inventory. Throws an error if a container is open"""
 
-        inventory = await self.get_player_inventory_contents()
-        return PlayerInventory(self, inventory["slots"], inventory["name"])
+        return self.get_player_inventory_contents().map(
+            lambda inventory:
+                PlayerInventory(self, inventory["slots"], inventory["name"]))
 
-    async def get_open_inventory_contents(self):
-        return await self.handle_packet("get open inventory")
 
-    async def click_container_button(self, button: int):
-        return await self.handle_packet("click inventory button", {"button": button})
+    def get_open_inventory_contents(self):
+        return PacketFuture(self.connection, "get open inventory")
 
-    async def get_merchant_trades(self):
-        return await self.handle_packet("get trades")
+    def click_container_button(self, button: int):
+        return PacketFuture(self.connection, "click inventory button", {"button": button})
 
-    async def select_trade(self, index: int):
-        return await self.handle_packet("select trade", {"index": index})
+    def get_merchant_trades(self):
+        return PacketFuture(self.connection, "get trades")
 
-    async def set_anvil_name(self, name: str):
-        return await self.handle_packet("set anvil name", {"name": name})
+    def select_trade(self, index: int):
+        return PacketFuture(self.connection, "select trade", {"index": index})
 
-    async def set_beacon_effect(self, primary: str | None, secondary: str | None = None):
-        return await self.handle_packet("set beacon effect", {
+    def set_anvil_name(self, name: str):
+        return PacketFuture(self.connection, "set anvil name", {"name": name})
+
+    def set_beacon_effect(self, primary: str | None, secondary: str | None = None):
+        return PacketFuture(self.connection, "set beacon effect", {
             **({} if primary is None else {"primary": primary}),
             **({} if secondary is None else {"secondary": secondary})
         })
 
-    async def get_enchantments(self):
-        return await self.handle_packet("get enchantments")
+    def get_enchantments(self):
+        return PacketFuture(self.connection, "get enchantments")
 
-    async def get_chunk(self, cx: int, cz: int) -> Chunk:
+    def get_chunk(self, cx: int, cz: int) -> PacketFuture[Chunk]:
         """
         Asks for a specific chunk somewhere in the world.
         :param cx: Location of the chunk, note this is 16x smaller than the normal coordinates
@@ -503,12 +617,13 @@ class Player:
 
         :return: On success, a Chunk object, or raises an error
         """
-        pt, data = await self.connection.write_packet("get chunk", {"cx": cx, "cz": cz})
-        if pt == ord('j'):
-            self._handle_json(pt, data)
-            assert False, "Unreachable"
-        return Chunk.from_network(BytesIO(data))
-    async def search_for_blocks(self, blocks : List[str] | str):
+        
+        return PacketFuture(self.connection, "get chunk", {"cx": cx, "cz": cz},
+                            raw=True, required_type=ord('b'), modifier=lambda data: Chunk.from_network(BytesIO(data)))
+
+
+
+    def search_for_blocks(self, blocks : Tuple[str] | List[str] | str):
         """
         Finds all the blocks of a certain type/types somewhere in the players render distance.
         This is MUCH faster than getting the entire world with ``get_chunk()``
@@ -520,77 +635,77 @@ class Player:
         """
         if type(blocks) is str:
             blocks = (blocks, )
-        return await self.handle_packet("search for blocks", {"blocks": blocks})
+        return PacketFuture(self.connection, "search for blocks", {"blocks": blocks})
 
     # =========================
     #   World/Server Management
     # =========================
 
-    async def get_server_list(self):
+    def get_server_list(self):
         """ Gets all the multiplayer servers in your server list, along with the "hidden" ones (your direct connect history). """
-        return await self.handle_packet("get server list")
+        return PacketFuture(self.connection, "get server list")
 
-    async def get_world_list(self):
+    def get_world_list(self):
         """
         List ALL the worlds on this minecraft instances .minecraft folder.
 
         This can be slow on some installs, as some users may have **thousands** of worlds.
         """
-        return await self.handle_packet("get worlds")
+        return PacketFuture(self.connection, "get worlds")
 
-    async def join_world(self, name: str):
+    def join_world(self, name: str):
         """
         Joins a local world. The name **needs** to be from the 'load name' from getWorldList()
 
         :param name: The name of the world to join, **needs** to match the 'load name' from ``getWorldList()``
         """
-        return await self.handle_packet("join world", {"load world": name})
+        return PacketFuture(self.connection, "join world", {"load world": name})
 
-    async def join_server(self, address: str):
+    def join_server(self, address: str):
         """
         Joins a multiplayer server
 
         :param address: Server ip to connect to
         """
-        return await self.handle_packet("join server", {"address": address})
+        return PacketFuture(self.connection, "join server", {"address": address})
 
     # =========================
     #   Player State Queries
     # =========================
 
-    async def get_freecam_state(self) -> bool:
+    def get_freecam_state(self) -> PacketFuture[bool]:
         """ Tells you if freecam is currently enabled. """
-        return (await self.handle_packet("is freecam"))["is freecam"]
+        return cast(PacketFuture[bool], PacketFuture(self.connection, "is freecam", modifier=lambda data: data.get("is freecam")))
 
-    async def get_freerot_state(self) -> bool:
+    def get_freerot_state(self) -> PacketFuture[bool]:
         """ Tells you if freeroot is currently enabled. """
-        return (await self.handle_packet("is freerot"))["is freerot"]
+        return cast(PacketFuture[bool], PacketFuture(self.connection, "is freerot", modifier=lambda data: data.get("is freerot")))
 
-    async def get_no_walk_state(self) -> bool:
+    def get_no_walk_state(self) -> PacketFuture[bool]:
         """ Tells you if no walk is currently enabled. """
-        return (await self.handle_packet("is nowalk"))["is nowalk"]
+        return cast(PacketFuture[bool], PacketFuture(self.connection, "is nowalk", modifier=lambda data: data.get("is nowalk")))
 
-    async def get_headless_state(self) -> bool:
+    def get_headless_state(self) -> PacketFuture[bool]:
         """ Tells your if the client is currently headless. """
-        return (await self.handle_packet("is headless"))["is headless"]
+        return cast(PacketFuture[bool], PacketFuture(self.connection, "is headless", modifier=lambda data: data.get("is headless")))
 
     # =========================
     #   Player State Setters
     # =========================
 
-    async def set_freecam(self, enabled: bool = True):
+    def set_freecam(self, enabled: bool = True) -> PacketFuture[dict]:
         """ Set if freecam is currently enabled. """
-        return await self.handle_packet("set freecam", {"enabled": enabled})
+        return PacketFuture(self.connection, "set freecam", {"enabled": enabled})
 
-    async def set_freerot(self, enabled: bool = True):
+    def set_freerot(self, enabled: bool = True) -> PacketFuture[dict]:
         """ Set if freeroot is currently enabled. """
-        return await self.handle_packet("set freerot", {"enabled": enabled})
+        return PacketFuture(self.connection, "set freerot", {"enabled": enabled})
 
-    async def set_no_walk(self, enabled: bool = True):
+    def set_no_walk(self, enabled: bool = True) -> PacketFuture[dict]:
         """ Set if no walk is currently enabled. """
-        return await self.handle_packet("set nowalk", {"enabled": enabled})
+        return PacketFuture(self.connection, "set nowalk", {"enabled": enabled})
 
-    async def set_headless(self, enabled: bool = True):
+    def set_headless(self, enabled: bool = True) -> PacketFuture[dict]:
         """
         Put the client into a "headless" state. This means you will no longer
         see the window on your screen. It theoretically should take less
@@ -603,13 +718,13 @@ class Player:
 
         **Use with caution!**
         """
-        return await self.handle_packet("set headless", {"enabled": enabled})
+        return PacketFuture(self.connection, "set headless", {"enabled": enabled})
 
     # =========================
     #   Baritone/Automation
     # =========================
 
-    async def baritone_goto(self, x: int, y: int, z: int):
+    def baritone_goto(self, x: int, y: int, z: int) -> PacketFuture[dict]:
         """
         Tells baritone to go to a specific location.
 
@@ -617,7 +732,7 @@ class Player:
         :param y: The y coordinate
         :param z: The z coordinate
         """
-        return await self.handle_packet(
+        return PacketFuture(self.connection, 
             "baritone goto", {"x": x, "y": y, "z": z}
         )
 
@@ -625,17 +740,17 @@ class Player:
     #   Chat/Command Messaging
     # =========================
 
-    async def send_chat_message(self, message: str):
+    def send_chat_message(self, message: str) -> PacketFuture[dict]:
         """
         Sends a public chat message. If prepended with "/", will execute a command.
 
         :param message: The message to send.
         """
-        return await self.handle_packet(
+        return PacketFuture(self.connection, 
             "send chat message", {"message": message}
         )
 
-    async def send_execute_command(self, message: str):
+    def send_execute_command(self, message: str) -> PacketFuture[dict]:
         """
         Runs a command.
 
@@ -645,20 +760,20 @@ class Player:
 
         Ex: ``gamemode creative`` to set the gamemode to creative.
         """
-        return await self.handle_packet(
+        return PacketFuture(self.connection, 
             "execute command", {"message": message}
         )
 
-    async def display_message(self, message: str):
+    def display_message(self, message: str) -> PacketFuture[dict]:
         """
         Displays a message in chat. This is private
         :param message:  Message to display in chat
         """
-        return await self.handle_packet(
+        return PacketFuture(self.connection, 
             "display chat message", {"message": message}
         )
 
-    async def overview_message(self, message: str):
+    def overview_message(self, message: str) -> PacketFuture[dict]:
         """
         Shows a message above the users hotbar, this is great for informational status updates.
 
@@ -666,7 +781,7 @@ class Player:
 
         :param message: Message to display above the hotbar
         """
-        return await self.handle_packet(
+        return PacketFuture(self.connection, 
             "overview message", {"message": message}
         )
 
@@ -674,19 +789,19 @@ class Player:
     #   Input/Control
     # =========================
 
-    async def clear_inputs(self):
+    def clear_inputs(self) -> PacketFuture[dict]:
         """ Remove all forced button presses. """
-        return await self.handle_packet("clear force input")
+        return PacketFuture(self.connection, "clear force input")
 
-    async def get_forced_inputs(self):
+    def get_forced_inputs(self) -> PacketFuture[dict]:
         """
         Reports the state of if certain input methods are forced. A key not being present
         indicates that no input is being forced. If a key is set to false, it is being forced up.
         And if a key is set to true, it is forced down.
         """
-        return (await self.handle_packet("get forced input")).get("inputs")
+        return PacketFuture(self.connection, "get forced input", modifier=lambda data: data.get("inputs"))
 
-    async def force_inputs(self, inputs: List[Tuple[InputButton, bool]]):
+    def force_inputs(self, inputs: List[Tuple[InputButton, bool]]) -> PacketFuture[dict]:
         """
         Force down/up buttons. If a button is not mentioned, it will not be impacted. Meaning that if it is already pressed,
         it will still be pressed if you do not update its state.
@@ -694,7 +809,7 @@ class Player:
         :param inputs: List of tuples of (InputButton, bool). Where the bool is the **forced state** of the input. Meaning
                        setting to False indicates the **user cannot press** that key.
         """
-        return await self.handle_packet(
+        return PacketFuture(self.connection, 
             "force inputs",
             {
                 "inputs": {
@@ -703,14 +818,14 @@ class Player:
             },
         )
 
-    async def remove_forced_inputs(self, inputs: List[InputButton]):
+    def remove_forced_inputs(self, inputs: List[InputButton]) -> PacketFuture[dict]:
         """
         Disables the forced state of inputs. If a button is not mentioned, it will not be impacted.
         A complete list of inputs will result in identical behavior to ``clear_inputs()``
 
         :param inputs: A list if inputs, each input will have is state no longer controlled.
         """
-        return await self.handle_packet(
+        return PacketFuture(self.connection, 
             "force inputs",
             {
                 "remove": [k.value for k in inputs]
@@ -721,13 +836,13 @@ class Player:
     #   Player Movement/Rotation
     # =========================
 
-    async def arotate(
+    def arotate(
             self,
             pitch: float,
             yaw: float,
             speed: float = 3,
             method: RoMethod = RoMethod.LINEAR,
-    ):
+    ) -> PacketFuture[dict]:
         """
         Smoothly, and realistically, rotate the player.
 
@@ -740,7 +855,7 @@ class Player:
 
         assert method != RoMethod.INSTANT, "Not a supported rotation method."
 
-        return await self.handle_packet(
+        return PacketFuture(self.connection, 
             "algorithmic rotation",
             {
                 "pitch": pitch,
@@ -750,14 +865,14 @@ class Player:
             },
         )
 
-    async def irotate(self, pitch: float, yaw: float):
+    def irotate(self, pitch: float, yaw: float) -> PacketFuture[dict]:
         """
         Instantly set the player's rotation. This looks like you are cheating.
 
         :param pitch: Pitch angle in degrees.
         :param yaw: Yaw angle in degrees.
         """
-        return await self.handle_packet(
+        return PacketFuture(self.connection, 
             "instantaneous rotation",
             {
                 "pitch": pitch,
@@ -765,26 +880,28 @@ class Player:
             },
         )
 
-    async def set_hotbar_slot(self, slot: int):
+    def set_hotbar_slot(self, slot: int) -> PacketFuture[dict]:
         """
         Set the current hotbar slot.
 
         :param slot: [1, 9] are valid hotbar slots
         """
         assert 1 <= slot <= 9, "Invalid slot value"
-        return await self.handle_packet("set hotbar slot", {"slot": slot})
+        return PacketFuture(self.connection, "set hotbar slot", {"slot": slot})
 
-    async def attack(self):
+    def attack(self) -> PacketFuture[dict]:
         """ Tells the player to punch. Single left click """
-        return await self.handle_packet("attack key click")
+        return PacketFuture(self.connection, "attack key click")
 
-    async def use(self):
+    def use(self) -> PacketFuture[dict]:
         """ Tells the player to use an item/block. Single right click """
-        return await self.handle_packet("use key click")
-    async def auto_use(self,
+        return PacketFuture(self.connection, "use key click")
+
+    def auto_use(self,
                        x : int, y  : int, z : int,
                        speed : float = 3, method : RoMethod = RoMethod.LINEAR,
-                       direction_of_use : Direction | None = None):
+                       direction_of_use : Direction | None = None
+                 ) -> PacketFuture[dict]:
         """
         Look at block and click it.
 
@@ -797,18 +914,18 @@ class Player:
         :return:
         """
 
-        return await self.handle_packet("auto use", {
+        return PacketFuture(self.connection, "auto use", {
             "x": x, "y": y, "z": z,
             "degrees per tick": speed,
             "method": method.value,
             **({} if direction_of_use is None else {"direction" : direction_of_use.value})
         })
 
-    async def auto_place(self,
+    def auto_place(self,
                          x: int, y: int, z: int,
                          speed : float = 3, method : RoMethod = RoMethod.LINEAR,
                          direction_to_place_on : Direction | None = None
-                         ):
+                         ) -> PacketFuture[dict]:
         """
         Place a block
 
@@ -820,16 +937,16 @@ class Player:
         :param direction_to_place_on: What block to place on. For example, use down to
                                       place on the block UNDER the location you specify
         """
-        return await self.handle_packet("auto place", {
+        return PacketFuture(self.connection, "auto place", {
             "x": x, "y": y, "z": z,
             "degrees per tick": speed,
             "method": method.value,
             **({} if direction_to_place_on is None else {"direction" : direction_to_place_on.value})
         })
 
-    async def set_directional_walk(
+    def set_directional_walk(
             self, degrees: float, speed: float = 1, force: bool = False
-    ):
+    )-> PacketFuture[dict]:
         """
         Force the player to walk in a certain direction. Directional walking allows you to make the player walk towards a block.
         The direction the player is walking in is absolute, meaning the user can look around without interfacing.
@@ -838,7 +955,7 @@ class Player:
         :param speed: Should be from 0-1. With zero being no movement, and one being regular walk speed.
         :param force: If false, will clamp the speed. If true, will allow any speed value, basically being speed hacks.
         """
-        return await self.handle_packet(
+        return PacketFuture(self.connection, 
             "set directional movement degree",
             {
                 "direction": degrees,
@@ -847,9 +964,9 @@ class Player:
             },
         )
 
-    async def set_directional_walk_vector(
+    def set_directional_walk_vector(
             self, x: float, z: float, speed: float = 1, force: bool = False
-    ):
+    ) -> PacketFuture[dict]:
         """
         Force the player to walk in a certain direction. Directional walking allows you to make the player walk towards a block.
         The direction the player is walking in is absolute, meaning the user can look around without interfacing.
@@ -864,7 +981,7 @@ class Player:
         :param speed: Should be from 0-1. With zero being no movement, and one being regular walk speed.
         :param force: If false, will clamp the speed. If true, will allow any speed value, basically being speed hacks.
         """
-        return await self.handle_packet(
+        return PacketFuture(self.connection, 
             "set directional movement vector",
             {
                 "x": x,
@@ -874,9 +991,9 @@ class Player:
             },
         )
 
-    async def stop_directional_walk(self):
+    def stop_directional_walk(self) -> PacketFuture[dict]:
         """No longer be directional walking"""
-        return await self.handle_packet("clear directional movement")
+        return PacketFuture(self.connection, "clear directional movement")
 
 
 # Generate functions for all the mod integrations
@@ -1066,8 +1183,8 @@ class Generic2Input(Inventory):
 class Anvil(Generic2Input):
     container_type = "anvil"
 
-    async def set_name(self, name: str):
-        return await self.player.set_anvil_name(name)
+    def set_name(self, name: str) -> PacketFuture[dict]:
+        return self.player.set_anvil_name(name)
 
 
 class Grindstone(Generic2Input):
@@ -1077,11 +1194,11 @@ class Grindstone(Generic2Input):
 class Merchant(Generic2Input):
     container_type = "merchant"
 
-    async def get_trades(self):
-        return await self.player.get_merchant_trades()
+    def get_trades(self) -> PacketFuture[dict]:
+        return self.player.get_merchant_trades()
 
-    async def select_trade(self, index: int):
-        return await self.player.select_trade(index)
+    def select_trade(self, index: int) -> PacketFuture[dict]:
+        return self.player.select_trade(index)
 
 
 class CartographyTable(Generic2Input):
@@ -1095,7 +1212,7 @@ class Beacon(Inventory):
     def get_payment_slot(self):
         return self.get_slot(0)
 
-    async def set_effects(self, primary: None | str = None, secondary: None | str = None):
+    def set_effects(self, primary: None | str = None, secondary: None | str = None) -> PacketFuture[dict]:
         return self.player.set_beacon_effect(primary, secondary)
 
 
@@ -1156,13 +1273,13 @@ class EnchantmentTable(Inventory):
     def get_lapis(self):
         return self.get_slot(1)
 
-    async def get_enchants(self):
-        return await self.player.get_enchantments()
+    def get_enchants(self) -> PacketFuture[dict]:
+        return self.player.get_enchantments()
 
-    async def select_enchantment(self, index: int):
+    def select_enchantment(self, index: int) -> PacketFuture[dict]:
         assert 0 <= index <= 2
 
-        return await self.player.click_container_button(index)
+        return self.player.click_container_button(index)
 
 
 class Hopper(Inventory):

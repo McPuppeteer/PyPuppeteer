@@ -178,6 +178,20 @@ class ClientConnection:
                     future.set_exception(
                         PuppeteerError("Killed server", etype=SERVER_KILLED)
                     )
+    def _write_packet_internal(self, cmd: str, extra: dict | None = None) -> tuple[dict, asyncio.Future]:
+        loop = asyncio.get_running_loop()
+        fut = loop.create_future()
+
+        pid = str(uuid.uuid4())
+
+        self.promises[pid] = fut
+
+        if extra is None:
+            extra = {}
+
+        packet = {"cmd": cmd, "id": pid, **extra}
+        return packet, fut
+       
 
     async def write_packet(self, cmd: str, extra: dict | None = None) -> tuple[int, dict | bytes | nbtlib.Base]:
         """
@@ -191,17 +205,8 @@ class ClientConnection:
 
         assert self.running
 
-        loop = asyncio.get_running_loop()
-        fut = loop.create_future()
+        packet, fut = self._write_packet_internal(cmd, extra)
 
-        pid = str(uuid.uuid4())
-
-        self.promises[pid] = fut
-
-        if extra is None:
-            extra = {}
-
-        packet = {"cmd": cmd, "id": pid, **extra}
         data = json.dumps(packet).encode("utf-8")
 
         data = struct.pack("!ci", b'j', len(data)) + data
