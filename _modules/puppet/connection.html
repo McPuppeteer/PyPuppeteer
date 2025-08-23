@@ -222,6 +222,20 @@
                     <span class="n">future</span><span class="o">.</span><span class="n">set_exception</span><span class="p">(</span>
                         <span class="n">PuppeteerError</span><span class="p">(</span><span class="s2">&quot;Killed server&quot;</span><span class="p">,</span> <span class="n">etype</span><span class="o">=</span><span class="n">SERVER_KILLED</span><span class="p">)</span>
                     <span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_packet_internal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">extra</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Future</span><span class="p">]:</span>
+        <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_running_loop</span><span class="p">()</span>
+        <span class="n">fut</span> <span class="o">=</span> <span class="n">loop</span><span class="o">.</span><span class="n">create_future</span><span class="p">()</span>
+
+        <span class="n">pid</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">promises</span><span class="p">[</span><span class="n">pid</span><span class="p">]</span> <span class="o">=</span> <span class="n">fut</span>
+
+        <span class="k">if</span> <span class="n">extra</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">extra</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="n">packet</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;cmd&quot;</span><span class="p">:</span> <span class="n">cmd</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">pid</span><span class="p">,</span> <span class="o">**</span><span class="n">extra</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">packet</span><span class="p">,</span> <span class="n">fut</span>
+       
 
 <div class="viewcode-block" id="ClientConnection.write_packet">
 <a class="viewcode-back" href="../../puppet.html#puppet.connection.ClientConnection.write_packet">[docs]</a>
@@ -237,17 +251,8 @@
 
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">running</span>
 
-        <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_running_loop</span><span class="p">()</span>
-        <span class="n">fut</span> <span class="o">=</span> <span class="n">loop</span><span class="o">.</span><span class="n">create_future</span><span class="p">()</span>
+        <span class="n">packet</span><span class="p">,</span> <span class="n">fut</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_write_packet_internal</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">extra</span><span class="p">)</span>
 
-        <span class="n">pid</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">promises</span><span class="p">[</span><span class="n">pid</span><span class="p">]</span> <span class="o">=</span> <span class="n">fut</span>
-
-        <span class="k">if</span> <span class="n">extra</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">extra</span> <span class="o">=</span> <span class="p">{}</span>
-
-        <span class="n">packet</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;cmd&quot;</span><span class="p">:</span> <span class="n">cmd</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">pid</span><span class="p">,</span> <span class="o">**</span><span class="n">extra</span><span class="p">}</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">packet</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
 
         <span class="n">data</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;!ci&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;j&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">))</span> <span class="o">+</span> <span class="n">data</span>
