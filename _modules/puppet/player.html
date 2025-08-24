@@ -34,6 +34,7 @@
 <span></span><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">io</span><span class="w"> </span><span class="kn">import</span> <span class="n">BytesIO</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">json.encoder</span><span class="w"> </span><span class="kn">import</span> <span class="n">py_encode_basestring</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">types</span><span class="w"> </span><span class="kn">import</span> <span class="n">coroutine</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span>
 
@@ -73,15 +74,15 @@
 
 <span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">)</span>
 <span class="n">R</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;R&quot;</span><span class="p">)</span>
-<div class="viewcode-block" id="PacketFuture">
-<a class="viewcode-back" href="../../puppet.html#puppet.player.PacketFuture">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">PacketFuture</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">T</span><span class="p">],</span> <span class="n">Awaitable</span><span class="p">[</span><span class="n">T</span><span class="p">]):</span>
+<div class="viewcode-block" id="LazyRequest">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.LazyRequest">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LazyRequest</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">T</span><span class="p">],</span> <span class="n">Awaitable</span><span class="p">[</span><span class="n">T</span><span class="p">]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A special awaitable object. Typically you can use this like</span>
 <span class="sd">    a regular couroutine (i.e. you await it). However it also can</span>
 <span class="sd">    be passed along to other functions to bundle packets together</span>
 
-<span class="sd">    TODO: ELABORATE</span>
+<span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">_connection</span> <span class="p">:</span> <span class="n">ClientConnection</span>
@@ -134,9 +135,9 @@
             <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">tmp</span><span class="p">()</span>
 
-<div class="viewcode-block" id="PacketFuture.map">
-<a class="viewcode-back" href="../../puppet.html#puppet.player.PacketFuture.map">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">predicate</span> <span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">T</span><span class="p">],</span> <span class="n">R</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;PacketFuture[R]&quot;</span><span class="p">:</span>
+<div class="viewcode-block" id="LazyRequest.map">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.LazyRequest.map">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">predicate</span> <span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">T</span><span class="p">],</span> <span class="n">R</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;LazyRequest[R]&quot;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Stack a new modifier ontop of an current modifiers. This</span>
 <span class="sd">        creates a new PacketFormat instance.</span>
@@ -149,15 +150,15 @@
             <span class="k">if</span> <span class="n">oldModifier</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">data</span> <span class="o">=</span> <span class="n">oldModifier</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">predicate</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">PacketFuture</span><span class="p">[</span><span class="n">R</span><span class="p">],</span> <span class="n">PacketFuture</span><span class="p">(</span>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">LazyRequest</span><span class="p">[</span><span class="n">R</span><span class="p">],</span> <span class="n">LazyRequest</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_connection</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_message</span><span class="p">,</span> <span class="n">extra</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_extra</span><span class="p">,</span> <span class="n">raw</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw</span><span class="p">,</span> <span class="n">required_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_required_type</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="n">tmp</span><span class="p">))</span></div>
 
 
 
 
         
-<div class="viewcode-block" id="PacketFuture.soft_send">
-<a class="viewcode-back" href="../../puppet.html#puppet.player.PacketFuture.soft_send">[docs]</a>
+<div class="viewcode-block" id="LazyRequest.soft_send">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.LazyRequest.soft_send">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">soft_send</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="n">Awaitable</span><span class="p">[</span><span class="n">T</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generates the packet as it would be if sent to the network.</span>
@@ -167,9 +168,9 @@
         <span class="k">return</span> <span class="n">packet</span><span class="p">,</span> <span class="n">cast</span><span class="p">(</span><span class="n">Awaitable</span><span class="p">[</span><span class="n">T</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform_future</span><span class="p">(</span><span class="n">fut</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="PacketFuture.as_co">
-<a class="viewcode-back" href="../../puppet.html#puppet.player.PacketFuture.as_co">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">as_co</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+<div class="viewcode-block" id="LazyRequest.start">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.LazyRequest.start">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Convert into a regualar coroutine &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span> </div>
 
@@ -211,7 +212,7 @@
 <div class="viewcode-block" id="Player.panic">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.panic">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">panic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;panic&quot;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;panic&quot;</span><span class="p">)</span></div>
 
 
     <span class="c1"># =========================</span>
@@ -285,35 +286,35 @@
     <span class="c1"># =========================</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_dump_mesa_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_dump_mesa_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]]:</span>
         <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot; Returns the config json associated with this mod. &quot;&quot;&quot;</span>
-            <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="n">cmd</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="n">cmd</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">Callable</span><span class="p">[[],</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]],</span> <span class="n">func</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">Callable</span><span class="p">[[],</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]],</span> <span class="n">func</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_get_mesa_config_item</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_get_mesa_config_item</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]]:</span>
         <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">category</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot; Returns the config json value of the config item associated with this mod. &quot;&quot;&quot;</span>
-            <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="p">{</span>
                 <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="n">category</span><span class="p">,</span>
                 <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
             <span class="p">})</span>
 
-        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">Callable</span><span class="p">[[],</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]],</span> <span class="n">func</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">Callable</span><span class="p">[[],</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]],</span> <span class="n">func</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_set_mesa_config_item</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_set_mesa_config_item</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]]:</span>
         <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">category</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot; Sets the config value for a given mod config item. &quot;&quot;&quot;</span>
-            <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="p">{</span>
                 <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="n">category</span><span class="p">,</span>
                 <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
                 <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">value</span><span class="p">,</span>
             <span class="p">})</span>
 
-        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">Callable</span><span class="p">[[],</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]],</span> <span class="n">func</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">Callable</span><span class="p">[[],</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]],</span> <span class="n">func</span><span class="p">)</span>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_generate_exec_mesa_config_item</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">cmd</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">category</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
@@ -321,7 +322,7 @@
             <span class="k">assert</span> <span class="n">action</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">action</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;press&quot;</span><span class="p">,</span> <span class="s2">&quot;release&quot;</span><span class="p">),</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;Invalid action. Must be press or release&quot;</span><span class="p">)</span>
 
-            <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="n">cmd</span><span class="p">,</span> <span class="p">{</span>
                 <span class="o">**</span><span class="p">{</span>
                     <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="n">category</span><span class="p">,</span>
                     <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span>
@@ -333,23 +334,54 @@
 
         <span class="k">return</span> <span class="n">func</span>
 
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_allow_dead</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coroutine</span> <span class="p">:</span> <span class="n">Coroutine</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; When running as a task, don&#39;t crash if the connection is dead.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">running</span><span class="p">:</span>
-            <span class="k">await</span> <span class="n">coroutine</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># This is just to stop the warnings</span>
-            <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="n">coroutine</span><span class="p">)</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_ignored_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span> <span class="p">:</span> <span class="n">Coroutine</span> <span class="o">|</span> <span class="n">LazyRequest</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make sure this packet is likely sent, but we don&#39;t care about the return. </span>
+<span class="sd">        Or if the connection is cut don&#39;t worry about it. </span>
+
+<span class="sd">        TLDR: Try your best, but be alright with faliure</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">coroutine</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">start</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">LazyRequest</span><span class="p">)</span> <span class="k">else</span> <span class="n">request</span>
+
+        <span class="c1"># Don&#39;t yell it me if something bad happens</span>
+        <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="n">coroutine</span><span class="p">)</span><span class="o">.</span><span class="n">add_done_callback</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">exception</span><span class="p">())</span> 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_bundle_internal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">packets</span> <span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">LazyRequest</span><span class="p">[</span><span class="n">Any</span><span class="p">]],</span> <span class="n">method</span> <span class="p">:</span> <span class="n">BundleMethod</span> <span class="o">=</span> <span class="n">BundleMethod</span><span class="o">.</span><span class="n">INSTANT</span><span class="p">,</span> <span class="n">ticks</span> <span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Awaitable</span><span class="p">[</span><span class="n">Any</span><span class="p">]]]:</span>
+        <span class="n">packets</span><span class="p">,</span> <span class="n">futures</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span> <span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">soft_send</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">packets</span><span class="p">)</span> <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ticks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">method</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">BundleMethod</span><span class="o">.</span><span class="n">TICKLY</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;You can only set an amount of ticks using the TICKLY bundle method!&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;bundle&quot;</span><span class="p">,</span> 
+                           <span class="p">{</span><span class="s2">&quot;packets&quot;</span><span class="p">:</span> <span class="n">packets</span><span class="p">,</span>
+                            <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="n">method</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                            <span class="o">**</span><span class="p">({}</span> <span class="k">if</span> <span class="n">ticks</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;ticks&quot;</span><span class="p">:</span> <span class="n">ticks</span><span class="p">})</span> 
+                            <span class="p">}),</span> <span class="n">futures</span>
+        
+<div class="viewcode-block" id="Player.bundle_p">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.bundle_p">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">bundle_p</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">packets</span> <span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">LazyRequest</span><span class="p">[</span><span class="n">Any</span><span class="p">]],</span> <span class="n">method</span> <span class="p">:</span> <span class="n">BundleMethod</span> <span class="o">=</span> <span class="n">BundleMethod</span><span class="o">.</span><span class="n">INSTANT</span><span class="p">,</span> <span class="n">ticks</span> <span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Awaitable</span><span class="p">[</span><span class="n">Any</span><span class="p">]]]:</span>
+        <span class="n">packet</span><span class="p">,</span> <span class="n">futures</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle_internal</span><span class="p">(</span><span class="n">packets</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">ticks</span><span class="o">=</span><span class="n">ticks</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">packet</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">_</span><span class="p">:</span> <span class="n">futures</span><span class="p">)</span></div>
+
 
 
 <div class="viewcode-block" id="Player.bundle">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.bundle">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">bundle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">packets</span> <span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">PacketFuture</span><span class="p">[</span><span class="n">Any</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Awaitable</span><span class="p">[</span><span class="n">Any</span><span class="p">]]]:</span>
-        <span class="n">packets</span><span class="p">,</span> <span class="n">futures</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span> <span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">soft_send</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">packets</span><span class="p">)</span> <span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">bundle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">packets</span> <span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">LazyRequest</span><span class="p">[</span><span class="n">Any</span><span class="p">]],</span> <span class="n">method</span> <span class="p">:</span> <span class="n">BundleMethod</span> <span class="o">=</span> <span class="n">BundleMethod</span><span class="o">.</span><span class="n">INSTANT</span><span class="p">,</span> <span class="n">ticks</span> <span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Awaitable</span><span class="p">[</span><span class="n">Any</span><span class="p">]]:</span>
+        <span class="n">packet</span><span class="p">,</span> <span class="n">futures</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bundle_internal</span><span class="p">(</span><span class="n">packets</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">ticks</span><span class="o">=</span><span class="n">ticks</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ignored_request</span><span class="p">(</span><span class="n">packet</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">futures</span></div>
 
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;bundle&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;packets&quot;</span><span class="p">:</span> <span class="n">packets</span><span class="p">,</span> <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="s2">&quot;instant&quot;</span> <span class="p">},</span> <span class="n">modifier</span><span class="o">=</span><span class="k">lambda</span> <span class="n">_</span><span class="p">:</span> <span class="n">futures</span><span class="p">)</span></div>
+        
 
- 
+<div class="viewcode-block" id="Player.sleep">
+<a class="viewcode-back" href="../../puppet.html#puppet.player.Player.sleep">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sleep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ticks</span> <span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Sleep for N ticks. NOTE: Will block tasks that are enqueued after this &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;sleep&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;interval&quot;</span><span class="p">:</span> <span class="n">ticks</span><span class="p">})</span></div>
+
 
 
 
@@ -359,28 +391,28 @@
 
 <div class="viewcode-block" id="Player.get_client_info">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_client_info">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_client_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_client_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns a dictionary of a bunch of information about the game client &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;get client info&quot;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;get client info&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Player.get_player_info">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_player_info">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_player_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_player_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns a dictionary of a bunch of information about the player, you MUST be in game to do this. &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;get player info&quot;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;get player info&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Player.get_installed_mods">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_installed_mods">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_installed_mods</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_installed_mods</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns a list of installed mods. &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;get mod list&quot;</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="k">lambda</span> <span class="n">dic</span><span class="p">:</span> <span class="n">dic</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mods&quot;</span><span class="p">))</span></div>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;get mod list&quot;</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="k">lambda</span> <span class="n">dic</span><span class="p">:</span> <span class="n">dic</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mods&quot;</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="Player.get_sources">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_sources">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_sources</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_sources</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This will give you a bunch of information about the mod version,</span>
 <span class="sd">        including the git commit hash, a link to where the source code</span>
@@ -393,17 +425,17 @@
 <span class="sd">        Note: If you are forking the mod, please modify: `fabric.mod.json`</span>
 <span class="sd">              to include your github repo.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;sources&quot;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;sources&quot;</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_list_commands</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_list_commands</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns a list of available commands. Note: Also included in ```get_client_info()``` &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;list commands&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;list commands&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Player.has_baritone">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.has_baritone">[docs]</a>
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">has_baritone</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns true if baritone is installed. NOTE: Not a PacketFuture&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns true if baritone is installed. NOTE: Not a LazyRequest&quot;&quot;&quot;</span>
 
         <span class="c1"># Typically &quot;test baritone&quot; returns an error, but this way</span>
         <span class="c1"># we don&#39;t have to bother the exception system</span>
@@ -413,52 +445,52 @@
 
 <div class="viewcode-block" id="Player.ping">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.ping">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">ping</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ping</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Pings the server.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;ping&quot;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;ping&quot;</span><span class="p">)</span></div>
 
 
     <span class="c1"># =========================</span>
     <span class="c1">#   Callback Management</span>
     <span class="c1"># =========================</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_callback_states</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="n">CallbackType</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_callback_states</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="n">CallbackType</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Tells you what callbacks are currently enabled in the client. Use ``_set_callbacks()`` to enable them.</span>
 
 <span class="sd">        :return: A dictionary of the callback states.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">PacketFuture</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="n">CallbackType</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]],</span>
-                    <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;get callbacks&quot;</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="k">lambda</span> <span class="n">result</span><span class="p">:</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">LazyRequest</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="n">CallbackType</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]],</span>
+                    <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;get callbacks&quot;</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="k">lambda</span> <span class="n">result</span><span class="p">:</span> <span class="p">{</span>
             <span class="n">string_callback_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">):</span> <span class="n">v</span>
             <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;typical callbacks&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
         <span class="p">}))</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_packet_callback_states</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">PacketCallbackState</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_packet_callback_states</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">PacketCallbackState</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Tells you what packet callbacks are enabled in the client. Use ``_set_packet_callbacks()`` to enable them.</span>
 
 <span class="sd">        :return: A dictionary of the packet callback states.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">PacketFuture</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">PacketCallbackState</span><span class="p">]],</span>
-                    <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;get callbacks&quot;</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="k">lambda</span> <span class="n">result</span><span class="p">:</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">LazyRequest</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">PacketCallbackState</span><span class="p">]],</span>
+                    <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;get callbacks&quot;</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="k">lambda</span> <span class="n">result</span><span class="p">:</span> <span class="p">{</span>
                         <span class="n">k</span><span class="p">:</span> <span class="n">string_packet_state_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
                         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;packet callbacks&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
         <span class="p">}))</span>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_set_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callbacks</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">CallbackType</span><span class="p">,</span> <span class="nb">bool</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callbacks</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">CallbackType</span><span class="p">,</span> <span class="nb">bool</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Enable more callbacks being sent to the player.</span>
 
 <span class="sd">        :param callbacks: A dictionary (identical to the return of ``_get_callback_states()``) of what callbacks you want to enable.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="o">.</span><span class="n">value</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">callbacks</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;set callbacks&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;callbacks&quot;</span><span class="p">:</span> <span class="n">payload</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;set callbacks&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;callbacks&quot;</span><span class="p">:</span> <span class="n">payload</span><span class="p">})</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_set_packet_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callbacks</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">PacketCallbackState</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_packet_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callbacks</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">PacketCallbackState</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Enable specific packet callbacks being sent to the player.</span>
 <span class="sd">        You should use ``_get_packet_callback_states()`` for a canonical list of packets enabled</span>
@@ -470,19 +502,19 @@
 
 <span class="sd">        :param callbacks: A dictionary (identical to the return of ``_get_packet_callback_states()``) of what callbacks you want to enable.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;set callbacks&quot;</span><span class="p">,</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;set callbacks&quot;</span><span class="p">,</span> <span class="p">{</span>
             <span class="s2">&quot;callbacks&quot;</span><span class="p">:</span> <span class="p">{</span>
                 <span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="o">.</span><span class="n">value</span>
                 <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">callbacks</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
             <span class="p">}</span>
         <span class="p">})</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_clear_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_clear_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Clear all callbacks being sent to the player.  &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;clear callbacks&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;clear callbacks&quot;</span><span class="p">)</span>
 <div class="viewcode-block" id="Player.clear_callbacks">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.clear_callbacks">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">clear_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">clear_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Clear all the callbacks. &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_callbacks</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clear_callbacks</span><span class="p">()</span></div>
@@ -490,7 +522,7 @@
 
 <div class="viewcode-block" id="Player.set_callback">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.set_callback">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">set_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">:</span> <span class="n">CallbackType</span><span class="p">,</span> <span class="n">callback</span> <span class="p">:</span>  <span class="n">CALLBACK_TYPE</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">:</span> <span class="n">CallbackType</span><span class="p">,</span> <span class="n">callback</span> <span class="p">:</span>  <span class="n">CALLBACK_TYPE</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set a function that will be called when an event occurs for the client.</span>
 
@@ -508,7 +540,7 @@
 
 <div class="viewcode-block" id="Player.remove_callback">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.remove_callback">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">remove_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span> <span class="p">:</span> <span class="n">CallbackType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">remove_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span> <span class="p">:</span> <span class="n">CallbackType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Remove a previously set callback. &quot;&quot;&quot;</span>
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callbacks</span><span class="p">[</span><span class="nb">type</span><span class="o">.</span><span class="n">value</span><span class="p">]</span>
 
@@ -538,19 +570,19 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_callbacks</span><span class="p">[</span><span class="nb">type</span><span class="o">.</span><span class="n">value</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp</span>
 
-        <span class="c1"># Try to save some time</span>
+        <span class="c1"># Try to save some time. </span>
         <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_set_callbacks</span><span class="p">({</span>
             <span class="nb">type</span><span class="p">:</span> <span class="kc">True</span>
-        <span class="p">})</span><span class="o">.</span><span class="n">as_co</span><span class="p">())</span>
+        <span class="p">})</span><span class="o">.</span><span class="n">start</span><span class="p">())</span>
 
 
 
         <span class="n">ret</span> <span class="o">=</span> <span class="k">await</span> <span class="n">fut</span>
 
         <span class="c1"># We don&#39;t care about this much</span>
-        <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_allow_dead</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_set_callbacks</span><span class="p">({</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ignored_request</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_set_callbacks</span><span class="p">({</span>
             <span class="nb">type</span><span class="p">:</span> <span class="n">old_state</span>
-        <span class="p">})</span><span class="o">.</span><span class="n">as_co</span><span class="p">()))</span>
+        <span class="p">}))</span>
 
         <span class="k">return</span> <span class="n">ret</span></div>
 
@@ -560,7 +592,7 @@
 
 <div class="viewcode-block" id="Player.set_packet_callback">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.set_packet_callback">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">set_packet_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idd</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">callbackType</span> <span class="p">:</span> <span class="n">PacketCallbackState</span><span class="p">,</span> <span class="n">callback</span> <span class="p">:</span>  <span class="n">CALLBACK_TYPE</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_packet_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idd</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">callbackType</span> <span class="p">:</span> <span class="n">PacketCallbackState</span><span class="p">,</span> <span class="n">callback</span> <span class="p">:</span>  <span class="n">CALLBACK_TYPE</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set a function that will be called when the client receives a packet (or sends one).</span>
 <span class="sd">        See the documentation of PacketCallbackState for more information.</span>
@@ -587,7 +619,7 @@
 
 <div class="viewcode-block" id="Player.remove_packet_callback">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.remove_packet_callback">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">remove_packet_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idd</span> <span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">remove_packet_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idd</span> <span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Remove a single packet callback.</span>
 
@@ -608,7 +640,7 @@
 
 <div class="viewcode-block" id="Player.get_block">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_block">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="n">Dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="n">Dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Asks for a specific block somewhere in the world</span>
 
@@ -618,21 +650,21 @@
 <span class="sd">        :return: A dictionary of the block data.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;get block&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="n">z</span><span class="p">},</span> <span class="n">required_type</span><span class="o">=</span><span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;n&#39;</span><span class="p">),</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="k">lambda</span> <span class="n">data</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">unpack</span><span class="p">())</span></div>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;get block&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="n">z</span><span class="p">},</span> <span class="n">required_type</span><span class="o">=</span><span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;n&#39;</span><span class="p">),</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="k">lambda</span> <span class="n">data</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">unpack</span><span class="p">())</span></div>
 
 
 
 <div class="viewcode-block" id="Player.list_loaded_chunks">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.list_loaded_chunks">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">list_loaded_chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="n">List</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">list_loaded_chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="n">List</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns a list of loaded chunks.&quot;&quot;&quot;</span>
 
-        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">PacketFuture</span><span class="p">[</span><span class="n">List</span><span class="p">],</span>  <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;list loaded chunks&quot;</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="k">lambda</span> <span class="n">data</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;chunks&quot;</span><span class="p">)))</span></div>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">LazyRequest</span><span class="p">[</span><span class="n">List</span><span class="p">],</span>  <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;list loaded chunks&quot;</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="k">lambda</span> <span class="n">data</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;chunks&quot;</span><span class="p">)))</span></div>
 
 
 <div class="viewcode-block" id="Player.click_slot">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.click_slot">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">click_slot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">slot</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">button</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">action</span> <span class="p">:</span> <span class="n">SlotActionType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">click_slot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">slot</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">button</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">action</span> <span class="p">:</span> <span class="n">SlotActionType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Simulates a single slot click/action. This is a low level function, slot ids change</span>
 <span class="sd">        based on the current screen.</span>
@@ -647,7 +679,7 @@
 <span class="sd">        :param action: See wiki</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;click slot&quot;</span><span class="p">,</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;click slot&quot;</span><span class="p">,</span> <span class="p">{</span>
             <span class="s2">&quot;slot&quot;</span><span class="p">:</span> <span class="n">slot</span><span class="p">,</span>
             <span class="s2">&quot;button&quot;</span><span class="p">:</span> <span class="n">button</span><span class="p">,</span>
             <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="n">action</span><span class="o">.</span><span class="n">value</span>
@@ -655,7 +687,7 @@
 
 <div class="viewcode-block" id="Player.swap_slots">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.swap_slots">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">swap_slots</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">slot1</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">slot2</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">useOffhand</span> <span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">swap_slots</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">slot1</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">slot2</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">useOffhand</span> <span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Attempts to swap slots in an inventory. Either with clicking, or with offhand swaps.</span>
 
@@ -671,7 +703,7 @@
 <span class="sd">        :return:</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;swap slots&quot;</span><span class="p">,</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;swap slots&quot;</span><span class="p">,</span> <span class="p">{</span>
             <span class="s2">&quot;slot1&quot;</span><span class="p">:</span> <span class="n">slot1</span><span class="p">,</span>
             <span class="s2">&quot;slot2&quot;</span><span class="p">:</span> <span class="n">slot2</span><span class="p">,</span>
             <span class="s2">&quot;useOffhand&quot;</span><span class="p">:</span> <span class="n">useOffhand</span>
@@ -684,12 +716,12 @@
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_player_inventory_contents">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_player_inventory_contents</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns JSON data of the player&#39;s inventory. Throws an error if a container is open&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;get player inventory&quot;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;get player inventory&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Player.get_player_inventory">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_player_inventory">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_player_inventory</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="s2">&quot;PlayerInventory&quot;</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_player_inventory</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="s2">&quot;PlayerInventory&quot;</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns an object of the player&#39;s inventory. Throws an error if a container is open&quot;&quot;&quot;</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_player_inventory_contents</span><span class="p">()</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
@@ -701,37 +733,37 @@
 <div class="viewcode-block" id="Player.get_open_inventory_contents">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_open_inventory_contents">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_open_inventory_contents</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;get open inventory&quot;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;get open inventory&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Player.click_container_button">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.click_container_button">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">click_container_button</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">button</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;click inventory button&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;button&quot;</span><span class="p">:</span> <span class="n">button</span><span class="p">})</span></div>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;click inventory button&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;button&quot;</span><span class="p">:</span> <span class="n">button</span><span class="p">})</span></div>
 
 
 <div class="viewcode-block" id="Player.get_merchant_trades">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_merchant_trades">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_merchant_trades</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;get trades&quot;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;get trades&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Player.select_trade">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.select_trade">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">select_trade</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;select trade&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">index</span><span class="p">})</span></div>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;select trade&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">index</span><span class="p">})</span></div>
 
 
 <div class="viewcode-block" id="Player.set_anvil_name">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.set_anvil_name">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_anvil_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;set anvil name&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">})</span></div>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;set anvil name&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">})</span></div>
 
 
 <div class="viewcode-block" id="Player.set_beacon_effect">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.set_beacon_effect">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_beacon_effect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">primary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">secondary</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;set beacon effect&quot;</span><span class="p">,</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;set beacon effect&quot;</span><span class="p">,</span> <span class="p">{</span>
             <span class="o">**</span><span class="p">({}</span> <span class="k">if</span> <span class="n">primary</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;primary&quot;</span><span class="p">:</span> <span class="n">primary</span><span class="p">}),</span>
             <span class="o">**</span><span class="p">({}</span> <span class="k">if</span> <span class="n">secondary</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;secondary&quot;</span><span class="p">:</span> <span class="n">secondary</span><span class="p">})</span>
         <span class="p">})</span></div>
@@ -740,12 +772,12 @@
 <div class="viewcode-block" id="Player.get_enchantments">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_enchantments">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_enchantments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;get enchantments&quot;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;get enchantments&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Player.get_chunk">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_chunk">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_chunk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">cz</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="n">Chunk</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_chunk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">cz</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="n">Chunk</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Asks for a specific chunk somewhere in the world.</span>
 <span class="sd">        :param cx: Location of the chunk, note this is 16x smaller than the normal coordinates</span>
@@ -754,7 +786,7 @@
 <span class="sd">        :return: On success, a Chunk object, or raises an error</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;get chunk&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;cx&quot;</span><span class="p">:</span> <span class="n">cx</span><span class="p">,</span> <span class="s2">&quot;cz&quot;</span><span class="p">:</span> <span class="n">cz</span><span class="p">},</span>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;get chunk&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;cx&quot;</span><span class="p">:</span> <span class="n">cx</span><span class="p">,</span> <span class="s2">&quot;cz&quot;</span><span class="p">:</span> <span class="n">cz</span><span class="p">},</span>
                             <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">required_type</span><span class="o">=</span><span class="nb">ord</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">),</span> <span class="n">modifier</span><span class="o">=</span><span class="k">lambda</span> <span class="n">data</span><span class="p">:</span> <span class="n">Chunk</span><span class="o">.</span><span class="n">from_network</span><span class="p">(</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data</span><span class="p">)))</span></div>
 
 
@@ -774,7 +806,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
             <span class="n">blocks</span> <span class="o">=</span> <span class="p">(</span><span class="n">blocks</span><span class="p">,</span> <span class="p">)</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;search for blocks&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;blocks&quot;</span><span class="p">:</span> <span class="n">blocks</span><span class="p">})</span></div>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;search for blocks&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;blocks&quot;</span><span class="p">:</span> <span class="n">blocks</span><span class="p">})</span></div>
 
 
     <span class="c1"># =========================</span>
@@ -785,7 +817,7 @@
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_server_list">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_server_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Gets all the multiplayer servers in your server list, along with the &quot;hidden&quot; ones (your direct connect history). &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;get server list&quot;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;get server list&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Player.get_world_list">
@@ -796,7 +828,7 @@
 
 <span class="sd">        This can be slow on some installs, as some users may have **thousands** of worlds.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;get worlds&quot;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;get worlds&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Player.join_world">
@@ -807,7 +839,7 @@
 
 <span class="sd">        :param name: The name of the world to join, **needs** to match the &#39;load name&#39; from ``getWorldList()``</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;join world&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;load world&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">})</span></div>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;join world&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;load world&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">})</span></div>
 
 
 <div class="viewcode-block" id="Player.join_server">
@@ -818,7 +850,7 @@
 
 <span class="sd">        :param address: Server ip to connect to</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;join server&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;address&quot;</span><span class="p">:</span> <span class="n">address</span><span class="p">})</span></div>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;join server&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;address&quot;</span><span class="p">:</span> <span class="n">address</span><span class="p">})</span></div>
 
 
     <span class="c1"># =========================</span>
@@ -827,30 +859,30 @@
 
 <div class="viewcode-block" id="Player.get_freecam_state">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_freecam_state">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_freecam_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_freecam_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Tells you if freecam is currently enabled. &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">PacketFuture</span><span class="p">[</span><span class="nb">bool</span><span class="p">],</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;is freecam&quot;</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="k">lambda</span> <span class="n">data</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;is freecam&quot;</span><span class="p">)))</span></div>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">LazyRequest</span><span class="p">[</span><span class="nb">bool</span><span class="p">],</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;is freecam&quot;</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="k">lambda</span> <span class="n">data</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;is freecam&quot;</span><span class="p">)))</span></div>
 
 
 <div class="viewcode-block" id="Player.get_freerot_state">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_freerot_state">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_freerot_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_freerot_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Tells you if freeroot is currently enabled. &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">PacketFuture</span><span class="p">[</span><span class="nb">bool</span><span class="p">],</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;is freerot&quot;</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="k">lambda</span> <span class="n">data</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;is freerot&quot;</span><span class="p">)))</span></div>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">LazyRequest</span><span class="p">[</span><span class="nb">bool</span><span class="p">],</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;is freerot&quot;</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="k">lambda</span> <span class="n">data</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;is freerot&quot;</span><span class="p">)))</span></div>
 
 
 <div class="viewcode-block" id="Player.get_no_walk_state">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_no_walk_state">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_no_walk_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_no_walk_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Tells you if no walk is currently enabled. &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">PacketFuture</span><span class="p">[</span><span class="nb">bool</span><span class="p">],</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;is nowalk&quot;</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="k">lambda</span> <span class="n">data</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;is nowalk&quot;</span><span class="p">)))</span></div>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">LazyRequest</span><span class="p">[</span><span class="nb">bool</span><span class="p">],</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;is nowalk&quot;</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="k">lambda</span> <span class="n">data</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;is nowalk&quot;</span><span class="p">)))</span></div>
 
 
 <div class="viewcode-block" id="Player.get_headless_state">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_headless_state">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_headless_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_headless_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Tells your if the client is currently headless. &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">PacketFuture</span><span class="p">[</span><span class="nb">bool</span><span class="p">],</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;is headless&quot;</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="k">lambda</span> <span class="n">data</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;is headless&quot;</span><span class="p">)))</span></div>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">LazyRequest</span><span class="p">[</span><span class="nb">bool</span><span class="p">],</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;is headless&quot;</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="k">lambda</span> <span class="n">data</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;is headless&quot;</span><span class="p">)))</span></div>
 
 
     <span class="c1"># =========================</span>
@@ -859,28 +891,28 @@
 
 <div class="viewcode-block" id="Player.set_freecam">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.set_freecam">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">set_freecam</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_freecam</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Set if freecam is currently enabled. &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;set freecam&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">enabled</span><span class="p">})</span></div>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;set freecam&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">enabled</span><span class="p">})</span></div>
 
 
 <div class="viewcode-block" id="Player.set_freerot">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.set_freerot">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">set_freerot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_freerot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Set if freeroot is currently enabled. &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;set freerot&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">enabled</span><span class="p">})</span></div>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;set freerot&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">enabled</span><span class="p">})</span></div>
 
 
 <div class="viewcode-block" id="Player.set_no_walk">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.set_no_walk">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">set_no_walk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_no_walk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Set if no walk is currently enabled. &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;set nowalk&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">enabled</span><span class="p">})</span></div>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;set nowalk&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">enabled</span><span class="p">})</span></div>
 
 
 <div class="viewcode-block" id="Player.set_headless">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.set_headless">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">set_headless</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_headless</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Put the client into a &quot;headless&quot; state. This means you will no longer</span>
 <span class="sd">        see the window on your screen. It theoretically should take less</span>
@@ -893,7 +925,7 @@
 
 <span class="sd">        **Use with caution!**</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;set headless&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">enabled</span><span class="p">})</span></div>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;set headless&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;enabled&quot;</span><span class="p">:</span> <span class="n">enabled</span><span class="p">})</span></div>
 
 
     <span class="c1"># =========================</span>
@@ -902,7 +934,7 @@
 
 <div class="viewcode-block" id="Player.baritone_goto">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.baritone_goto">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">baritone_goto</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">baritone_goto</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Tells baritone to go to a specific location.</span>
 
@@ -910,7 +942,7 @@
 <span class="sd">        :param y: The y coordinate</span>
 <span class="sd">        :param z: The z coordinate</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> 
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> 
             <span class="s2">&quot;baritone goto&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="n">z</span><span class="p">}</span>
         <span class="p">)</span></div>
 
@@ -921,20 +953,20 @@
 
 <div class="viewcode-block" id="Player.send_chat_message">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.send_chat_message">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">send_chat_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">send_chat_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Sends a public chat message. If prepended with &quot;/&quot;, will execute a command.</span>
 
 <span class="sd">        :param message: The message to send.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> 
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> 
             <span class="s2">&quot;send chat message&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="n">message</span><span class="p">}</span>
         <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Player.send_execute_command">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.send_execute_command">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">send_execute_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">send_execute_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Runs a command.</span>
 
@@ -944,26 +976,26 @@
 
 <span class="sd">        Ex: ``gamemode creative`` to set the gamemode to creative.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> 
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> 
             <span class="s2">&quot;execute command&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="n">message</span><span class="p">}</span>
         <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Player.display_message">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.display_message">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">display_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">display_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Displays a message in chat. This is private</span>
 <span class="sd">        :param message:  Message to display in chat</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> 
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> 
             <span class="s2">&quot;display chat message&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="n">message</span><span class="p">}</span>
         <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Player.overview_message">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.overview_message">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">overview_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">overview_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Shows a message above the users hotbar, this is great for informational status updates.</span>
 
@@ -971,7 +1003,7 @@
 
 <span class="sd">        :param message: Message to display above the hotbar</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> 
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> 
             <span class="s2">&quot;overview message&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="n">message</span><span class="p">}</span>
         <span class="p">)</span></div>
 
@@ -982,25 +1014,25 @@
 
 <div class="viewcode-block" id="Player.clear_inputs">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.clear_inputs">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">clear_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">clear_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Remove all forced button presses. &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;clear force input&quot;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;clear force input&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Player.get_forced_inputs">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.get_forced_inputs">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_forced_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_forced_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Reports the state of if certain input methods are forced. A key not being present</span>
 <span class="sd">        indicates that no input is being forced. If a key is set to false, it is being forced up.</span>
 <span class="sd">        And if a key is set to true, it is forced down.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;get forced input&quot;</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="k">lambda</span> <span class="n">data</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;inputs&quot;</span><span class="p">))</span></div>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;get forced input&quot;</span><span class="p">,</span> <span class="n">modifier</span><span class="o">=</span><span class="k">lambda</span> <span class="n">data</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;inputs&quot;</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="Player.force_inputs">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.force_inputs">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">force_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">InputButton</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">force_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">InputButton</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Force down/up buttons. If a button is not mentioned, it will not be impacted. Meaning that if it is already pressed,</span>
 <span class="sd">        it will still be pressed if you do not update its state.</span>
@@ -1008,7 +1040,7 @@
 <span class="sd">        :param inputs: List of tuples of (InputButton, bool). Where the bool is the **forced state** of the input. Meaning</span>
 <span class="sd">                       setting to False indicates the **user cannot press** that key.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> 
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> 
             <span class="s2">&quot;force inputs&quot;</span><span class="p">,</span>
             <span class="p">{</span>
                 <span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="p">{</span>
@@ -1020,14 +1052,14 @@
 
 <div class="viewcode-block" id="Player.remove_forced_inputs">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.remove_forced_inputs">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">remove_forced_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">InputButton</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">remove_forced_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">InputButton</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Disables the forced state of inputs. If a button is not mentioned, it will not be impacted.</span>
 <span class="sd">        A complete list of inputs will result in identical behavior to ``clear_inputs()``</span>
 
 <span class="sd">        :param inputs: A list if inputs, each input will have is state no longer controlled.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> 
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> 
             <span class="s2">&quot;force inputs&quot;</span><span class="p">,</span>
             <span class="p">{</span>
                 <span class="s2">&quot;remove&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">k</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">]</span>
@@ -1047,7 +1079,7 @@
             <span class="n">yaw</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
             <span class="n">speed</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
             <span class="n">method</span><span class="p">:</span> <span class="n">RoMethod</span> <span class="o">=</span> <span class="n">RoMethod</span><span class="o">.</span><span class="n">LINEAR</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Smoothly, and realistically, rotate the player.</span>
 
@@ -1060,7 +1092,7 @@
 
         <span class="k">assert</span> <span class="n">method</span> <span class="o">!=</span> <span class="n">RoMethod</span><span class="o">.</span><span class="n">INSTANT</span><span class="p">,</span> <span class="s2">&quot;Not a supported rotation method.&quot;</span>
 
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> 
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> 
             <span class="s2">&quot;algorithmic rotation&quot;</span><span class="p">,</span>
             <span class="p">{</span>
                 <span class="s2">&quot;pitch&quot;</span><span class="p">:</span> <span class="n">pitch</span><span class="p">,</span>
@@ -1073,14 +1105,14 @@
 
 <div class="viewcode-block" id="Player.irotate">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.irotate">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">irotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pitch</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">yaw</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">irotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pitch</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">yaw</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Instantly set the player&#39;s rotation. This looks like you are cheating.</span>
 
 <span class="sd">        :param pitch: Pitch angle in degrees.</span>
 <span class="sd">        :param yaw: Yaw angle in degrees.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> 
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> 
             <span class="s2">&quot;instantaneous rotation&quot;</span><span class="p">,</span>
             <span class="p">{</span>
                 <span class="s2">&quot;pitch&quot;</span><span class="p">:</span> <span class="n">pitch</span><span class="p">,</span>
@@ -1091,28 +1123,28 @@
 
 <div class="viewcode-block" id="Player.set_hotbar_slot">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.set_hotbar_slot">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">set_hotbar_slot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">slot</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_hotbar_slot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">slot</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set the current hotbar slot.</span>
 
 <span class="sd">        :param slot: [1, 9] are valid hotbar slots</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">assert</span> <span class="mi">1</span> <span class="o">&lt;=</span> <span class="n">slot</span> <span class="o">&lt;=</span> <span class="mi">9</span><span class="p">,</span> <span class="s2">&quot;Invalid slot value&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;set hotbar slot&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;slot&quot;</span><span class="p">:</span> <span class="n">slot</span><span class="p">})</span></div>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;set hotbar slot&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;slot&quot;</span><span class="p">:</span> <span class="n">slot</span><span class="p">})</span></div>
 
 
 <div class="viewcode-block" id="Player.attack">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.attack">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">attack</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">attack</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Tells the player to punch. Single left click &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;attack key click&quot;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;attack key click&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Player.use">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.use">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">use</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">use</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Tells the player to use an item/block. Single right click &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;use key click&quot;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;use key click&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Player.auto_use">
@@ -1121,7 +1153,7 @@
                        <span class="n">x</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span>  <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">z</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
                        <span class="n">speed</span> <span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">method</span> <span class="p">:</span> <span class="n">RoMethod</span> <span class="o">=</span> <span class="n">RoMethod</span><span class="o">.</span><span class="n">LINEAR</span><span class="p">,</span>
                        <span class="n">direction_of_use</span> <span class="p">:</span> <span class="n">Direction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-                 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+                 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Look at block and click it.</span>
 
@@ -1134,7 +1166,7 @@
 <span class="sd">        :return:</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;auto use&quot;</span><span class="p">,</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;auto use&quot;</span><span class="p">,</span> <span class="p">{</span>
             <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="n">z</span><span class="p">,</span>
             <span class="s2">&quot;degrees per tick&quot;</span><span class="p">:</span> <span class="n">speed</span><span class="p">,</span>
             <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="n">method</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
@@ -1148,7 +1180,7 @@
                          <span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
                          <span class="n">speed</span> <span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">method</span> <span class="p">:</span> <span class="n">RoMethod</span> <span class="o">=</span> <span class="n">RoMethod</span><span class="o">.</span><span class="n">LINEAR</span><span class="p">,</span>
                          <span class="n">direction_to_place_on</span> <span class="p">:</span> <span class="n">Direction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-                         <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+                         <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Place a block</span>
 
@@ -1160,7 +1192,7 @@
 <span class="sd">        :param direction_to_place_on: What block to place on. For example, use down to</span>
 <span class="sd">                                      place on the block UNDER the location you specify</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;auto place&quot;</span><span class="p">,</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;auto place&quot;</span><span class="p">,</span> <span class="p">{</span>
             <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">y</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="n">z</span><span class="p">,</span>
             <span class="s2">&quot;degrees per tick&quot;</span><span class="p">:</span> <span class="n">speed</span><span class="p">,</span>
             <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="n">method</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
@@ -1172,7 +1204,7 @@
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.set_directional_walk">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_directional_walk</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span> <span class="n">degrees</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">speed</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="p">)</span><span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="p">)</span><span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Force the player to walk in a certain direction. Directional walking allows you to make the player walk towards a block.</span>
 <span class="sd">        The direction the player is walking in is absolute, meaning the user can look around without interfacing.</span>
@@ -1181,7 +1213,7 @@
 <span class="sd">        :param speed: Should be from 0-1. With zero being no movement, and one being regular walk speed.</span>
 <span class="sd">        :param force: If false, will clamp the speed. If true, will allow any speed value, basically being speed hacks.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> 
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> 
             <span class="s2">&quot;set directional movement degree&quot;</span><span class="p">,</span>
             <span class="p">{</span>
                 <span class="s2">&quot;direction&quot;</span><span class="p">:</span> <span class="n">degrees</span><span class="p">,</span>
@@ -1195,7 +1227,7 @@
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.set_directional_walk_vector">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_directional_walk_vector</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">z</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">speed</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">force</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Force the player to walk in a certain direction. Directional walking allows you to make the player walk towards a block.</span>
 <span class="sd">        The direction the player is walking in is absolute, meaning the user can look around without interfacing.</span>
@@ -1210,7 +1242,7 @@
 <span class="sd">        :param speed: Should be from 0-1. With zero being no movement, and one being regular walk speed.</span>
 <span class="sd">        :param force: If false, will clamp the speed. If true, will allow any speed value, basically being speed hacks.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> 
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> 
             <span class="s2">&quot;set directional movement vector&quot;</span><span class="p">,</span>
             <span class="p">{</span>
                 <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span>
@@ -1223,9 +1255,9 @@
 
 <div class="viewcode-block" id="Player.stop_directional_walk">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Player.stop_directional_walk">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">stop_directional_walk</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">stop_directional_walk</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;No longer be directional walking&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PacketFuture</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;clear directional movement&quot;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">LazyRequest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="p">,</span> <span class="s2">&quot;clear directional movement&quot;</span><span class="p">)</span></div>
 </div>
 
 
@@ -1499,7 +1531,7 @@
 
 <div class="viewcode-block" id="Anvil.set_name">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Anvil.set_name">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">set_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">set_anvil_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span></div>
 </div>
 
@@ -1519,13 +1551,13 @@
 
 <div class="viewcode-block" id="Merchant.get_trades">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Merchant.get_trades">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_trades</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_trades</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">get_merchant_trades</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="Merchant.select_trade">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Merchant.select_trade">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">select_trade</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">select_trade</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">select_trade</span><span class="p">(</span><span class="n">index</span><span class="p">)</span></div>
 </div>
 
@@ -1552,7 +1584,7 @@
 
 <div class="viewcode-block" id="Beacon.set_effects">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.Beacon.set_effects">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">set_effects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">primary</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">secondary</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_effects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">primary</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">secondary</span><span class="p">:</span> <span class="kc">None</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">set_beacon_effect</span><span class="p">(</span><span class="n">primary</span><span class="p">,</span> <span class="n">secondary</span><span class="p">)</span></div>
 </div>
 
@@ -1661,13 +1693,13 @@
 
 <div class="viewcode-block" id="EnchantmentTable.get_enchants">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.EnchantmentTable.get_enchants">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_enchants</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_enchants</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">get_enchantments</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="EnchantmentTable.select_enchantment">
 <a class="viewcode-back" href="../../puppet.html#puppet.player.EnchantmentTable.select_enchantment">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">select_enchantment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PacketFuture</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">select_enchantment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LazyRequest</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
         <span class="k">assert</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">index</span> <span class="o">&lt;=</span> <span class="mi">2</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">player</span><span class="o">.</span><span class="n">click_container_button</span><span class="p">(</span><span class="n">index</span><span class="p">)</span></div>

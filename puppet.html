@@ -182,16 +182,15 @@ to the Minecraft client</p>
 <section id="module-puppet.player">
 <span id="puppet-player-module"></span><h2>puppet.player module<a class="headerlink" href="#module-puppet.player" title="Link to this heading">¶</a></h2>
 <dl class="py class">
-<dt class="sig sig-object py" id="puppet.player.PacketFuture">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">puppet.player.</span></span><span class="sig-name descname"><span class="pre">PacketFuture</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">connection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">required_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">106</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modifier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#PacketFuture"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.PacketFuture" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="puppet.player.LazyRequest">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">puppet.player.</span></span><span class="sig-name descname"><span class="pre">LazyRequest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">connection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">required_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">106</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modifier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#LazyRequest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.LazyRequest" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">T</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">Awaitable</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">T</span></code>]</p>
 <p>A special awaitable object. Typically you can use this like
 a regular couroutine (i.e. you await it). However it also can
 be passed along to other functions to bundle packets together</p>
-<p>TODO: ELABORATE</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="puppet.player.PacketFuture.map">
-<span class="sig-name descname"><span class="pre">map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">predicate</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#PacketFuture.map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.PacketFuture.map" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="puppet.player.LazyRequest.map">
+<span class="sig-name descname"><span class="pre">map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">predicate</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#LazyRequest.map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.LazyRequest.map" title="Link to this definition">¶</a></dt>
 <dd><p>Stack a new modifier ontop of an current modifiers. This
 creates a new PacketFormat instance.</p>
 <dl class="field-list simple">
@@ -199,14 +198,14 @@ creates a new PacketFormat instance.</p>
 <dd class="field-odd"><p><strong>predicate</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[<code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code>(<code class="docutils literal notranslate"><span class="pre">T</span></code>)], <code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code>(<code class="docutils literal notranslate"><span class="pre">R</span></code>)]</span>) – Take the old return value, and transform it.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code>(<code class="docutils literal notranslate"><span class="pre">R</span></code>)]</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code>(<code class="docutils literal notranslate"><span class="pre">R</span></code>)]</span></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="puppet.player.PacketFuture.soft_send">
-<span class="sig-name descname"><span class="pre">soft_send</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#PacketFuture.soft_send"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.PacketFuture.soft_send" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="puppet.player.LazyRequest.soft_send">
+<span class="sig-name descname"><span class="pre">soft_send</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#LazyRequest.soft_send"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.LazyRequest.soft_send" title="Link to this definition">¶</a></dt>
 <dd><p>Generates the packet as it would be if sent to the network.
 This is used for bundled packets.</p>
 <dl class="field-list simple">
@@ -217,8 +216,8 @@ This is used for bundled packets.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="puppet.player.PacketFuture.as_co">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">as_co</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#PacketFuture.as_co"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.PacketFuture.as_co" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="puppet.player.LazyRequest.start">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#LazyRequest.start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.LazyRequest.start" title="Link to this definition">¶</a></dt>
 <dd><p>Convert into a regualar coroutine</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -281,11 +280,32 @@ the function to return.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="puppet.player.Player.bundle">
-<span class="sig-name descname"><span class="pre">bundle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">packets</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.bundle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.bundle" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="puppet.player.Player.bundle_p">
+<span class="sig-name descname"><span class="pre">bundle_p</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">packets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">BundleMethod.INSTANT</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ticks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.bundle_p"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.bundle_p" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Awaitable</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Awaitable</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.bundle">
+<span class="sig-name descname"><span class="pre">bundle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">packets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">BundleMethod.INSTANT</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ticks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.bundle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.bundle" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Awaitable</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="puppet.player.Player.sleep">
+<span class="sig-name descname"><span class="pre">sleep</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ticks</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.sleep"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.sleep" title="Link to this definition">¶</a></dt>
+<dd><p>Sleep for N ticks. NOTE: Will block tasks that are enqueued after this</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -296,7 +316,7 @@ the function to return.</p>
 <dd><p>Returns a dictionary of a bunch of information about the game client</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -307,7 +327,7 @@ the function to return.</p>
 <dd><p>Returns a dictionary of a bunch of information about the player, you MUST be in game to do this.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -318,7 +338,7 @@ the function to return.</p>
 <dd><p>Returns a list of installed mods.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -334,7 +354,7 @@ any user of the program, even across the network, to have
 the ability to have the source code.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 <dl class="simple">
@@ -346,7 +366,7 @@ the ability to have the source code.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="puppet.player.Player.has_baritone">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_baritone</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Player.has_baritone"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Player.has_baritone" title="Link to this definition">¶</a></dt>
-<dd><p>Returns true if baritone is installed. NOTE: Not a PacketFuture</p>
+<dd><p>Returns true if baritone is installed. NOTE: Not a LazyRequest</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
@@ -360,7 +380,7 @@ the ability to have the source code.</p>
 <dd><p>Pings the server.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -371,7 +391,7 @@ the ability to have the source code.</p>
 <dd><p>Clear all the callbacks.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -390,7 +410,7 @@ the event json as a parameter.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -401,7 +421,7 @@ the event json as a parameter.</p></li>
 <dd><p>Remove a previously set callback.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -432,7 +452,7 @@ For a list of all the minecraft protocol packets and their network definition.</
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -446,7 +466,7 @@ For a list of all the minecraft protocol packets and their network definition.</
 <dd class="field-odd"><p><strong>idd</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The <cite>resource id</cite> of the packet whose callback you wish to no longer see.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -464,7 +484,7 @@ For a list of all the minecraft protocol packets and their network definition.</
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>]</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>]</span></p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A dictionary of the block data.</p>
@@ -478,7 +498,7 @@ For a list of all the minecraft protocol packets and their network definition.</
 <dd><p>Returns a list of loaded chunks.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -500,7 +520,7 @@ and the actions.</p>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -522,7 +542,7 @@ This gets the same result, but avoids merging items, <strong>however</strong> ma
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p>
@@ -542,7 +562,7 @@ This gets the same result, but avoids merging items, <strong>however</strong> ma
 <dd><p>Returns an object of the player’s inventory. Throws an error if a container is open</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[PlayerInventory]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[PlayerInventory]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -592,7 +612,7 @@ This gets the same result, but avoids merging items, <strong>however</strong> ma
 :param cz: Location of the chunk, note this is 16x smaller than the normal coordinates</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Chunk</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Chunk</span></code>]</span></p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>On success, a Chunk object, or raises an error</p>
@@ -657,7 +677,7 @@ Note: Ids are in the form: <code class="docutils literal notranslate"><span clas
 <dd><p>Tells you if freecam is currently enabled.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -668,7 +688,7 @@ Note: Ids are in the form: <code class="docutils literal notranslate"><span clas
 <dd><p>Tells you if freeroot is currently enabled.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -679,7 +699,7 @@ Note: Ids are in the form: <code class="docutils literal notranslate"><span clas
 <dd><p>Tells you if no walk is currently enabled.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -690,7 +710,7 @@ Note: Ids are in the form: <code class="docutils literal notranslate"><span clas
 <dd><p>Tells your if the client is currently headless.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -701,7 +721,7 @@ Note: Ids are in the form: <code class="docutils literal notranslate"><span clas
 <dd><p>Set if freecam is currently enabled.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -712,7 +732,7 @@ Note: Ids are in the form: <code class="docutils literal notranslate"><span clas
 <dd><p>Set if freeroot is currently enabled.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -723,7 +743,7 @@ Note: Ids are in the form: <code class="docutils literal notranslate"><span clas
 <dd><p>Set if no walk is currently enabled.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -741,7 +761,7 @@ with nothing but the task manager to save you!</p>
 <p><strong>Use with caution!</strong></p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -759,7 +779,7 @@ with nothing but the task manager to save you!</p>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -773,7 +793,7 @@ with nothing but the task manager to save you!</p>
 <dd class="field-odd"><p><strong>message</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The message to send.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -787,7 +807,7 @@ with nothing but the task manager to save you!</p>
 <dd class="field-odd"><p><strong>message</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The command to execute</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 <p>Note: Do <strong>NOT</strong> include the “/”</p>
@@ -802,7 +822,7 @@ with nothing but the task manager to save you!</p>
 :param message:  Message to display in chat</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -817,7 +837,7 @@ with nothing but the task manager to save you!</p>
 <dd class="field-odd"><p><strong>message</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Message to display above the hotbar</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -828,7 +848,7 @@ with nothing but the task manager to save you!</p>
 <dd><p>Remove all forced button presses.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -841,7 +861,7 @@ indicates that no input is being forced. If a key is set to false, it is being f
 And if a key is set to true, it is forced down.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -857,7 +877,7 @@ it will still be pressed if you do not update its state.</p>
 setting to False indicates the <strong>user cannot press</strong> that key.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -872,7 +892,7 @@ A complete list of inputs will result in identical behavior to <code class="docu
 <dd class="field-odd"><p><strong>inputs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="#puppet.constants.InputButton" title="puppet.constants.InputButton"><code class="xref py py-class docutils literal notranslate"><span class="pre">InputButton</span></code></a>]</span>) – A list if inputs, each input will have is state no longer controlled.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -892,7 +912,7 @@ this will not be true.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -909,7 +929,7 @@ this will not be true.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -923,7 +943,7 @@ this will not be true.</p></li>
 <dd class="field-odd"><p><strong>slot</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – [1, 9] are valid hotbar slots</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -934,7 +954,7 @@ this will not be true.</p></li>
 <dd><p>Tells the player to punch. Single left click</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -945,7 +965,7 @@ this will not be true.</p></li>
 <dd><p>Tells the player to use an item/block. Single right click</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -966,7 +986,7 @@ this will not be true.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p></p>
@@ -991,7 +1011,7 @@ place on the block UNDER the location you specify</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1010,7 +1030,7 @@ The direction the player is walking in is absolute, meaning the user can look ar
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1034,7 +1054,7 @@ large values.</p>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1045,7 +1065,7 @@ large values.</p>
 <dd><p>No longer be directional walking</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1611,7 +1631,7 @@ if the container has a row/col based inventory.</p>
 <span class="sig-name descname"><span class="pre">set_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Anvil.set_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Anvil.set_name" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1643,7 +1663,7 @@ if the container has a row/col based inventory.</p>
 <span class="sig-name descname"><span class="pre">get_trades</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Merchant.get_trades"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Merchant.get_trades" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1653,7 +1673,7 @@ if the container has a row/col based inventory.</p>
 <span class="sig-name descname"><span class="pre">select_trade</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Merchant.select_trade"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Merchant.select_trade" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1695,7 +1715,7 @@ if the container has a row/col based inventory.</p>
 <span class="sig-name descname"><span class="pre">set_effects</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">primary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">secondary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#Beacon.set_effects"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.Beacon.set_effects" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1841,7 +1861,7 @@ if the container has a row/col based inventory.</p>
 <span class="sig-name descname"><span class="pre">get_enchants</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#EnchantmentTable.get_enchants"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.EnchantmentTable.get_enchants" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1851,7 +1871,7 @@ if the container has a row/col based inventory.</p>
 <span class="sig-name descname"><span class="pre">select_enchantment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/player.html#EnchantmentTable.select_enchantment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.player.EnchantmentTable.select_enchantment" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.PacketFuture" title="puppet.player.PacketFuture"><code class="xref py py-class docutils literal notranslate"><span class="pre">PacketFuture</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#puppet.player.LazyRequest" title="puppet.player.LazyRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">LazyRequest</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -2243,6 +2263,28 @@ meaning that it is subject to change, even if the Minecraft version number is th
 <dl class="py attribute">
 <dt class="sig sig-object py" id="puppet.constants.Direction.DOWN">
 <span class="sig-name descname"><span class="pre">DOWN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'DOWN'</span></em><a class="headerlink" href="#puppet.constants.Direction.DOWN" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="puppet.constants.BundleMethod">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">puppet.constants.</span></span><span class="sig-name descname"><span class="pre">BundleMethod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/puppet/constants.html#BundleMethod"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#puppet.constants.BundleMethod" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>An enumeration.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.BundleMethod.INSTANT">
+<span class="sig-name descname"><span class="pre">INSTANT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'INSTANT'</span></em><a class="headerlink" href="#puppet.constants.BundleMethod.INSTANT" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.BundleMethod.TICKLY">
+<span class="sig-name descname"><span class="pre">TICKLY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'TICKLY'</span></em><a class="headerlink" href="#puppet.constants.BundleMethod.TICKLY" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="puppet.constants.BundleMethod.SEQUENTIAL">
+<span class="sig-name descname"><span class="pre">SEQUENTIAL</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'SEQUENTIAL'</span></em><a class="headerlink" href="#puppet.constants.BundleMethod.SEQUENTIAL" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
