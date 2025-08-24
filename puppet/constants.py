@@ -90,6 +90,10 @@ class Direction(enum.Enum):
     UP = "UP"
     DOWN = "DOWN"
 
+class BundleMethod(enum.Enum):
+    INSTANT = "INSTANT"
+    TICKLY = "TICKLY"
+    SEQUENTIAL = "SEQUENTIAL"
 
 
 class InputButton(enum.Enum):

@@ -1,6 +1,7 @@
 import asyncio
 from io import BytesIO
 from json.encoder import py_encode_basestring
+from types import coroutine
 from typing import *
 from collections.abc import Iterable
 
@@ -40,13 +41,13 @@ def _handle_json(packet_type: int, json: Dict) -> Dict:
 
 T = TypeVar("T")
 R = TypeVar("R")
-class PacketFuture(Generic[T], Awaitable[T]):
+class LazyRequest(Generic[T], Awaitable[T]):
     """
     A special awaitable object. Typically you can use this like
     a regular couroutine (i.e. you await it). However it also can
     be passed along to other functions to bundle packets together
 
-    TODO: ELABORATE
+    
     """
 
     _connection : ClientConnection
@@ -99,7 +100,7 @@ class PacketFuture(Generic[T], Awaitable[T]):
             return cast(T, data)
         return tmp()
 
-    def map(self, predicate : Callable[[T], R]) -> "PacketFuture[R]":
+    def map(self, predicate : Callable[[T], R]) -> "LazyRequest[R]":
         """
         Stack a new modifier ontop of an current modifiers. This
         creates a new PacketFormat instance.
@@ -112,7 +113,7 @@ class PacketFuture(Generic[T], Awaitable[T]):
             if oldModifier is not None:
                 data = oldModifier(data)
             return predicate(data)
-        return cast(PacketFuture[R], PacketFuture(
+        return cast(LazyRequest[R], LazyRequest(
             self._connection, self._message, extra=self._extra, raw=self._raw, required_type=self._required_type, modifier=tmp))
 
 
@@ -126,7 +127,7 @@ class PacketFuture(Generic[T], Awaitable[T]):
         packet, fut =  self._connection._write_packet_internal(self._message, self._extra)
         return packet, cast(Awaitable[T], self._transform_future(fut))
 
-    async def as_co(self) -> T:
+    async def start(self) -> T:
         """ Convert into a regualar coroutine """
         return await self 
 
@@ -162,7 +163,7 @@ class Player:
     _callbacks: Dict[str, CALLBACK_TYPE]
 
     def panic(self):
-        return PacketFuture(self.connection, "panic")
+        return LazyRequest(self.connection, "panic")
 
     # =========================
     #   Connection Management
@@ -229,35 +230,35 @@ class Player:
     # =========================
 
     @classmethod
-    def _generate_dump_mesa_config(cls, cmd: str) -> Callable[[], PacketFuture[dict]]:
+    def _generate_dump_mesa_config(cls, cmd: str) -> Callable[[], LazyRequest[dict]]:
         def func(self):
             """ Returns the config json associated with this mod. """
-            return PacketFuture(self.connection, cmd)
+            return LazyRequest(self.connection, cmd)
 
-        return cast(Callable[[], PacketFuture[dict]], func)
+        return cast(Callable[[], LazyRequest[dict]], func)
 
     @classmethod
-    def _generate_get_mesa_config_item(cls, cmd: str) -> Callable[[], PacketFuture[dict]]:
+    def _generate_get_mesa_config_item(cls, cmd: str) -> Callable[[], LazyRequest[dict]]:
         def func(self, category: str, name: str):
             """ Returns the config json value of the config item associated with this mod. """
-            return PacketFuture(self.connection, cmd, {
+            return LazyRequest(self.connection, cmd, {
                 "category": category,
                 "name": name,
             })
 
-        return cast(Callable[[], PacketFuture[dict]], func)
+        return cast(Callable[[], LazyRequest[dict]], func)
 
     @classmethod
-    def _generate_set_mesa_config_item(cls, cmd: str) -> Callable[[], PacketFuture[dict]]:
+    def _generate_set_mesa_config_item(cls, cmd: str) -> Callable[[], LazyRequest[dict]]:
         def func(self, category: str, name: str, value):
             """ Sets the config value for a given mod config item. """
-            return PacketFuture(self.connection, cmd, {
+            return LazyRequest(self.connection, cmd, {
                 "category": category,
                 "name": name,
                 "value": value,
             })
 
-        return cast(Callable[[], PacketFuture[dict]], func)
+        return cast(Callable[[], LazyRequest[dict]], func)
     @classmethod
     def _generate_exec_mesa_config_item(cls, cmd: str):
         def func(self, category: str, name: str, action: str = None):
@@ -265,7 +266,7 @@ class Player:
             assert action is None or action in ("press", "release"), ValueError(
                 "Invalid action. Must be press or release")
 
-            return PacketFuture(self.connection, cmd, {
+            return LazyRequest(self.connection, cmd, {
                 **{
                     "category": category,
                     "name": name
@@ -277,20 +278,45 @@ class Player:
 
         return func
 
-    async def _allow_dead(self, coroutine : Coroutine):
-        """ When running as a task, don't crash if the connection is dead."""
-        if self.connection.running:
-            await coroutine
-        else:
-            # This is just to stop the warnings
-            asyncio.create_task(coroutine).cancel()
+    def _ignored_request(self, request : Coroutine | LazyRequest):
+        """
+        Make sure this packet is likely sent, but we don't care about the return. 
+        Or if the connection is cut don't worry about it. 
 
+        TLDR: Try your best, but be alright with faliure
+        """
 
-    def bundle(self, packets : Iterable[PacketFuture[Any]]) -> PacketFuture[Tuple[Awaitable[Any]]]:
+        coroutine = request.start() if isinstance(request, LazyRequest) else request
+
+        # Don't yell it me if something bad happens
+        asyncio.create_task(coroutine).add_done_callback(lambda t: t.exception()) 
+
+    def _bundle_internal(self, packets : Iterable[LazyRequest[Any]], method : BundleMethod = BundleMethod.INSTANT, ticks : int | None = None) -> Tuple[LazyRequest[dict], Tuple[Awaitable[Any]]]:
         packets, futures = zip(* (p.soft_send() for p in packets) )
 
-        return PacketFuture(self.connection, "bundle", {"packets": packets, "method": "instant" }, modifier=lambda _: futures)
- 
+        if ticks is not None and method is not BundleMethod.TICKLY:
+            raise AttributeError("You can only set an amount of ticks using the TICKLY bundle method!")
+
+        return LazyRequest(self.connection, "bundle", 
+                           {"packets": packets,
+                            "method": method.value,
+                            **({} if ticks is None else {"ticks": ticks}) 
+                            }), futures
+        
+    def bundle_p(self, packets : Iterable[LazyRequest[Any]], method : BundleMethod = BundleMethod.INSTANT, ticks : int | None = None) -> LazyRequest[Tuple[Awaitable[Any]]]:
+        packet, futures = self._bundle_internal(packets, method=method, ticks=ticks)
+        return packet.map(lambda _: futures)
+
+
+    def bundle(self, packets : Iterable[LazyRequest[Any]], method : BundleMethod = BundleMethod.INSTANT, ticks : int | None = None) -> Tuple[Awaitable[Any]]:
+        packet, futures = self._bundle_internal(packets, method=method, ticks=ticks)
+        self._ignored_request(packet)
+        return futures
+        
+
+    def sleep(self, ticks : int) -> LazyRequest[dict]:
+        """ Sleep for N ticks. NOTE: Will block tasks that are enqueued after this """
+        return LazyRequest(self.connection, "sleep", {"interval": ticks})
 
 
 
@@ -298,19 +324,19 @@ class Player:
     #   Client/Player Info
     # =========================
 
-    def get_client_info(self) -> PacketFuture[dict]:
+    def get_client_info(self) -> LazyRequest[dict]:
         """ Returns a dictionary of a bunch of information about the game client """
-        return PacketFuture(self.connection, "get client info")
+        return LazyRequest(self.connection, "get client info")
 
-    def get_player_info(self) -> PacketFuture[dict]:
+    def get_player_info(self) -> LazyRequest[dict]:
         """ Returns a dictionary of a bunch of information about the player, you MUST be in game to do this. """
-        return PacketFuture(self.connection, "get player info")
+        return LazyRequest(self.connection, "get player info")
 
-    def get_installed_mods(self) -> PacketFuture[list[dict]]:
+    def get_installed_mods(self) -> LazyRequest[list[dict]]:
         """ Returns a list of installed mods. """
-        return PacketFuture(self.connection, "get mod list", modifier=lambda dic: dic.get("mods"))
+        return LazyRequest(self.connection, "get mod list", modifier=lambda dic: dic.get("mods"))
 
-    def get_sources(self) -> PacketFuture[dict]:
+    def get_sources(self) -> LazyRequest[dict]:
         """
         This will give you a bunch of information about the mod version,
         including the git commit hash, a link to where the source code
@@ -323,65 +349,65 @@ class Player:
         Note: If you are forking the mod, please modify: `fabric.mod.json`
               to include your github repo.
         """
-        return PacketFuture(self.connection, "sources")
+        return LazyRequest(self.connection, "sources")
 
-    def _list_commands(self) -> PacketFuture[dict]:
+    def _list_commands(self) -> LazyRequest[dict]:
         """ Returns a list of available commands. Note: Also included in ```get_client_info()``` """
-        return PacketFuture(self.connection, "list commands")
+        return LazyRequest(self.connection, "list commands")
 
     async def has_baritone(self) -> bool:
-        """ Returns true if baritone is installed. NOTE: Not a PacketFuture"""
+        """ Returns true if baritone is installed. NOTE: Not a LazyRequest"""
 
         # Typically "test baritone" returns an error, but this way
         # we don't have to bother the exception system
         _, jso = await self.connection.write_packet("test baritone")
         return jso["status"] == "ok"
 
-    def ping(self) -> PacketFuture[dict]:
+    def ping(self) -> LazyRequest[dict]:
         """
         Pings the server.
         """
-        return PacketFuture(self.connection, "ping")
+        return LazyRequest(self.connection, "ping")
 
     # =========================
     #   Callback Management
     # =========================
 
-    def _get_callback_states(self) -> PacketFuture[Dict[CallbackType, bool]]:
+    def _get_callback_states(self) -> LazyRequest[Dict[CallbackType, bool]]:
         """
         Tells you what callbacks are currently enabled in the client. Use ``_set_callbacks()`` to enable them.
 
         :return: A dictionary of the callback states.
         """
-        return cast(PacketFuture[Dict[CallbackType, bool]],
-                    PacketFuture(self.connection, "get callbacks", modifier=lambda result: {
+        return cast(LazyRequest[Dict[CallbackType, bool]],
+                    LazyRequest(self.connection, "get callbacks", modifier=lambda result: {
             string_callback_dict.get(k): v
             for k, v in result["typical callbacks"].items()
         }))
 
-    def _get_packet_callback_states(self) -> PacketFuture[Dict[str, PacketCallbackState]]:
+    def _get_packet_callback_states(self) -> LazyRequest[Dict[str, PacketCallbackState]]:
         """
         Tells you what packet callbacks are enabled in the client. Use ``_set_packet_callbacks()`` to enable them.
 
         :return: A dictionary of the packet callback states.
         """
-        return cast(PacketFuture[Dict[str, PacketCallbackState]],
-                    PacketFuture(self.connection, "get callbacks", modifier=lambda result: {
+        return cast(LazyRequest[Dict[str, PacketCallbackState]],
+                    LazyRequest(self.connection, "get callbacks", modifier=lambda result: {
                         k: string_packet_state_dict.get(v)
                         for k, v in result["packet callbacks"].items()
         }))
 
 
-    def _set_callbacks(self, callbacks: Dict[CallbackType, bool]) -> PacketFuture[dict]:
+    def _set_callbacks(self, callbacks: Dict[CallbackType, bool]) -> LazyRequest[dict]:
         """
         Enable more callbacks being sent to the player.
 
         :param callbacks: A dictionary (identical to the return of ``_get_callback_states()``) of what callbacks you want to enable.
         """
         payload = {k.value: v for k, v in callbacks.items()}
-        return PacketFuture(self.connection, "set callbacks", {"callbacks": payload})
+        return LazyRequest(self.connection, "set callbacks", {"callbacks": payload})
 
-    def _set_packet_callbacks(self, callbacks: Dict[str, PacketCallbackState]) -> PacketFuture[dict]:
+    def _set_packet_callbacks(self, callbacks: Dict[str, PacketCallbackState]) -> LazyRequest[dict]:
         """
         Enable specific packet callbacks being sent to the player.
         You should use ``_get_packet_callback_states()`` for a canonical list of packets enabled
@@ -393,22 +419,22 @@ class Player:
 
         :param callbacks: A dictionary (identical to the return of ``_get_packet_callback_states()``) of what callbacks you want to enable.
         """
-        return PacketFuture(self.connection, "set callbacks", {
+        return LazyRequest(self.connection, "set callbacks", {
             "callbacks": {
                 k: v.value
                 for k, v in callbacks.items()
             }
         })
 
-    def _clear_callbacks(self) -> PacketFuture[Any]:
+    def _clear_callbacks(self) -> LazyRequest[Any]:
         """ Clear all callbacks being sent to the player.  """
-        return PacketFuture(self.connection, "clear callbacks")
-    def clear_callbacks(self) -> PacketFuture[Any]:
+        return LazyRequest(self.connection, "clear callbacks")
+    def clear_callbacks(self) -> LazyRequest[Any]:
         """ Clear all the callbacks. """
         self._callbacks = {}
         return self._clear_callbacks()
 
-    def set_callback(self, type: CallbackType, callback :  CALLBACK_TYPE) -> PacketFuture[dict]:
+    def set_callback(self, type: CallbackType, callback :  CALLBACK_TYPE) -> LazyRequest[dict]:
         """
         Set a function that will be called when an event occurs for the client.
 
@@ -423,7 +449,7 @@ class Player:
             type: True
         })
 
-    def remove_callback(self, type : CallbackType) -> PacketFuture[dict]:
+    def remove_callback(self, type : CallbackType) -> LazyRequest[dict]:
         """ Remove a previously set callback. """
         del self._callbacks[type.value]
 
@@ -450,26 +476,26 @@ class Player:
 
         self._callbacks[type.value] = tmp
 
-        # Try to save some time
+        # Try to save some time. 
         asyncio.create_task(self._set_callbacks({
             type: True
-        }).as_co())
+        }).start())
 
 
 
         ret = await fut
 
         # We don't care about this much
-        asyncio.create_task(self._allow_dead(self._set_callbacks({
+        self._ignored_request(self._set_callbacks({
             type: old_state
-        }).as_co()))
+        }))
 
         return ret
 
 
 
 
-    def set_packet_callback(self, idd : str, callbackType : PacketCallbackState, callback :  CALLBACK_TYPE) -> PacketFuture[dict]:
+    def set_packet_callback(self, idd : str, callbackType : PacketCallbackState, callback :  CALLBACK_TYPE) -> LazyRequest[dict]:
         """
         Set a function that will be called when the client receives a packet (or sends one).
         See the documentation of PacketCallbackState for more information.
@@ -493,7 +519,7 @@ class Player:
 
         return self._set_packet_callbacks({idd: callbackType})
 
-    def remove_packet_callback(self, idd : str) -> PacketFuture[dict]:
+    def remove_packet_callback(self, idd : str) -> LazyRequest[dict]:
         """
         Remove a single packet callback.
 
@@ -511,7 +537,7 @@ class Player:
     #   World/Block/Chunk Access
     # =========================
 
-    def get_block(self, x: int, y: int, z: int) -> PacketFuture[Dict]:
+    def get_block(self, x: int, y: int, z: int) -> LazyRequest[Dict]:
         """
         Asks for a specific block somewhere in the world
 
@@ -521,15 +547,15 @@ class Player:
         :return: A dictionary of the block data.
         """
 
-        return PacketFuture(self.connection, "get block", {"x": x, "y": y, "z": z}, required_type=ord('n'), raw=True, modifier=lambda data: data.unpack())
+        return LazyRequest(self.connection, "get block", {"x": x, "y": y, "z": z}, required_type=ord('n'), raw=True, modifier=lambda data: data.unpack())
 
 
-    def list_loaded_chunks(self) -> PacketFuture[List]:
+    def list_loaded_chunks(self) -> LazyRequest[List]:
         """ Returns a list of loaded chunks."""
 
-        return cast(PacketFuture[List],  PacketFuture(self.connection, "list loaded chunks", modifier=lambda data: data.get("chunks")))
+        return cast(LazyRequest[List],  LazyRequest(self.connection, "list loaded chunks", modifier=lambda data: data.get("chunks")))
 
-    def click_slot(self, slot : int, button : int, action : SlotActionType) -> PacketFuture[dict]:
+    def click_slot(self, slot : int, button : int, action : SlotActionType) -> LazyRequest[dict]:
         """
         Simulates a single slot click/action. This is a low level function, slot ids change
         based on the current screen.
@@ -544,12 +570,12 @@ class Player:
         :param action: See wiki
         """
 
-        return PacketFuture(self.connection, "click slot", {
+        return LazyRequest(self.connection, "click slot", {
             "slot": slot,
             "button": button,
             "action": action.value
         })
-    def swap_slots(self, slot1 : int, slot2 : int, useOffhand : bool = False) -> PacketFuture[dict]:
+    def swap_slots(self, slot1 : int, slot2 : int, useOffhand : bool = False) -> LazyRequest[dict]:
         """
         Attempts to swap slots in an inventory. Either with clicking, or with offhand swaps.
 
@@ -565,7 +591,7 @@ class Player:
         :return:
         """
 
-        return PacketFuture(self.connection, "swap slots", {
+        return LazyRequest(self.connection, "swap slots", {
             "slot1": slot1,
             "slot2": slot2,
             "useOffhand": useOffhand
@@ -575,9 +601,9 @@ class Player:
 
     def get_player_inventory_contents(self):
         """ Returns JSON data of the player's inventory. Throws an error if a container is open"""
-        return PacketFuture(self.connection, "get player inventory")
+        return LazyRequest(self.connection, "get player inventory")
 
-    def get_player_inventory(self) -> PacketFuture["PlayerInventory"]:
+    def get_player_inventory(self) -> LazyRequest["PlayerInventory"]:
         """ Returns an object of the player's inventory. Throws an error if a container is open"""
 
         return self.get_player_inventory_contents().map(
@@ -586,30 +612,30 @@ class Player:
 
 
     def get_open_inventory_contents(self):
-        return PacketFuture(self.connection, "get open inventory")
+        return LazyRequest(self.connection, "get open inventory")
 
     def click_container_button(self, button: int):
-        return PacketFuture(self.connection, "click inventory button", {"button": button})
+        return LazyRequest(self.connection, "click inventory button", {"button": button})
 
     def get_merchant_trades(self):
-        return PacketFuture(self.connection, "get trades")
+        return LazyRequest(self.connection, "get trades")
 
     def select_trade(self, index: int):
-        return PacketFuture(self.connection, "select trade", {"index": index})
+        return LazyRequest(self.connection, "select trade", {"index": index})
 
     def set_anvil_name(self, name: str):
-        return PacketFuture(self.connection, "set anvil name", {"name": name})
+        return LazyRequest(self.connection, "set anvil name", {"name": name})
 
     def set_beacon_effect(self, primary: str | None, secondary: str | None = None):
-        return PacketFuture(self.connection, "set beacon effect", {
+        return LazyRequest(self.connection, "set beacon effect", {
             **({} if primary is None else {"primary": primary}),
             **({} if secondary is None else {"secondary": secondary})
         })
 
     def get_enchantments(self):
-        return PacketFuture(self.connection, "get enchantments")
+        return LazyRequest(self.connection, "get enchantments")
 
-    def get_chunk(self, cx: int, cz: int) -> PacketFuture[Chunk]:
+    def get_chunk(self, cx: int, cz: int) -> LazyRequest[Chunk]:
         """
         Asks for a specific chunk somewhere in the world.
         :param cx: Location of the chunk, note this is 16x smaller than the normal coordinates
@@ -618,7 +644,7 @@ class Player:
         :return: On success, a Chunk object, or raises an error
         """
         
-        return PacketFuture(self.connection, "get chunk", {"cx": cx, "cz": cz},
+        return LazyRequest(self.connection, "get chunk", {"cx": cx, "cz": cz},
                             raw=True, required_type=ord('b'), modifier=lambda data: Chunk.from_network(BytesIO(data)))
 
 
@@ -635,7 +661,7 @@ class Player:
         """
         if type(blocks) is str:
             blocks = (blocks, )
-        return PacketFuture(self.connection, "search for blocks", {"blocks": blocks})
+        return LazyRequest(self.connection, "search for blocks", {"blocks": blocks})
 
     # =========================
     #   World/Server Management
@@ -643,7 +669,7 @@ class Player:
 
     def get_server_list(self):
         """ Gets all the multiplayer servers in your server list, along with the "hidden" ones (your direct connect history). """
-        return PacketFuture(self.connection, "get server list")
+        return LazyRequest(self.connection, "get server list")
 
     def get_world_list(self):
         """
@@ -651,7 +677,7 @@ class Player:
 
         This can be slow on some installs, as some users may have **thousands** of worlds.
         """
-        return PacketFuture(self.connection, "get worlds")
+        return LazyRequest(self.connection, "get worlds")
 
     def join_world(self, name: str):
         """
@@ -659,7 +685,7 @@ class Player:
 
         :param name: The name of the world to join, **needs** to match the 'load name' from ``getWorldList()``
         """
-        return PacketFuture(self.connection, "join world", {"load world": name})
+        return LazyRequest(self.connection, "join world", {"load world": name})
 
     def join_server(self, address: str):
         """
@@ -667,45 +693,45 @@ class Player:
 
         :param address: Server ip to connect to
         """
-        return PacketFuture(self.connection, "join server", {"address": address})
+        return LazyRequest(self.connection, "join server", {"address": address})
 
     # =========================
     #   Player State Queries
     # =========================
 
-    def get_freecam_state(self) -> PacketFuture[bool]:
+    def get_freecam_state(self) -> LazyRequest[bool]:
         """ Tells you if freecam is currently enabled. """
-        return cast(PacketFuture[bool], PacketFuture(self.connection, "is freecam", modifier=lambda data: data.get("is freecam")))
+        return cast(LazyRequest[bool], LazyRequest(self.connection, "is freecam", modifier=lambda data: data.get("is freecam")))
 
-    def get_freerot_state(self) -> PacketFuture[bool]:
+    def get_freerot_state(self) -> LazyRequest[bool]:
         """ Tells you if freeroot is currently enabled. """
-        return cast(PacketFuture[bool], PacketFuture(self.connection, "is freerot", modifier=lambda data: data.get("is freerot")))
+        return cast(LazyRequest[bool], LazyRequest(self.connection, "is freerot", modifier=lambda data: data.get("is freerot")))
 
-    def get_no_walk_state(self) -> PacketFuture[bool]:
+    def get_no_walk_state(self) -> LazyRequest[bool]:
         """ Tells you if no walk is currently enabled. """
-        return cast(PacketFuture[bool], PacketFuture(self.connection, "is nowalk", modifier=lambda data: data.get("is nowalk")))
+        return cast(LazyRequest[bool], LazyRequest(self.connection, "is nowalk", modifier=lambda data: data.get("is nowalk")))
 
-    def get_headless_state(self) -> PacketFuture[bool]:
+    def get_headless_state(self) -> LazyRequest[bool]:
         """ Tells your if the client is currently headless. """
-        return cast(PacketFuture[bool], PacketFuture(self.connection, "is headless", modifier=lambda data: data.get("is headless")))
+        return cast(LazyRequest[bool], LazyRequest(self.connection, "is headless", modifier=lambda data: data.get("is headless")))
 
     # =========================
     #   Player State Setters
     # =========================
 
-    def set_freecam(self, enabled: bool = True) -> PacketFuture[dict]:
+    def set_freecam(self, enabled: bool = True) -> LazyRequest[dict]:
         """ Set if freecam is currently enabled. """
-        return PacketFuture(self.connection, "set freecam", {"enabled": enabled})
+        return LazyRequest(self.connection, "set freecam", {"enabled": enabled})
 
-    def set_freerot(self, enabled: bool = True) -> PacketFuture[dict]:
+    def set_freerot(self, enabled: bool = True) -> LazyRequest[dict]:
         """ Set if freeroot is currently enabled. """
-        return PacketFuture(self.connection, "set freerot", {"enabled": enabled})
+        return LazyRequest(self.connection, "set freerot", {"enabled": enabled})
 
-    def set_no_walk(self, enabled: bool = True) -> PacketFuture[dict]:
+    def set_no_walk(self, enabled: bool = True) -> LazyRequest[dict]:
         """ Set if no walk is currently enabled. """
-        return PacketFuture(self.connection, "set nowalk", {"enabled": enabled})
+        return LazyRequest(self.connection, "set nowalk", {"enabled": enabled})
 
-    def set_headless(self, enabled: bool = True) -> PacketFuture[dict]:
+    def set_headless(self, enabled: bool = True) -> LazyRequest[dict]:
         """
         Put the client into a "headless" state. This means you will no longer
         see the window on your screen. It theoretically should take less
@@ -718,13 +744,13 @@ class Player:
 
         **Use with caution!**
         """
-        return PacketFuture(self.connection, "set headless", {"enabled": enabled})
+        return LazyRequest(self.connection, "set headless", {"enabled": enabled})
 
     # =========================
     #   Baritone/Automation
     # =========================
 
-    def baritone_goto(self, x: int, y: int, z: int) -> PacketFuture[dict]:
+    def baritone_goto(self, x: int, y: int, z: int) -> LazyRequest[dict]:
         """
         Tells baritone to go to a specific location.
 
@@ -732,7 +758,7 @@ class Player:
         :param y: The y coordinate
         :param z: The z coordinate
         """
-        return PacketFuture(self.connection, 
+        return LazyRequest(self.connection, 
             "baritone goto", {"x": x, "y": y, "z": z}
         )
 
@@ -740,17 +766,17 @@ class Player:
     #   Chat/Command Messaging
     # =========================
 
-    def send_chat_message(self, message: str) -> PacketFuture[dict]:
+    def send_chat_message(self, message: str) -> LazyRequest[dict]:
         """
         Sends a public chat message. If prepended with "/", will execute a command.
 
         :param message: The message to send.
         """
-        return PacketFuture(self.connection, 
+        return LazyRequest(self.connection, 
             "send chat message", {"message": message}
         )
 
-    def send_execute_command(self, message: str) -> PacketFuture[dict]:
+    def send_execute_command(self, message: str) -> LazyRequest[dict]:
         """
         Runs a command.
 
@@ -760,20 +786,20 @@ class Player:
 
         Ex: ``gamemode creative`` to set the gamemode to creative.
         """
-        return PacketFuture(self.connection, 
+        return LazyRequest(self.connection, 
             "execute command", {"message": message}
         )
 
-    def display_message(self, message: str) -> PacketFuture[dict]:
+    def display_message(self, message: str) -> LazyRequest[dict]:
         """
         Displays a message in chat. This is private
         :param message:  Message to display in chat
         """
-        return PacketFuture(self.connection, 
+        return LazyRequest(self.connection, 
             "display chat message", {"message": message}
         )
 
-    def overview_message(self, message: str) -> PacketFuture[dict]:
+    def overview_message(self, message: str) -> LazyRequest[dict]:
         """
         Shows a message above the users hotbar, this is great for informational status updates.
 
@@ -781,7 +807,7 @@ class Player:
 
         :param message: Message to display above the hotbar
         """
-        return PacketFuture(self.connection, 
+        return LazyRequest(self.connection, 
             "overview message", {"message": message}
         )
 
@@ -789,19 +815,19 @@ class Player:
     #   Input/Control
     # =========================
 
-    def clear_inputs(self) -> PacketFuture[dict]:
+    def clear_inputs(self) -> LazyRequest[dict]:
         """ Remove all forced button presses. """
-        return PacketFuture(self.connection, "clear force input")
+        return LazyRequest(self.connection, "clear force input")
 
-    def get_forced_inputs(self) -> PacketFuture[dict]:
+    def get_forced_inputs(self) -> LazyRequest[dict]:
         """
         Reports the state of if certain input methods are forced. A key not being present
         indicates that no input is being forced. If a key is set to false, it is being forced up.
         And if a key is set to true, it is forced down.
         """
-        return PacketFuture(self.connection, "get forced input", modifier=lambda data: data.get("inputs"))
+        return LazyRequest(self.connection, "get forced input", modifier=lambda data: data.get("inputs"))
 
-    def force_inputs(self, inputs: List[Tuple[InputButton, bool]]) -> PacketFuture[dict]:
+    def force_inputs(self, inputs: List[Tuple[InputButton, bool]]) -> LazyRequest[dict]:
         """
         Force down/up buttons. If a button is not mentioned, it will not be impacted. Meaning that if it is already pressed,
         it will still be pressed if you do not update its state.
@@ -809,7 +835,7 @@ class Player:
         :param inputs: List of tuples of (InputButton, bool). Where the bool is the **forced state** of the input. Meaning
                        setting to False indicates the **user cannot press** that key.
         """
-        return PacketFuture(self.connection, 
+        return LazyRequest(self.connection, 
             "force inputs",
             {
                 "inputs": {
@@ -818,14 +844,14 @@ class Player:
             },
         )
 
-    def remove_forced_inputs(self, inputs: List[InputButton]) -> PacketFuture[dict]:
+    def remove_forced_inputs(self, inputs: List[InputButton]) -> LazyRequest[dict]:
         """
         Disables the forced state of inputs. If a button is not mentioned, it will not be impacted.
         A complete list of inputs will result in identical behavior to ``clear_inputs()``
 
         :param inputs: A list if inputs, each input will have is state no longer controlled.
         """
-        return PacketFuture(self.connection, 
+        return LazyRequest(self.connection, 
             "force inputs",
             {
                 "remove": [k.value for k in inputs]
@@ -842,7 +868,7 @@ class Player:
             yaw: float,
             speed: float = 3,
             method: RoMethod = RoMethod.LINEAR,
-    ) -> PacketFuture[dict]:
+    ) -> LazyRequest[dict]:
         """
         Smoothly, and realistically, rotate the player.
 
@@ -855,7 +881,7 @@ class Player:
 
         assert method != RoMethod.INSTANT, "Not a supported rotation method."
 
-        return PacketFuture(self.connection, 
+        return LazyRequest(self.connection, 
             "algorithmic rotation",
             {
                 "pitch": pitch,
@@ -865,14 +891,14 @@ class Player:
             },
         )
 
-    def irotate(self, pitch: float, yaw: float) -> PacketFuture[dict]:
+    def irotate(self, pitch: float, yaw: float) -> LazyRequest[dict]:
         """
         Instantly set the player's rotation. This looks like you are cheating.
 
         :param pitch: Pitch angle in degrees.
         :param yaw: Yaw angle in degrees.
         """
-        return PacketFuture(self.connection, 
+        return LazyRequest(self.connection, 
             "instantaneous rotation",
             {
                 "pitch": pitch,
@@ -880,28 +906,28 @@ class Player:
             },
         )
 
-    def set_hotbar_slot(self, slot: int) -> PacketFuture[dict]:
+    def set_hotbar_slot(self, slot: int) -> LazyRequest[dict]:
         """
         Set the current hotbar slot.
 
         :param slot: [1, 9] are valid hotbar slots
         """
         assert 1 <= slot <= 9, "Invalid slot value"
-        return PacketFuture(self.connection, "set hotbar slot", {"slot": slot})
+        return LazyRequest(self.connection, "set hotbar slot", {"slot": slot})
 
-    def attack(self) -> PacketFuture[dict]:
+    def attack(self) -> LazyRequest[dict]:
         """ Tells the player to punch. Single left click """
-        return PacketFuture(self.connection, "attack key click")
+        return LazyRequest(self.connection, "attack key click")
 
-    def use(self) -> PacketFuture[dict]:
+    def use(self) -> LazyRequest[dict]:
         """ Tells the player to use an item/block. Single right click """
-        return PacketFuture(self.connection, "use key click")
+        return LazyRequest(self.connection, "use key click")
 
     def auto_use(self,
                        x : int, y  : int, z : int,
                        speed : float = 3, method : RoMethod = RoMethod.LINEAR,
                        direction_of_use : Direction | None = None
-                 ) -> PacketFuture[dict]:
+                 ) -> LazyRequest[dict]:
         """
         Look at block and click it.
 
@@ -914,7 +940,7 @@ class Player:
         :return:
         """
 
-        return PacketFuture(self.connection, "auto use", {
+        return LazyRequest(self.connection, "auto use", {
             "x": x, "y": y, "z": z,
             "degrees per tick": speed,
             "method": method.value,
@@ -925,7 +951,7 @@ class Player:
                          x: int, y: int, z: int,
                          speed : float = 3, method : RoMethod = RoMethod.LINEAR,
                          direction_to_place_on : Direction | None = None
-                         ) -> PacketFuture[dict]:
+                         ) -> LazyRequest[dict]:
         """
         Place a block
 
@@ -937,7 +963,7 @@ class Player:
         :param direction_to_place_on: What block to place on. For example, use down to
                                       place on the block UNDER the location you specify
         """
-        return PacketFuture(self.connection, "auto place", {
+        return LazyRequest(self.connection, "auto place", {
             "x": x, "y": y, "z": z,
             "degrees per tick": speed,
             "method": method.value,
@@ -946,7 +972,7 @@ class Player:
 
     def set_directional_walk(
             self, degrees: float, speed: float = 1, force: bool = False
-    )-> PacketFuture[dict]:
+    )-> LazyRequest[dict]:
         """
         Force the player to walk in a certain direction. Directional walking allows you to make the player walk towards a block.
         The direction the player is walking in is absolute, meaning the user can look around without interfacing.
@@ -955,7 +981,7 @@ class Player:
         :param speed: Should be from 0-1. With zero being no movement, and one being regular walk speed.
         :param force: If false, will clamp the speed. If true, will allow any speed value, basically being speed hacks.
         """
-        return PacketFuture(self.connection, 
+        return LazyRequest(self.connection, 
             "set directional movement degree",
             {
                 "direction": degrees,
@@ -966,7 +992,7 @@ class Player:
 
     def set_directional_walk_vector(
             self, x: float, z: float, speed: float = 1, force: bool = False
-    ) -> PacketFuture[dict]:
+    ) -> LazyRequest[dict]:
         """
         Force the player to walk in a certain direction. Directional walking allows you to make the player walk towards a block.
         The direction the player is walking in is absolute, meaning the user can look around without interfacing.
@@ -981,7 +1007,7 @@ class Player:
         :param speed: Should be from 0-1. With zero being no movement, and one being regular walk speed.
         :param force: If false, will clamp the speed. If true, will allow any speed value, basically being speed hacks.
         """
-        return PacketFuture(self.connection, 
+        return LazyRequest(self.connection, 
             "set directional movement vector",
             {
                 "x": x,
@@ -991,9 +1017,9 @@ class Player:
             },
         )
 
-    def stop_directional_walk(self) -> PacketFuture[dict]:
+    def stop_directional_walk(self) -> LazyRequest[dict]:
         """No longer be directional walking"""
-        return PacketFuture(self.connection, "clear directional movement")
+        return LazyRequest(self.connection, "clear directional movement")
 
 
 # Generate functions for all the mod integrations
@@ -1183,7 +1209,7 @@ class Generic2Input(Inventory):
 class Anvil(Generic2Input):
     container_type = "anvil"
 
-    def set_name(self, name: str) -> PacketFuture[dict]:
+    def set_name(self, name: str) -> LazyRequest[dict]:
         return self.player.set_anvil_name(name)
 
 
@@ -1194,10 +1220,10 @@ class Grindstone(Generic2Input):
 class Merchant(Generic2Input):
     container_type = "merchant"
 
-    def get_trades(self) -> PacketFuture[dict]:
+    def get_trades(self) -> LazyRequest[dict]:
         return self.player.get_merchant_trades()
 
-    def select_trade(self, index: int) -> PacketFuture[dict]:
+    def select_trade(self, index: int) -> LazyRequest[dict]:
         return self.player.select_trade(index)
 
 
@@ -1212,7 +1238,7 @@ class Beacon(Inventory):
     def get_payment_slot(self):
         return self.get_slot(0)
 
-    def set_effects(self, primary: None | str = None, secondary: None | str = None) -> PacketFuture[dict]:
+    def set_effects(self, primary: None | str = None, secondary: None | str = None) -> LazyRequest[dict]:
         return self.player.set_beacon_effect(primary, secondary)
 
 
@@ -1273,10 +1299,10 @@ class EnchantmentTable(Inventory):
     def get_lapis(self):
         return self.get_slot(1)
 
-    def get_enchants(self) -> PacketFuture[dict]:
+    def get_enchants(self) -> LazyRequest[dict]:
         return self.player.get_enchantments()
 
-    def select_enchantment(self, index: int) -> PacketFuture[dict]:
+    def select_enchantment(self, index: int) -> LazyRequest[dict]:
         assert 0 <= index <= 2
 
         return self.player.click_container_button(index)
