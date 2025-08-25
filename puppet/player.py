@@ -289,7 +289,8 @@ class Player:
         coroutine = request.start() if isinstance(request, LazyRequest) else request
 
         # Don't yell it me if something bad happens
-        asyncio.create_task(coroutine).add_done_callback(lambda t: t.exception()) 
+        asyncio.create_task(coroutine).add_done_callback(lambda t: None)
+
 
     def _bundle_internal(self, packets : Iterable[LazyRequest[Any]], method : BundleMethod = BundleMethod.INSTANT, ticks : int | None = None) -> Tuple[LazyRequest[dict], Tuple[Awaitable[Any]]]:
         packets, futures = zip(* (p.soft_send() for p in packets) )
